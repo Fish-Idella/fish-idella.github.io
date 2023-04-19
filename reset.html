@@ -22,7 +22,7 @@
     <script>
         document.getElementById("reset").addEventListener("click", function () {
             var script = document.createElement("script");
-            script.src = `/js/save.js?${Date.now()}`;
+            script.src = `/libs/old/save.js?${Date.now()}`;
             new PuSet.Storage().then(function (a) {
                 script.onload = function () {
                     a.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set))).then(function () {

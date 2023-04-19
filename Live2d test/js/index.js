@@ -1,0 +1,1 @@
+console.dir(window.Live2DCubismCore)

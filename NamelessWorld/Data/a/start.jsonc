@@ -1,0 +1,31 @@
+{
+    // 数据包类型
+    "data_type": "ui",
+    // a
+    "script": {
+        "start": {
+            "type": "si",
+            "src": "image/df0559cc719e82bc78c1b668b865179d.jpg",
+            "width": "max",
+            "height": "max",
+            "top": 0,
+            "left": 0,
+            "sleep": 100,
+            "hold": true,
+            "then": "2"
+        },
+        "2": {
+            "type": "button",
+            "text": "Start",
+            "width": 100,
+            "height": 50,
+            "bottom": 50,
+            "left": 30,
+            "sleep": 100,
+            "hold": true,
+            "fontSize": 30,
+            "fontFamily": "Calibri",
+            "fill": "green"
+        }
+    }
+}

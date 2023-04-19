@@ -1,0 +1,276 @@
+.flex-horizontal {
+    display: flex;
+    padding: 0;
+    flex-direction: row;
+}
+
+.flex-vertical {
+    display: flex;
+    padding: 0;
+    flex-direction: column;
+}
+
+input,
+body,
+button {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.flex-horizontal>input[type=text],
+.fc {
+    position: relative;
+    flex-grow: 1;
+}
+
+.view {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden auto;
+}
+
+.box {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 3em;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+div.box.min {
+    height: 3em;
+    overflow: hidden;
+}
+
+div.box:hover .title_bar {
+    background-color: rgb(0, 102, 181);
+}
+
+.title_bar {
+    font-family: Montserrat,'Source Sans Pro','Franklin Gothic Medium', 'Arial Narrow',Arial, sans;
+    display: flex;
+    height: 3em;
+    background-color: rgb(0, 77, 136);
+    color: white;
+}
+
+.icon_box {
+    height: 3em;
+    text-decoration: none;
+    line-height: 3em;
+}
+
+.icon_box>img.icon {
+    margin: .5em;
+}
+
+.title {
+    color: white;
+    font-size: 1.3em;
+    margin: 0 .5em;
+}
+
+.title_bar input[type=button],
+.title_bar button {
+    color: white;
+}
+
+.info {
+    margin: 0;
+}
+
+.info>li {
+    margin: .5em 0;
+}
+
+ul.item {
+    background-color: #eeeeee;
+    line-height: 2em;
+}
+
+ul.item.min {
+    height: 2em;
+    overflow: hidden;
+}
+
+ul.item>li>div b,
+ul.item>li>b {
+    width: 7em;
+}
+
+.sub-title {
+    word-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sub-title>div {
+    display: inline-flex;
+    overflow: hidden;
+    width: 49%;
+}
+
+ol.list input[name=key] {
+    flex-grow: initial;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+ol.list b {
+    /* line-height: 0rem; */
+    padding: 0px 5px;
+    /* vertical-align: middle; */
+}
+
+button,
+b,
+input {
+    word-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+
+    display: inline-block;
+    outline: none;
+    border: none;
+    background-color: transparent;
+}
+
+/* .flex-horizontal>input[type=text]:hover, */
+.flex-horizontal>input[type=text]:focus {
+    color: rgb(0, 128, 255);
+}
+
+ol.list div {
+    height: 2em;
+}
+
+ol.list>li:hover {
+    background-color: #fefefe;
+}
+
+.add:hover,
+ol.list>li.add:hover,
+div.add#comAdd:hover {
+    background-color: #727898;
+}
+
+#comAdd {
+    display: block;
+    width: 100%;
+    height: 3em;
+    /* background-color: rgb(9 34 108); */
+}
+
+li.add {
+    line-height: 2em;
+}
+
+.add {
+    position: relative;
+    background-color: #383b54;
+}
+
+ul.item>li:hover {
+    background-color: #f8f8f8;
+}
+
+.add::before,
+.add::after {
+    content: "";
+    position: absolute;
+    background-color: rgb(225 225 225);
+    top: 50%;
+    left: 50%;
+    border-radius: 1rem;
+}
+
+.add::before {
+    width: 1rem;
+    height: .1rem;
+    margin-left: -0.5rem;
+    margin-top: -0.05rem;
+}
+
+.add::after {
+    width: .1rem;
+    height: 1rem;
+    margin-left: -0.05rem;
+    margin-top: -0.5rem;
+}
+
+
+.onmin {
+    position: relative;
+    line-height: 1rem;
+}
+
+todo.onmin::after {
+    content: ">";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    text-align: center;
+    line-height: 100%;
+}
+
+#edit {
+    background-color: #00000077;
+}
+
+#edit>div.pop {
+    position: absolute;
+    width: 80%;
+    height: 180px;
+    max-height: 60%;
+    overflow: hidden auto;
+    top: 20%;
+    left: 10%;
+    background-color: #eeeeee;
+}
+
+#edit ul {
+    list-style: none;
+    padding: 0;
+}
+
+#edit ul>li {
+    margin: 5px 10px;
+}
+
+#edit ul>li>input {
+    border-bottom: 1px solid #969696;
+}
+
+#edit ul>li>input:focus {
+    border-bottom: 1px solid #342e74;
+}
+
+#edit ul>li,
+#edit button {
+    height: 2rem;
+    line-height: 2rem;
+}
+
+#edit ul>li>span {
+    width: 70px;
+}
+
+#edit button {
+    width: 100%;
+    color: #1c00ff;
+}
+
+.hide {
+    display: none !important;
+}
+
+button.ondel {
+    color: red;
+}

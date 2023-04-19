@@ -1,0 +1,289 @@
+body,html,input,button,select,td,th {
+	font-size: 14px;
+	font-family: Helvetica,Arial,sans-serif!important;
+}
+
+a,
+a::after,
+a:active {
+	color: rgb(0, 0, 0);
+	text-decoration: solid;
+}
+
+.view {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: transparent;
+}
+
+.grid-horizontal {
+	display: grid;
+	grid-auto-flow: row;
+}
+
+.grid-vertical {
+	display: grid;
+	grid-auto-flow: column;
+}
+
+.flex-horizontal {
+	display: flex;
+	flex-direction: row;
+}
+
+.flex-vertical {
+	display: flex;
+	flex-direction: column;
+}
+
+
+#background {
+	opacity: 1;
+	transition: transform .25s ease-in;
+	transform-origin: center;
+}
+
+.dynamic {
+	position: fixed;
+	min-width: 100%;
+	min-height: 100%;
+	object-fit: cover;
+}
+
+.wallpaper {
+	display: block;
+	background-color: #efefef;
+	/* background-image: linear-gradient(#acacac, #114785); */
+	background-position: 50%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-blend-mode: darken;
+	backface-visibility: hidden;
+}
+
+#background.scale {
+	transform: scale(1.1);
+}
+
+#background.scale .wallpaper {
+	filter: blur(1px);
+}
+
+.fc {
+	flex-grow: 1;
+	position: relative;
+}
+
+html>body .hide {
+	display: none;
+}
+
+/* 
+@media screen and (max-height: 300px ), (max-width: 450px) {
+	body,.view {
+		display: none;
+	}
+} */
+
+.view {
+	background-color: #efefef;
+}
+
+.pic {
+	table-layout: fixed;
+	border-spacing: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	vertical-align: middle;
+	overflow: hidden;
+	text-align: center;
+	background-color: #f6f6f6;
+}
+
+textarea.view {
+	border: none;
+	outline: none;
+	resize: none;
+	overflow: auto;
+	font-size: .2rem;
+	font-family: Consolas, 'Courier New', monospace;
+}
+
+.controller {
+	width: 24rem;
+	background-color: #1e1e1e;
+	color: white;
+}
+
+label {
+	cursor: pointer;
+}
+
+.flex-item {
+	width: 100%;
+	height: auto;
+	position: relative;
+	justify-items: center;
+	align-items: center;
+	margin-top: 2rem;
+}
+
+#file-box {
+	position: relative;
+	width: 90%;
+	height: 10rem;
+	background-color: #efefef;
+	display: inline-block;
+	border-radius: 1rem;
+	overflow: hidden;
+	text-align: center;
+	color: #b0b0b0;
+	font-size: 1.2rem;
+}
+
+.icon-add {
+	display: block;
+	position: absolute;
+	background-color: #efefef;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+}
+
+#file-box:hover>.icon-add {
+	background-color: #ffffff;
+}
+
+.icon-add::before,
+.icon-add::after {
+	position: absolute;
+	background-color: #b0b0b0;
+	box-shadow: 0 0 2px #b0b0b0;
+	content: "";
+	top: 36%;
+	left: 50%;
+}
+
+.icon-add::before {
+	width: 4px;
+	height: 50px;
+	margin-top: -25px;
+	margin-left: -2px;
+}
+
+.icon-add::after {
+	width: 50px;
+	height: 4px;
+	margin-top: -2px;
+	margin-left: -25px;
+}
+
+#file-box::after {
+	content: attr(title);
+	position: absolute;
+	width: 100%;
+	height: 3rem;
+	line-height: 3rem;
+	left: 0;
+	bottom: 0;
+}
+
+
+
+#checkbox-box {
+	position: relative;
+	width: 90%;
+	height: 3rem;
+	background-color: #1e1e1e;
+	display: inline-block;
+	border-radius: 1rem;
+	overflow: hidden;
+	text-align: center;
+	color: #1e1e1e;
+	font-size: 1.2rem;
+	/* border: 1px solid #efefef; */
+	box-shadow: 0px 0px 1px #efefef, 0px 0px 1px #efefef inset;
+}
+
+#checkbox-box::before,
+#checkbox-box::after {
+	position: absolute;
+	background-color: transparent;
+	z-index: 2;
+	width: 50%;
+	height: 100%;
+	line-height: 3rem;
+	top: 0;
+}
+
+#checkbox-box::before {
+	content: "盲文模式";
+	left: 0;
+}
+
+#checkbox-box::after {
+	content: "明暗模式";
+	right: 0;
+}
+
+#checkbox+span {
+	background-color: #1e1e1e;
+}
+
+#checkbox+span::after {
+	position: absolute;
+	content: "";
+	width: 50%;
+	height: 3rem;
+	line-height: 3rem;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	transition: left 100ms linear;
+	background-color: #efefef;
+	background-image: linear-gradient(#ffffff, #dfdfdf);
+}
+
+#checkbox:checked+span::after {
+	left: 50%;
+}
+
+#checkbox-box:hover {
+	box-shadow: 0px 0px 3px #ffffff, 0px 0px 3px #ffffff inset;
+}
+
+
+
+
+
+
+
+
+
+#start {
+	position: relative;
+	width: 90%;
+	height: 3rem;
+	background-color: #efefef;
+	background-image: linear-gradient(#ffffff, #dfdfdf);
+	display: block;
+	border-radius: 1rem;
+	font-size: 1.2rem;
+	color: #1e1e1e;
+	border: none;
+	margin-bottom: 1rem;
+}

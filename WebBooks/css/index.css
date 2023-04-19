@@ -1,0 +1,206 @@
+body,html,input,button,select,td,th {
+	font-size: 14px;
+	font-family: Helvetica,Arial,sans-serif!important;
+}
+
+.view {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: transparent;
+	background: white;
+}
+
+.grid-horizontal {
+	display: grid;
+	grid-auto-flow: row;
+}
+
+.grid-vertical {
+	display: grid;
+	grid-auto-flow: column;
+}
+
+.flex-horizontal {
+	display: flex;
+	flex-direction: row;
+}
+
+.flex-vertical {
+	display: flex;
+	flex-direction: column;
+}
+
+.dynamic {
+	position: fixed;
+	min-width: 100%;
+	min-height: 100%;
+	object-fit: cover;
+}
+
+.wallpaper {
+	display: block;
+	background-color: #efefef;
+	/* background-image: linear-gradient(#acacac, #114785); */
+	background-position: 50%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-blend-mode: darken;
+	backface-visibility: hidden;
+}
+
+.fc {
+	flex-grow: 1;
+	position: relative;
+}
+
+html>body .hide {
+	display: none;
+}
+
+/* 
+@media screen and (max-height: 300px ), (max-width: 450px) {
+	body,.view {
+		display: none;
+	}
+} */
+
+.title {
+	width: 100%;
+	height: 5rem;
+	text-align: center;
+	line-height: 5rem;
+	font-size: 2rem;
+}
+
+.body {
+	overflow: hidden auto;
+}
+
+.body::-webkit-scrollbar {
+	display: none;
+}
+
+#icon-box,
+#shujia-box {
+	width: 100%;
+	height: auto;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-items: center;
+	align-content: flex-start;
+	justify-content: space-evenly;
+	grid-row-gap: 1rem;
+	grid-template-columns: repeat(auto-fill, 33.3333vmin);
+}
+
+#icon-box>div,
+#shujia-box>div {
+	position: relative;
+	width: 100%;
+	height: 54vmin;
+	/* justify-content: center; */
+	align-items: center;
+}
+
+#icon-box .shu,
+#shujia-box .shu {
+	position: relative;
+	width: 30vmin;
+	height: 48vmin;
+	border: 1px solid #b0b0b0;
+	background-color: #f7f7f7;
+	background-size: 100% 100%;
+}
+
+#icon-box .shuming,
+#shujia-box .shuming {
+	width: 100%;
+	/* line-height: 6vmin; */
+	text-align: center;
+	overflow: hidden;
+	appearance: none;
+	border: none;
+	outline: none;
+	padding: 0;
+	margin: 0;
+}
+
+#tianjia {
+	order: 2;
+}
+
+#tianjia .shu::before,
+#tianjia .shu::after {
+	position: absolute;
+	background-color: #b0b0b0;
+	box-shadow: 0 0 2px #b0b0b0;
+	content: "";
+}
+
+#tianjia .shu::before {
+	width: 4px;
+	height: 50px;
+	top: 50%;
+	left: 50%;
+	margin-top: -25px;
+	margin-left: -2px;
+}
+
+#tianjia .shu::after {
+	width: 50px;
+	height: 4px;
+	top: 50%;
+	left: 50%;
+	margin-top: -2px;
+	margin-left: -25px;
+}
+
+#menu {
+	background: #0000004f;
+	align-items: center;
+	justify-content: center;
+}
+
+.toast {
+	position: relative;
+	width: 20rem;
+	height: 30rem;
+	max-width: 80%;
+	max-height: 80%;
+	background: #ffffff;
+}
+
+.toast input {
+	position: relative;
+	appearance: none;
+	display: block;
+	outline: none;
+	width: 100%;
+	height: 3rem;
+	border: none;
+	border-bottom: 1px solid #b0b0b0;
+	background: #efefef;
+	margin: 0;
+	padding: 0;
+}
+
+.toast input.title {
+	font-size: 1.6rem;
+}
+
+.toast input.barrier {
+	margin-top: 1rem;
+	border-top: 1px solid #b0b0b0;
+}
+
+.red {
+	color: red;
+}
