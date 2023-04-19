@@ -1,0 +1,33 @@
+#dialog {
+    background-color: rgba(0, 0, 0, 0.671);
+    place-content: center;
+    place-items: center;
+}
+
+.dialog-box {
+    width: auto;
+    height: auto;
+    min-width: 30rem;
+    max-width: 60%;
+    min-height: 20rem;
+    max-height: 80%;
+    background-color: white;
+    border-radius: 1rem;
+    padding: 0 1rem;
+}
+
+#dialog-title {
+    font-size: 1.5rem;
+    line-height: 3rem;
+}
+
+#dialog-button {
+    place-content: space-around;
+    place-items: center;
+    height: 3rem;
+    line-height: 3rem;
+}
+
+#dialog-button input {
+    width: auto;
+}
