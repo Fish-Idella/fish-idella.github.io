@@ -1,6 +1,6 @@
 new Promise((resolve, reject) => {
     storage.then(function () {
-        resolve(fetch("/libs/old/configure.json", {
+        resolve(fetch("/libs/configure.json", {
             method: 'GET',
             headers: {
                 'Content-Type': 'text/plain',
