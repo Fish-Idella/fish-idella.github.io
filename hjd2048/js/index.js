@@ -150,8 +150,8 @@
     base: "https://bbs.274w3.com/2048/",
 
     navs: [
-        "http://doww.elsbhqdzqad.com/w33.php",
-        "http://doww.elsbhqdzqsd.com/w32.php",
+        "https://doww.elsbhqdzqad.com/w33.php",
+        "https://doww.elsbhqdzqsd.com/w32.php",
         "https://doww.helsbhqdz123.com/w34.php"
     ],
 
