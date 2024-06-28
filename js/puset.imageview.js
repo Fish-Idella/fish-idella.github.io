@@ -1,8 +1,12 @@
 (function (PuSet) {
     "use strict";
 
-    const src_loading = "img/loading-w.gif";
-    const src_error = "img/pic-error.jpg";
+    const src_loading = "img/loading.webp";
+    const src_loading_b = "img/loading.gif";
+    const src_error = "img/error.png";
+
+    // 触摸事件允许的误差，如果移动小于指定像素，无视移动
+    const deviation = 20;
 
     const PX = {
         R_NUMBER: /^.*?(\-?\d+(\.\d+)*).*$/,
@@ -28,35 +32,54 @@
     };
 
     /**
-     * @param {number} time        动画需要的时长
-     * @param {number} range       位移距离
-     * @param {function} callback 
+     * 
+     * @param {number} time      动画需要的时长
+     * @param {number} range     位移距离
+     * @param {any} data         传入的数据，可省略
+     * @param {(process:number, data:data) => boolean} running   运行中的函数，retrun false 中止动画
+     * @param {(elapsed:number, data:data) => boolean} done      运行结束的函数，retrun false 中止动画
      */
-    function createAnimate(time, range, callback) {
+    function createAnimate(time, range, data, running, done) {
+
+        // 如果第三个参数是function，则默认参数省略了data
+        if ("function" === typeof data) {
+            [time, range, running, done] = arguments;
+            // done = running;
+            // running = data;
+            // data = null;
+        }
 
         if (time === 0) {
-            requestAnimationFrame(() => callback(range));
+            requestAnimationFrame(() => void running(range, data));
         }
 
         // 动画开始时的时间戳
         let startTime = undefined;
+        // 进度
+        let process = 0;
         // 平均速度
         const velocity = range / time;
+        const notDone = "function" != typeof done;
 
         function step(timestamp) {
-            if (startTime === undefined) {
-                startTime = timestamp;
-            }
+            startTime === undefined && (startTime = timestamp);
 
             const elapsed = timestamp - startTime;
 
-            if (callback(Math.min(range, (elapsed * velocity))) === false) {
-                return;
-            }
+            // 如果进度满了
+            if (process === range) {
 
-            if (elapsed < time) {
-                requestAnimationFrame(step);
+                // 没有done函数，会直接结束
+                if (notDone) return;
+
+                // 有done函数，等待done返回值
+                if (false === done(elapsed, data)) return;
+
+            } else {
+                // 帧动画
+                if (false === running(process = Math.min(range, elapsed * velocity), data)) return;
             }
+            requestAnimationFrame(step);
         }
 
         requestAnimationFrame(step);
@@ -88,12 +111,12 @@
         if (data && data.item) {
             const imgv = data.item(i);
             const url = imgv.dataset.src;
-            const img = new Image;
+            const img = new Image();
 
             img.onerror = function () {
                 if (image.parentElement.dataset.index == i) {
+                    image.width = 280;
                     image.src = src_error;
-                    image.width = 919;
                 }
             };
             img.onload = function () {
@@ -109,39 +132,41 @@
         }
     }
 
+    // 无须验证元素是否存在
+    function leftA(elem, postion) {
+        elem.style.left = postion;
+    }
+
+    // 须要验证元素是否存在
+    function leftB(elem, postion) {
+        elem && leftA(elem, postion);
+    }
+
     function keep(target, self) {
-        target.style.left = PX.zero;
-        if (self.next) {
-            self.next.style.left = PX.percent;
-        }
-        if (self.previous) {
-            self.previous.style.left = PX.negative;
-        }
+        leftA(target, PX.zero);
+        leftB(self.next, PX.percent);
+        leftB(self.previous, PX.negative);
     }
 
     function next(target, self) {
-        if (self.previous) {
-            self.previous.style.left = PX.negative;
-        }
+        leftB(self.previous, PX.negative);
         if (self.next) {
-            self.next.style.left = PX.zero;
-            target.style.left = PX.negative;
+            leftA(self.next, PX.zero);
+            leftA(target, PX.negative);
             self.updateLayout(self.children, self.next);
         } else {
-            target.style.left = PX.zero;
+            leftA(target, PX.zero);
         }
     }
 
     function previous(target, self) {
-        if (self.next) {
-            self.next.style.left = PX.percent;
-        }
+        leftB(self.next, PX.percent);
         if (self.previous) {
-            self.previous.style.left = PX.zero;
-            target.style.left = PX.percent;
+            leftA(self.previous, PX.zero);
+            leftA(target, PX.percent);
             self.updateLayout(self.children, self.previous);
         } else {
-            target.style.left = PX.zero;
+            leftA(target, PX.zero);
         }
     }
 
@@ -154,10 +179,10 @@
         array: null,
 
         // 数值是否在增长
-        isEnlarge: false,
+        enlarge: false,
 
         // 记录中最近的一次数值
-        currentItem: 0,
+        current: 0,
 
         // 峰谷变化次数
         index: 0,
@@ -168,41 +193,49 @@
         init: function (i) {
             const length = this.array.length;
             this.array.splice(0, length, i, i);
-            this.currentItem = i;
+            this.enlarge = 0;
+            this.current = i;
             this.index = 1;
         },
-        get: function (i) {
-            return this.array[i] || null;
+        get: function (num) {
+            const array = this.array;
+            return num < 0 ? array[num + array.length] : array[num];
         },
-        ifAdd: function (i) {
-            if (this.isEnlarge) {
-                if (i < this.currentItem) {
-                    this.index++;
-                    this.isEnlarge = false;
-                }
-            } else {
-                if (i > this.currentItem) {
-                    this.index++;
-                    this.isEnlarge = true;
-                }
+        getRange: function (start, end) {
+            return this.get(isNaN(end) ? this.index : end) - this.get(isNaN(start) ? 0 : start);
+        },
+        addIf: function (i) {
+            const enlarge = i - this.current;
+            if ((this.enlarge > 0 && enlarge < 0) || (this.enlarge < 0 && enlarge > 0)) {
+                this.index++;
             }
-            this.currentItem = i;
+            this.current = i;
             this.array[this.index] = i;
+            this.enlarge = this.getRange(-2, -1);
         }
     });
 
     PuSet.ImageView = PuSet.createClass({
 
         target: null,
-        content: null,
+        content_horizontal: null,
         header: null,
         footer: null,
 
         previous: null,
-        currentItem: null,
+        current: null,
         next: null,
 
         children: null,
+
+        lastString: "",
+
+        toastId: 0,
+        toast_content: null,
+        toast_view: null,
+
+        content_vertical: null,
+        information: null,
 
         index: 0,
         max: 5,
@@ -218,12 +251,15 @@
             return new init("string" == typeof target ? document.querySelector(target) : target, +count);
         },
 
-        updateLayout: function (children, currentItem) {
-            currentItem.style.left = PX.zero;
-            this.currentItem = currentItem;
-            this.index = +currentItem.dataset.index;
+        updateLayout: function (children, current) {
+            leftA(current, PX.zero);
+            this.current = current;
+            this.index = +current.dataset.index;
 
-            const childrenV = this.imgsVertical.children;
+            // 
+            this.toast(`第 ${1 + this.index} 张`, 500);
+
+            const childrenV = this.content_vertical.children;
 
             const previousIndex = this.index - 1;
             if (this.index > 0) {
@@ -268,9 +304,9 @@
                 this.data = array;
                 this.length = array.length;
 
-                const children = this.content.children;
-                const childrenV = this.imgsVertical.children;
-                const length = Math.max(this.length, this.max, childrenV.length);
+                const children_horizontal = this.content_horizontal.children;
+                const children_vertical = this.content_vertical.children;
+                const length = Math.max(this.length, this.max, children_vertical.length);
 
                 let item;
 
@@ -286,42 +322,70 @@
 
                     // 可能会用到上面填充的信息
                     if (i < this.max) {
-                        item = children.item(i);
+                        item = children_horizontal.item(i);
                         item.dataset.index = i;
                         item.classList.remove("transition");
                         if (i < this.length) {
-                            loadImage(item.firstChild, childrenV, i);
-                            item.style.left = "100%";
+                            loadImage(item.firstChild, children_vertical, i);
+                            leftA(item, PX.percent);
                             item.classList.remove("hide");
                         } else {
                             item.classList.add("hide");
                         }
                     }
                 }
-                this.updateLayout(children, children.item(0));
+                this.updateLayout(children_horizontal, children_horizontal.item(0));
             } else {
-                this.information.innerHTML = '<span class="no-image">没有找到图像资源或处理资源出错。</span>';
+                // this.information.innerHTML = '<span class="no-image">没有找到图像资源或处理资源出错。</span>';
                 this.information.classList.remove("hide");
             }
             return this;
         },
 
         wait: function () {
-            loadImage(this.currentItem.firstChild, null, 0);
+            if (this.or) {
+                loadImage(this.current.firstChild, null, 0);
+            } else {
+                PuSet.each(this.content_vertical.children, (elem) => elem.src = src_loading_b);
+            }
         },
 
         getVerticalItem: function (i) {
             let img;
-            if (this.imgsVertical) {
-                img = this.imgsVertical.children.item(i);
+            if (this.content_vertical) {
+                img = this.content_vertical.children.item(i);
                 if (img === null) {
                     img = new Image;
                     img.alt = "这是一个看图片的网站";
-                    this.imgsVertical.appendChild(img);
+                    this.content_vertical.appendChild(img);
                 }
             }
-            img.src = "img/loading.gif";
+            img.src = src_loading_b;
             return img;
+        },
+
+        toast: function (string, keep = 1000) {
+            const self = this;
+            const toastId = Date.now();
+            if (string === self.lastString && (toastId - self.toastId) < keep) {
+                return;
+            }
+
+            const toast = self.toast_view;
+            self.toast_content.innerHTML = '<span>' + (("" + (self.lastString = string)).replace(/\</g, "&lt;")) + '</span>';
+
+            createAnimate(150, 200, (self.toastId = toastId), function (i) {
+                toast.style.bottom = PX.parse(i - 140);
+            }, function (time, data) {
+                if (self.toastId != data) {
+                    return false;
+                }
+                if (time > keep) {
+                    toast.style.bottom = PX.negative;
+                    return false;
+                }
+            });
+
         },
 
         init: function (target, i) {
@@ -334,35 +398,52 @@
                  */
                 const self = this;
 
-                const t = target.querySelector(".footer");
-                const clone = document.importNode(t.content, true);
-                target.innerHTML = '<header></header><section><div class="view horizontalContent"></div><div class="view verticalContent hide"></div><div class="view information hide"></div></section><footer></footer>';
+                let clone_footer, clone_header;
+                const template_header = target.querySelector(".header");
+                const template_footer = target.querySelector(".footer");
+
+                if (template_header) {
+                    clone_header = document.importNode(template_header.content, true);
+                }
+                if (template_footer) {
+                    clone_footer = document.importNode(template_footer.content, true);
+                }
+
+                target.innerHTML = '<header class="image-box hide"></header><section><div class="view horizontal content"></div><div class="view vertical content hide"></div><div class="view information content hide"></div>' +
+                    '<table class="toast"><tbody><tr><td class="toast-content"></td></tr></tbody></table></section><footer class="image-box hide"></footer>';
                 target.classList.add("image-view");
 
                 const max = Math.max(5, isNaN(i) ? 5 : i);
                 this.max = (max % 2 == 0) ? (max + 1) : max;
                 this.middle = Math.floor(this.max / 2);
 
-                let n = [
+                const n = [
                     `<div style="left: 0px;" data-index="0"><img draggable="false" alt="这是一个看图片的网站" src=${src_loading}></div>`
                 ];
                 for (let s = 1; s < self.max; s++) {
                     n.push(`<div style="left: 100%;" data-index="${s}"><img draggable="false" alt="这是一个看图片的网站" src=${src_loading}></div>`);
                 }
 
-                this.content = target.querySelector("section div.horizontalContent");
-                this.content.innerHTML = n.join("");
+                this.content_horizontal = target.querySelector("section div.horizontal.content");
+                this.content_horizontal.innerHTML = n.join("");
 
                 this.header = target.querySelector("header");
                 this.footer = target.querySelector("footer");
-                this.footer.appendChild(clone);
+                if (template_header) {
+                    this.header.appendChild(clone_header);
+                }
+                if (template_footer) {
+                    this.footer.appendChild(clone_footer);
+                }
 
                 this.information = target.querySelector(".information");
+                this.toast_view = target.querySelector(".toast");
+                this.toast_content = this.toast_view.querySelector(".toast-content");
 
-                this.children = self.content.children;
-                this.currentItem = self.children.item(0);
+                this.children = self.content_horizontal.children;
+                this.current = self.children.item(0);
 
-                this.imgsVertical = target.querySelector(".verticalContent");
+                this.content_vertical = target.querySelector(".vertical.content");
 
                 /**
                  * 获取元素的宽高
@@ -380,13 +461,13 @@
 
                 window.addEventListener("resize", function () {
                     getRectangleSize();
-                    const image = self.currentItem.firstChild;
+                    const image = self.current.firstChild;
                     image.width = getWidth(image, self.height);
                 });
 
                 let trajectory = new Trajectory();
 
-                PuSet(this.content).setManager(function (manager) {
+                PuSet(this.content_horizontal).setManager(function (manager) {
                     manager.get("pan").set({
                         direction: Hammer.DIRECTION_ALL
                     });
@@ -395,12 +476,20 @@
                         const i = self.target.clientWidth / 3;
                         if (ev.center.x > 2 * i) {
                             PuSet.each(self.children, (item) => item.classList.remove("transition"));
-                            next(self.currentItem, self);
+                            if (self.next) {
+                                next(self.current, self);
+                            } else {
+                                self.toast("已是最后一张");
+                            }
                         } else if (ev.center.x > i) {
                             self.toggleActionBar();
                         } else {
                             PuSet.each(self.children, (item) => item.classList.remove("transition"));
-                            previous(self.currentItem, self);
+                            if (self.previous) {
+                                previous(self.current, self);
+                            } else {
+                                self.toast("已是第一张");
+                            }
                         }
                     });
                 }).action("panstart", "div", ev => {
@@ -409,29 +498,28 @@
                     getRectangleSize();
                 }).action("pan", "div", function (ev) {
                     const deltaX = ev.deltaX;
-                    trajectory.ifAdd(deltaX);
+                    trajectory.addIf(deltaX);
                     window.requestAnimationFrame(() => {
                         if (ev.isFinal) {
                             PuSet.each(self.children, (item) => item.classList.add("transition"));
-                            if (Math.abs(deltaX) > 30) { // 偏移量小于30，忽略本次滑动
-                                if (trajectory.isEnlarge && deltaX >= 0) { // 右划，查看前一张
-                                    previous(this, self);
-                                    return;
-                                } else if (!trajectory.isEnlarge && deltaX <= 0) { // 左划，查看后一张
-                                    next(this, self);
-                                    return;
-                                }
+                            const offset = trajectory.enlarge;
+                            // console.log(trajectory.getRange(), "+", deltaX)
+                            const absX = Math.abs(deltaX);
+                            const absO = Math.abs(offset);
+                            if ((absX > deviation && offset > 0 && deltaX > 0) || (offset < 0 && absO < deviation)) { // 右划，查看前一张
+                                previous(this, self);
+                                return;
+                            }
+                            if ((absX > deviation && offset < 0 && deltaX < 0) || (offset > 0 && absO < deviation)) { // 左划，查看后一张
+                                next(this, self);
+                                return;
                             }
                             keep(this, self, false);
                         } else {
-                            let left = Math.min((self.previous ? self.width : 50), Math.max((self.next ? -self.width : -50), deltaX));
-                            if (self.next) {
-                                self.next.style.left = PX.parse(Math.max(0, left + self.width));
-                            }
-                            if (self.previous) {
-                                self.previous.style.left = PX.parse(Math.min(0, left - self.width));
-                            }
-                            this.style.left = PX.parse(left);
+                            const offset = Math.min((self.previous ? self.width : 50), Math.max((self.next ? -self.width : -50), deltaX));
+                            leftB(self.next, PX.parse(Math.max(0, offset + self.width)))
+                            leftB(self.previous, PX.parse(Math.min(0, offset - self.width)));
+                            leftA(this, PX.parse(offset));
                         }
                     });
                 });
@@ -442,6 +530,7 @@
             return this;
         }
     }, {
+
         /**
          * 移除指定元素的所有子元素
          * @param {HTMLElement} elem 
