@@ -5,6 +5,7 @@
  * @param {*} index 汽车初始位置
  */
 var Car = function (horiz, verti, index = 0) {
+
     var $car = jQuery(document.createElement("div"));
 
     $car.css({
@@ -26,7 +27,9 @@ var Car = function (horiz, verti, index = 0) {
     this.verti = verti - 1;
 
     this.yiban = this.horiz + this.verti;
+
     this.sanduan = this.yiban + this.horiz;
+
     this.max = (this.horiz + this.verti) * 2;
 
     this.car = $car;
@@ -45,17 +48,13 @@ Car.prototype = {
         let width, height;
 
         if (index > this.sanduan) { // 左边路段
-            width = 0,
-                height = this.verti - (index - this.sanduan);
+            width = 0, height = this.verti - (index - this.sanduan);
         } else if (index > this.yiban) { // 下面路段
-            width = this.horiz - (index - this.yiban),
-                height = this.verti;
+            width = this.horiz - (index - this.yiban), height = this.verti;
         } else if (index > this.horiz) { // 右边
-            width = this.horiz,
-                height = index - this.horiz;
+            width = this.horiz, height = index - this.horiz;
         } else { // 上边
-            width = index,
-                height = 0;
+            width = index, height = 0;
         }
 
         this.car.css({
@@ -67,9 +66,7 @@ Car.prototype = {
     start: function () {
 
         if (this.brake == 1) {
-            this.t = setTimeout(() => {
-                this.goto(this.index + 1);
-            }, 100);
+            this.t = setTimeout(() => this.goto(this.index + 1), 100);
         } else {
             clearTimeout(this.t);
         }
@@ -136,11 +133,11 @@ TrafficJam.prototype = {
 }
 
 
-var num = 60;
+var num = 34;
 
 
 
-var tj = new TrafficJam(document.getElementById("lu"), 1500, 600, num);
+var tj = new TrafficJam(document.getElementById("lu"), 1200, 500, num);
 
 
 setInterval(function () {

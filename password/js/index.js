@@ -166,7 +166,9 @@ const vm_password = function () {
             data = data.layoutData[elem.dataset.path]
         });
         data.data.push({ "key": "key", "value": "value" });
-    }).find("#comAdd").on("click.add", function () {
+    })
+    
+    .find("#comAdd").on("click.add", function () {
         vm_password.data.push({
             name: "Name",
             icon: "",

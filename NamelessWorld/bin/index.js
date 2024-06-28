@@ -92,6 +92,10 @@ function (animation, MAIN_WIDTH, MAIN_HEIGHT, document, view) {
         }
     });
 
+    console.log(view)
+    PuSetAnimation.setBackgroundImage("bin/layout/34f97f5d0fc6a4e0088f7f35e24456d3.jpeg");
+    PuSetAnimation.showFPS(true)
+
     const backgroundImages = new GameBackgroundImage();
 
     let obj = backgroundImages.add({

@@ -69,12 +69,15 @@ a:after {
 	flex-grow: 1;
 }
 
-#title {
+#title,
+.bar {
 	height: 3rem;
 	border-bottom: 1px solid var(--color-border);
 	text-align: center;
 	font-size: 1.2rem;
 	line-height: 3rem;
+	color: #fff;
+	background-color: #584b4b;
 }
 
 #list,
@@ -92,11 +95,11 @@ a.subject {
 	height: 2.8rem;
 	line-height: 2.8rem;
 }
-
+/*
 #main>a.subject[href^="read.php"] {
 	display: none;
 }
-
+*/
 #list a {
 	display: inline-block;
 	border-bottom: 1px solid var(--color-border);
@@ -137,7 +140,7 @@ a.subject {
 	display: flex;
 	overflow: hidden;
 	width: 100%;
-	height: 50px;
+	height: 3rem;
 	left: 0;
 	z-index: 1;
 	background-color: var(--color-translucent-background);
@@ -164,7 +167,7 @@ a.subject {
 	text-align: center;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	line-height: 50px;
+	line-height: 3rem;
 	flex: 1;
 }
 
@@ -187,6 +190,18 @@ a.subject {
 .information>span.no-image {
 	text-align: center;
 	line-height: 200px;
+}
+
+.information .red {
+	position: relative;
+	width: 98%;
+	height: auto;
+	top: 1%;
+	left: 1%;
+}
+
+.information a {
+	color: #7584da;
 }
 
 .vertical img {
@@ -273,9 +288,24 @@ a.subject {
 }
 
 template,
-img.hide,
-.view.hide,
+.hide,
 .att_img,
 .content::-webkit-scrollbar {
 	display: none !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+#code {
+	border: none;
+	outline: none;
+	resize: none;
 }

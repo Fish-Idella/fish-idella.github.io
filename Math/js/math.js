@@ -20,31 +20,20 @@ let PuSet = (function (PuSet) {
      * @param {*} a 
      * @param {*} b 
      * @param {*} c 
-     * @returns 三角形面积
+     * @returns 
      */
     function isTriangle(a, b, c) {
         let hasNaN = 0;
         let arr = [+a, +b, +c].sort();
         const [A, B, C] = arr;
 
-        if (A + B === C) {
-            return 0;
-        }
-
         // 判断三参数是否为数字
         arr.forEach(value => hasNaN |= isNaN(value));
 
-        // 三角形特性，判断三边是否能围成三角形
         // 两边之和大于第三边
         hasNaN |= !((A + B) > C);
 
-        if (hasNaN) {
-            console.error("参数错误，不能组成三角形。");
-            return NaN;
-        } else {
-            const P = (A + B + C) / 2;
-            return Math.sqrt(P * (P - A) * (P - B) * (P - C));
-        }
+        return !hasNaN;
     }
 
     PuSet.Math = {
@@ -57,7 +46,8 @@ let PuSet = (function (PuSet) {
             if (arguments.length === 1 && Array.isArray(a)) {
                 return this.Heron.apply(this, a);
             } else {
-                return isTriangle.apply(this, arguments);
+                const p = (a+b+c) / 2;
+                return Math.sqrt(p * (p - a) * (p - b) * (p - c));
             }
         },
 

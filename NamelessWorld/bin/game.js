@@ -212,9 +212,15 @@ const PuSetAnimation = (function (mWindow, mDocument) {
             }
         },
 
+        setBackgroundImage: function(style) {
+            container.style["background-image"] = `url(${style})`;
+        },
+
         setStyle: setStyle,
         createClass: createClass,
-        addEventListener: addEventListener
+        addEventListener: addEventListener,
+
+
 
     });
 

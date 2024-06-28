@@ -1,19 +1,83 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>身份证号码校验</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div>
-        <div>
-            <div>身份证号码校验</div>
-            <div><input id="pid" type="number" placeholder="输入18位身份证号码"></div>
-            <div id="outer"></div>
-        </div>
-    </div>
+    <table id="main">
+        <thead>
+            <tr>
+                <th class="title" colspan="18">身份证号码校验</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="tips">
+                <td colspan="6" class="color-2">地址码</td>
+                <td colspan="8" class="color-5">出生日期码</td>
+                <td colspan="3" class="color-8">顺序码</td>
+                <td class="color-9">校检码</td>
+            </tr>
+            <tr class="tips">
+                <td class="color-1">大区编号</td>
+                <td class="color-1">省级编号</td>
+                <td colspan="2" class="color-2">市级编号</td>
+                <td colspan="2" class="color-3">县级编号</td>
+                <td colspan="4" class="color-4">出生年份</td>
+                <td colspan="2" class="color-5">出生月份</td>
+                <td colspan="2" class="color-6">出生日期</td>
+                <td colspan="2" class="color-7">发证机关编号</td>
+                <td class="color-8">性别</td>
+                <td class="color-9"></td>
+            </tr>
+            <tr id="code">
+                <td class="color-1"><input type="text" maxlength="1" value="1"></td>
+                <td class="color-1"><input type="text" maxlength="1" value="1"></td>
+                <td class="color-2"><input type="text" maxlength="1" value="0"></td>
+                <td class="color-2"><input type="text" maxlength="1" value="1"></td>
+                <td class="color-3"><input type="text" maxlength="1" value="0"></td>
+                <td class="color-3"><input type="text" maxlength="1" value="5"></td>
+                <td class="color-4"><input type="text" maxlength="1" value="1"></td>
+                <td class="color-4"><input type="text" maxlength="1" value="9"></td>
+                <td class="color-4"><input type="text" maxlength="1" value="4"></td>
+                <td class="color-4"><input type="text" maxlength="1" value="9"></td>
+                <td class="color-5"><input type="text" maxlength="1" value="1"></td>
+                <td class="color-5"><input type="text" maxlength="1" value="2"></td>
+                <td class="color-6"><input type="text" maxlength="1" value="3"></td>
+                <td class="color-6"><input type="text" maxlength="1" value="1"></td>
+                <td class="color-7"><input type="text" maxlength="1" value="0"></td>
+                <td class="color-7"><input type="text" maxlength="1" value="0"></td>
+                <td class="color-8"><input type="text" maxlength="1" value="2"></td>
+                <td class="color-9 selected"><input type="text" maxlength="1" value="X"></td>
+            </tr>
+            <tr class="outer">
+                <td id="region"></td>
+                <td id="province"></td>
+                <td id="city" colspan="2"></td>
+                <td id="county" colspan="2"></td>
+                <td id="birthday" colspan="8"></td>
+                <td id="gender" colspan="3"></td>
+                <td id="checkcode"></td>
+            </tr>
+            <tr>
+                <td colspan="4">数据参考：</td>
+                <td colspan="14">
+                    <a target="_blank" href="https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=080D6FBF2BB468F9007657F26D60013E">公民身份号码：GB
+                        11643-1999</a><br>
+                    <a target="_blank" href="https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=C9C488FD717AFDCD52157F41C3302C6D">中华人民共和国行政区划代码：GB/T
+                        2260-2007</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="js/city.js"></script>
     <script src="js/script.js"></script>
 </body>
+
 </html>

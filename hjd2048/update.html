@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport"
+        content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <title>此功能暂时无法使用</title>
+</head>
+
+<body>
+    <!-- <p>此功能暂时无法使用，请关注后续<a href="javascript:">版本更新</a>。</p> -->
+
+    <div class="view flex-vertical">
+        <textarea id="code" class="fc" spellcheck="false" required="true" title="" placeholder="javascript代码">window.location.href = "index.html"</textarea>
+        <footer class="bar flex-horizontal">
+            <button type="button" class="fc" id="run">运行</button>
+            <button type="button" class="fc" id="clear">清空</button>
+        </footer>
+    </div>
+
+    <script type="text/javascript" src="js/puset-2.1.2.min.js"></script>
+    <script>
+
+        const code = document.querySelector("#code");
+        document.getElementById("run").addEventListener("click", function () {
+            try {
+                ((new Function("$", code.value))(window.PuSet));
+            } catch (ex) {
+                alert(ex)
+            }
+        });
+        document.getElementById("clear").addEventListener("click", function () {
+            code.value = "";
+            code.focus();
+        });
+
+    </script>
+</body>
+
+</html>

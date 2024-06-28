@@ -1,0 +1,16 @@
+{
+    "remote_path": "",
+    "local_path": "",
+    "user_agent": "",
+    "mimetype": "*/*",
+    "length": 80000,
+    "thread_length": 5,
+    "status": 1,
+    "threads": [
+        { "start": 0, "end": 5000, "current": 2000 },
+        { "start": 0, "end": 5000, "current": 2000 },
+        { "start": 0, "end": 5000, "current": 2000 },
+        { "start": 0, "end": 5000, "current": 2000 },
+        { "start": 0, "end": 5000, "current": 2000 }
+    ]
+}

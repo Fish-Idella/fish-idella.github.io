@@ -1,0 +1,60 @@
+#path {
+    height: 50px;
+    border-bottom: 1px solid #ddd;
+}
+
+#code_view {
+    overflow: scroll;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    line-height: 30px;
+}
+
+#code_view div.type {
+    margin: 0 0 0 2rem;
+}
+
+div.type.min>div.start>span.start,
+div.type>div.start>span.subtitle {
+    display: none;
+}
+
+div.type>div.start>span.start,
+div.type.min>div.start>span.subtitle {
+    display: inline;
+}
+
+div.start>b.key {
+    font-weight: 600;
+    color:dodgerblue;
+}
+
+.type.string b.value {
+    color:coral;
+}
+
+div.subtitle {
+    display: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#right {
+    width: 30%;
+    border-left: 1px solid #ddd;
+}
+
+.object.min, .array.min {
+    overflow: hidden;
+    height: 30px;
+}

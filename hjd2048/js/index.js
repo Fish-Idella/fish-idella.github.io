@@ -121,18 +121,39 @@
         }
     });
 
-    // window.zoom = window.showMenu = function () { return false; };
+    window.zoom = window.showMenu = function () { return false; };
 
-    // HJD.base = window.localStorage.getItem("hjd-base") || HJD.base;
+    if (Mm.hasInterface && window.navigator.userAgent.includes("PuSet")) {
+        HJD.base = Mm.getBase(HJD.base);
+    } else {
+        HJD.elems.title.removeAttribute("class");
+    }
 
-    Mm.hasInterface && window.navigator.userAgent.includes("PuSet") || HJD.elems.title.removeAttribute("class");
-
-    HJD.loadMain();
+    // 获取有效的网址
+    (function getMainURL(url, i, max) {
+        HJD.elems.main.innerHTML = `正在第${i}次加载列表`;
+        Mm.get(url + "?" + Date.now()).then(xhr => {
+            let href = xhr.responseText.match(/window.location.href\s*\=\s*('|")(http(s)?:\/\/[^\s'"]+)\1/);
+            if (href) {
+                return getMainURL(href[2], i, max);
+            }
+            window.localStorage.setItem('main-url', HJD.base = xhr.responseURL);
+            HJD.loadMain(xhr.responseText);
+        }).catch((ex) => {
+            setTimeout(() => getMainURL(HJD.navs[i % max], i + 1, max), 0)
+        });
+    }((window.localStorage.getItem('main-url') || HJD.base), 1, HJD.navs.length));
 
 }({
 
     // fid-7.html
-    base: "https://bbs.zgogc.com/2048/index.php?m=bbs",
+    base: "https://bbs.274w3.com/2048/",
+
+    navs: [
+        "http://doww.elsbhqdzqad.com/w33.php",
+        "http://doww.elsbhqdzqsd.com/w32.php",
+        "https://doww.helsbhqdz123.com/w34.php"
+    ],
 
     mainPages: ["thread.php?fid-273.html", "thread.php?fid-7.html"],
 
@@ -154,7 +175,7 @@
 
     addElement: function (id, elem) {
         if (Array.isArray(id)) {
-            id.forEach((value) => this.elems[value] = document.getElementById(value));
+            id.forEach(value => this.elems[value] = document.getElementById(value));
         } else {
             this.elems[id] = elem ? elem : document.getElementById(id);
         }
@@ -189,45 +210,46 @@
         return (new Mm.URL(url, base)).href;
     },
 
-    loadMain: function () {
+    loadMain: function (html) {
 
-        const HJD = this, arr = [];
-        this.mainPages.forEach(function (value) {
-            arr.push(fetch(HJD.formatURL(value, HJD.base)).then(response => response.text()).then(function (html) {
-                return PuSet.parseHTML(html).querySelectorAll("#cate_children > tr.tr3 > th:nth-child(2) > h2 > a.a1");
-            }).catch(() => null));
-        });
+        if (html.includes("反诈中心")) {
+            return alert("网站已被反诈中心拦截");
+        }
 
-        Promise.all(arr).then(function () {
-            arr.forEach(function (response) {
-                response.then(function (links) {
-                    links && links.forEach(function (elem) {
-                        HJD.elems.list.appendChild(elem);
-                        let href = HJD.list[elem.textContent] = elem.getAttribute("href");
-                        if (HJD.mainIndex === 0 && href.includes(HJD.fid)) {
-                            HJD.loadMainList(HJD.formatURL(href, HJD.base), elem.textContent);
-                        }
-                    });
-                });
-            });
-        }).then(function () {
-            HJD.keys = Object.keys(HJD.list);
-            if (HJD.keys.length > 0) {
-                Mm.setSimpleList(HJD.keys.join("||"));
+        const HJD = this;
 
-                if (HJD.mainIndex === 0) {
-                    const title = HJD.keys[0];
-                    HJD.loadMainList(HJD.formatURL(HJD.list[title], HJD.base), title);
-                }
-            } else {
-                HJD.elems.main.innerHTML = "加载失败";
+        const links = PuSet.parseHTML(html).querySelectorAll("#cate_1 > tr > th > span > a");
+        links.forEach(function (elem) {
+            HJD.elems.list.appendChild(elem);
+            let href = HJD.list[elem.textContent] = elem.getAttribute("href");
+            if (HJD.mainIndex === 0 && href.includes(HJD.fid)) {
+                HJD.loadMainList(HJD.formatURL(href, HJD.base), elem.textContent);
             }
         });
+        HJD.keys = Object.keys(HJD.list);
+        if (HJD.keys.length > 0) {
+            Mm.setSimpleList(HJD.keys.join("||"));
+
+            if (HJD.mainIndex === 0) {
+                const title = HJD.keys[0];
+                HJD.loadMainList(HJD.formatURL(HJD.list[title], HJD.base), title);
+            }
+        } else {
+            window.localStorage.removeItem('main-url');
+            // window.location.href = "update.html";
+        }
+
     },
 
-    r_fid: /^(.+\?fid\-)(\d+)(.+)$/,
+    // 可能会变动，从URL中获取fid
+    r_fid: /^(.*\?.*?fid.+?)(\d+)(.*)$/,
 
     setTitle: function (e) { this.elems.title.innerHTML = e, document.title = e },
+
+    appendChild: function(elem) {
+        elem.removeAttribute("style");
+        this.elems.main.appendChild(elem);
+    },
 
     loadMainList: function (url, title) {
         //fid-29
@@ -236,6 +258,7 @@
             this.mainIndex = 1;
             this.elems.main.innerHTML = "";
             if (title = url.match(this.r_fid)) {
+                // console.log(title)
                 this.fid = title[2];
             }
         }
@@ -248,11 +271,21 @@
                 url = this.formatURL(`thread.php?fid=${this.fid}&page=${this.mainIndex}`, this.base);
             }
 
-            fetch(url).then(r => r.text()).then(html => {
-                const links = PuSet.parseHTML(html).querySelectorAll("#ajaxtable tr > td:nth-child(2) > a.subject");
-                links.forEach(elem => this.elems.main.appendChild(elem));
-            }).catch(() => this.mainIndex--).finally(() => this.loading = false);
+            fetch(url).then(r => r.text())
+                .then(html => PuSet.parseHTML(html).querySelectorAll("#ajaxtable tr > td:nth-child(2) > a.subject").forEach(elem => this.appendChild(elem)))
+                .catch(() => this.mainIndex--)
+                .finally(() => this.loading = false);
         }
+    },
+
+    stop: function() {
+        if (window.stop) {
+            // 中止其他网络请求
+            window.stop();
+        } else if (document.execCommand) {
+            document.execCommand("Stop", true);
+        }
+        return this;
     },
 
     /**
@@ -261,13 +294,8 @@
      * @param {string} title 新页面的标题
      */
     loadImageList: function (url, title) {
-        if (window.stop) {
-            // 中止其他网络请求
-            window.stop();
-        } else if (document.execCommand) {
-            document.execCommand("Stop", true);
-        }
-        const HJD = this;
+
+        const HJD = this.stop();
 
         if ("string" === typeof title) {
             // 初始化子页面
@@ -284,21 +312,21 @@
             const _document = PuSet.parseHTML(html);
             const links = _document.querySelectorAll("#read_tpc ignore_js_op");
 
-            if (!links.length) {
-                return HJD.imageView.bind();
-            }
-
             let arr = [];
-            links.forEach(function (elem) {
-                img = elem.querySelector("img");
-                arr.push(img.getAttribute("src"));
-                elem.remove();
-            });
+
+            if (links.length) {
+                links.forEach(function (elem) {
+                    img = elem.querySelector("img");
+                    arr.push(img.getAttribute("file") || img.getAttribute("src"));
+                    elem.remove();
+                });
+            } else {
+                HJD.imageView.bind();
+            }
 
             // 情报信息
             if (read_tpc = _document.querySelector("#read_tpc")) {
-                HJD.elems.information.innerHTML =
-                    "女优情报：<br>" + read_tpc.innerHTML.replace(/script/ig, "template");
+                HJD.elems.information.innerHTML = `<div class="red">${read_tpc.innerHTML.replace(/script/ig, "template")}</div>`;
             }
 
             if (title) {

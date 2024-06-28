@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <style>
+        #code {
+            border: 1px #000 solid;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="view flex-vertical">
+        <header class="bar">九宫格切图</header>
+        <section class="fc">
+            <canvas id="code" width="820" height="1000">不支持画布功能</canvas>
+            <code id="debug" style="position: fixed;"></code>
+        </section>
+        <footer class="bar flex-horizontal">
+            <input type="file" id="file" value="选择图片">
+            <button type="button" class="fc" id="run">运行</button>
+        </footer>
+    </div>
+
+    <script type="text/javascript" src="js/hammer.min.js"></script>
+    <script type="text/javascript" src="js/puset-2.1.2.min.js"></script>
+    <script type="text/javascript" src="js/Mm.js"></script>
+    <script type="text/javascript" src="js/jjg.js"></script>
+
+</body>
+
+</html>

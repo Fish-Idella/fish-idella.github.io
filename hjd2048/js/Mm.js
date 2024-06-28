@@ -2,22 +2,55 @@
  * Android WebView and Javascript interaction interface
  */
 
-window.Mm = (function (Mm) {
+window.Mm = (function (props) {
 
-    Mm.global = PuSet.getActionInput(document);
+    props.global = PuSet.getActionInput(document);
 
-    window.onpusetwebviewkeyclick = function(typeCode) {
-        Mm.global.trigger(new PuSet.ActionEvent("global-key", {
+    window.onpusetwebviewkeyclick = function onpusetwebviewkeyclick(typeCode) {
+        props.global.trigger(new PuSet.ActionEvent("global-key", {
             isCustom: true,
             globalKey: typeCode
         }));
     };
 
-    const M = function (a, b) {
-        return PuSet(a, b);
-    };
+    const forbidden = /[\/\?\\\|\<\>\*\"]*/g;
 
-    return Object.assign(M, Mm);
+    return Object.assign(function Mm(a, b) {
+        return PuSet(a, b);
+    }, props, {
+
+        /**
+         * 下载多个文件，并存放到同一个文件夹下
+         * @param {string} dir 文件夹名称
+         * @param {string[]} arr 文件数据
+         */
+        downloadGroup: function downloadGroup(dir, arr) {
+            if (props.hasInterface && PuSetWebView.downloadGroup) {
+                PuSetWebView.downloadGroup(dir.replace(forbidden, ""), JSON.stringify(arr));
+            } else {
+                let length = arr.length;
+                let t = setInterval(() => {
+                    length--;
+                    props.download(arr[length]);
+                    if (length === 0) {
+                        clearInterval(t);
+                    }
+                }, 1000);
+            }
+        },
+
+        get: function get(url) {
+            return new Promise((resolve, reject) => {
+                let xhr = new XMLHttpRequest;
+                xhr.open("GET", url);
+                xhr.onload = () => resolve(xhr);
+                xhr.onerror = reject;
+                xhr.send();
+            });
+        }
+
+    });
+
 }({
 
     /**
@@ -59,7 +92,7 @@ window.Mm = (function (Mm) {
     /**
      * 接管 WebView 的事件，触发事件时优先传递给 js
      */
-    takeoverEvent: function() {
+    takeoverEvent: function () {
         if (!this.isTakeover) {
             if (this.hasInterface && PuSetWebView.takeoverEvent) {
                 PuSetWebView.takeoverEvent(this.isTakeover = true);
@@ -103,38 +136,26 @@ window.Mm = (function (Mm) {
         }));
     },
 
-    /**
-     * 下载多个文件，并存放到同一个文件夹下
-     * @param {string} dir 文件夹名称
-     * @param {string[]} arr 文件数据
-     */
-    downloadGroup: function (dir, arr) {
-        if (this.hasInterface && PuSetWebView.downloadGroup) {
-            PuSetWebView.downloadGroup(dir.replace(/[\/\?\\\|\<\>\*\"]*/g, ""), JSON.stringify(arr));
-        } else {
-            let length = arr.length;
-            let t = setInterval(() => {
-                length--;
-                this.download(arr[length]);
-                if (length === 0) {
-                    clearInterval(t);
-                }
-            }, 1000);
-        }
-    },
-
     URL: window.URL || window.webkitURL || window,
+
+    getBase: function (defStr) {
+        let result = null;
+        if (window.PuSetWebView.getBase) {
+            result = window.PuSetWebView.getBase();
+        }
+        return result || defStr;
+    },
 
     getImage: function (image, url, error) {
         const img = new Image();
 
-        img.onerror = function(ev) {
+        img.onerror = function (ev) {
             if (error && image.dataset.src == url) {
                 error(image, url, ev);
             }
         };
-        
-        img.onload = function() {
+
+        img.onload = function () {
             if (image.dataset.src == url) {
                 image.src = image.dataset.src;
             }

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON View</title>
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body class="flex-vertical">
+    <div id="path"></div>
+    <div id="content" class="fc flex-horizontal">
+        <div class="fc">
+            <div id="code_view" class="view">
+                <div class="type object">
+                    <div class="start"><span>"</span><b class="key">object</b><span class="start">": {</span><span class="subtitle">": {object}</span></div>
+                    <div class="content"></div>
+                    <div class="end"><span>}</span><span class="comma">,</span></div>
+                </div>
+                <div class="type array">
+                    <div class="start"><span>"</span><b class="key">array</b><span class="start">": [</span><span class="subtitle">": {array}</span></div>
+                    <div class="content"></div>
+                    <div class="end"><span>]</span><span class="comma">,</span></div>
+                </div>
+                <div class="type string">
+                    <div class="subtitle">{string}</div>
+                    <div class="start"><span>"</span><b class="key">string</b><span>": "</span><b
+                            class="value">123131</b><span>"</span><span class="comma">,</span></div>
+                </div>
+                <div class="type number">
+                    <div class="subtitle">{number}</div>
+                    <div class="start"><span>"</span><b class="key">number</b><span>": </span><b
+                            class="value">0</b><span class="comma">,</span></div>
+                </div>
+                <div class="type boolean">
+                    <div class="subtitle">{boolean}</div>
+                    <div class="start"><span>"</span><b class="key">boolean</b><span>": </span><b
+                            class="value">true</b><span class="comma">,</span></div>
+                </div>
+                <div class="type null">
+                    <div class="subtitle">{null}</div>
+                    <div class="start"><span>"</span><b class="key">null</b><span>": </span><b
+                            class="value">null</b><span class="comma">,</span></div>
+                </div>
+            </div>
+        </div>
+        <div id="right"></div>
+    </div>
+
+    <script src="/js/puset-2.1.2.js"></script>
+    <script src="js/DataUnit.js"></script>
+    <script src="js/index.js"></script>
+</body>
+
+</html>
