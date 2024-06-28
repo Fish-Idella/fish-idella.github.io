@@ -132,15 +132,19 @@
     // 获取有效的网址
     (function getMainURL(url, i, max) {
         HJD.elems.main.innerHTML = `正在第${i}次加载列表`;
-        Mm.get(url + "?" + Date.now()).then(xhr => {
+        Mm.get(HJD.formatURL("?" + Date.now(), url)).then(xhr => {
             let href = xhr.responseText.match(/window.location.href\s*\=\s*('|")(http(s)?:\/\/[^\s'"]+)\1/);
             if (href) {
                 return getMainURL(href[2], i, max);
             }
             window.localStorage.setItem('main-url', HJD.base = xhr.responseURL);
             HJD.loadMain(xhr.responseText);
-        }).catch((ex) => {
-            setTimeout(() => getMainURL(HJD.navs[i % max], i + 1, max), 0)
+        }).catch(() => {
+            if ((i + i) > max) {
+                alert("加载失败");
+            } else {
+                setTimeout(() => getMainURL(HJD.navs[i % max], i + 1, max), 200);
+            }
         });
     }((window.localStorage.getItem('main-url') || HJD.base), 1, HJD.navs.length));
 
@@ -150,9 +154,15 @@
     base: "https://bbs.274w3.com/2048/",
 
     navs: [
-        "https://doww.elsbhqdzqad.com/w33.php",
-        "https://doww.elsbhqdzqsd.com/w32.php",
-        "https://doww.helsbhqdz123.com/w34.php"
+        // "http://doww.elsbhqdzqad.com/w33.php",
+        // "http://doww.elsbhqdzqsd.com/w32.php",
+        "https://doww.helsbhqdz123.com/w34.php",
+        "https://release.302-properties.net/bbs.php",
+        "https://release.302-homes.net/bbs1.php",
+        "https://release.302clothing.com/bbs2.php",
+        "https://release.301studio.net/bbs.php",
+        "https://release.301-bet.com/bbs1.php",
+        "https://release.301mail.com/bbs2.php"
     ],
 
     mainPages: ["thread.php?fid-273.html", "thread.php?fid-7.html"],
@@ -235,8 +245,8 @@
                 HJD.loadMainList(HJD.formatURL(HJD.list[title], HJD.base), title);
             }
         } else {
-            window.localStorage.removeItem('main-url');
-            // window.location.href = "update.html";
+            // window.localStorage.removeItem('main-url');
+            window.location.href = "update.html";
         }
 
     },
@@ -246,7 +256,7 @@
 
     setTitle: function (e) { this.elems.title.innerHTML = e, document.title = e },
 
-    appendChild: function(elem) {
+    appendChild: function (elem) {
         elem.removeAttribute("style");
         this.elems.main.appendChild(elem);
     },
@@ -278,7 +288,7 @@
         }
     },
 
-    stop: function() {
+    stop: function () {
         if (window.stop) {
             // 中止其他网络请求
             window.stop();
