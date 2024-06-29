@@ -1,0 +1,114 @@
+body.theme-default {
+    --theme-background-color: #efefef;
+    --theme-text-color: #112233;
+}
+
+body {
+    color: var(--theme-text-color);
+    background-color: var(--theme-background-color);
+}
+
+/** 横屏 */
+@media (min-aspect-ratio: 10/9) {
+    div.rsvp {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .out-box {
+        width: 70%;
+    }
+
+    .in-box {
+        width: 30%;
+
+    }
+}
+
+/** 竖屏 */
+@media (max-aspect-ratio: 10/9) {
+    div.rsvp {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .out-box {
+        width: 100%;
+    }
+
+    .in-box {
+        width: 100%;
+        flex-grow: 1;
+    }
+}
+
+.view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.out-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.out-box>.content {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.out-box>.content>#controls {}
+
+.out-box>.dashboard {
+    position: relative;
+    flex-grow: 1;
+    box-sizing: border-box;
+}
+
+video.main {
+    aspect-ratio: 1920 / 1080;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.in-box {
+    position: relative;
+    box-sizing: border-box;
+}
+
+label[type=file] {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    width: 5rem;
+    height: 2rem;
+    text-align: center;
+    line-height: 2rem;
+    border: 1px solid #123;
+}
+
+
+label[type=file]>input[type=file],
+label[type=file]>span {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+    background: none;
+    border: none;
+    outline: none;
+    background-color: white;
+    color: #000;
+    display: inline-block;
+}
