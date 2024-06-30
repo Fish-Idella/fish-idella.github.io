@@ -64,7 +64,51 @@ body {
     box-sizing: border-box;
 }
 
-.out-box>.content>#controls {}
+.out-box>.content>#controls>.bottom {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    bottom: 0;
+    padding: 0;
+    width: 100%;
+    height: 9vw;
+    background-image: linear-gradient(#ffffff00 0%, #ffffff53 100%);
+}
+
+#progress-bar {
+    /* width: 100%; */
+    height: 3vw;
+    margin: 0 10px;
+}
+
+.buttons {
+    flex-grow: 1;
+    position: relative;
+}
+
+#controls .buttons>.bt {
+    position: relative;
+    display: inline-block;
+    width: auto;
+    height: 4vw;
+    line-height: 4vw;
+    overflow: hidden;
+    color: white;
+    margin: 0 5px;
+}
+
+#controls .buttons>.bt.bt-play {
+    display: inline-flex;
+}
+
+.bpx-player-ctrl-time-label {
+    padding: 0px 10px;
+    font-size: 3vw;
+}
+
+
+
 
 .out-box>.dashboard {
     position: relative;
