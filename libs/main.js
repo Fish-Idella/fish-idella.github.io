@@ -407,7 +407,7 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
                 if (value.startsWith("--set")) {
                     window.op(PuSettingAPI);
                 } else {
-                    MainUI.jsonp("http://suggestion.baidu.com/su?cb=op&wd=" + encodeURIComponent(value));
+                    MainUI.jsonp("https://suggestion.baidu.com/su?cb=op&wd=" + encodeURIComponent(value));
                 }
             }, 500);
         } else {

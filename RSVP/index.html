@@ -9,21 +9,32 @@
 </head>
 
 <body class="view theme-default">
-    <div class="rsvp">
+    <div class="view rsvp">
         <div class="out-box">
-            <div class="content">
+            <div id="player" class="content">
                 <video id="video" class="main" width="100%" height="auto"
-                    poster="/images/5ff86b7c37fbe15dae262fd75bbba305.jpg">你的浏览器不支持HTML5视频。</video>
+                    poster="/images/5ff86b7c37fbe15dae262fd75bbba305.jpg"></video>
                 <div id="controls" class="view">
-                    <div class="bottom">
-                        <input id="progress-bar" type="range" />
+                    <div class="bottom hide">
+                        <input id="progress-bar" title="进度" type="range" max="100" value="0" />
                         <div class="buttons">
-                            <div class="bt bt-play">
-                                <img data-a="svg/play.svg" data-b="svg/pause.svg" src="svg/pause.svg" alt="">
-                                <div class="bpx-player-ctrl-time-label">
-                                    <span class="bpx-player-ctrl-time-current">00:42</span>
-                                    <span class="bpx-player-ctrl-time-divide">/</span>
-                                    <span class="bpx-player-ctrl-time-duration">16:06</span>
+                            <div class="left fc">
+                                <div class="bt bt-play" title="播放/暂停">
+                                    <img data-a="svg/play.svg" data-b="svg/pause.svg" src="svg/play.svg" alt="播放/暂停">
+                                    <div class="bpx-player-ctrl-time-label">
+                                        <span class="bpx-player-ctrl-time-current">00:00</span>
+                                        <span class="bpx-player-ctrl-time-divide">/</span>
+                                        <span class="bpx-player-ctrl-time-duration">00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="right">
+                                <div class="bt" title="音量">
+                                    <img data-a="svg/volume.svg" data-b="svg/muted.svg" src="svg/volume.svg" alt="音量">
+                                </div>
+                                <div class="bt" title="全屏">
+                                    <img id="fullscreen" data-a="svg/separate.svg" data-b="svg/combined.svg"
+                                        src="svg/separate.svg" alt="全屏">
                                 </div>
                             </div>
                         </div>
@@ -31,13 +42,28 @@
                 </div>
             </div>
             <div class="dashboard">
-                <label for="file" type="file">
-                    <input type="file" name="video" id="file" accept="video/*">
-                    <span>选择视频</span>
-                </label>
+                <div class="box">
+                    <div  class="flex h">
+                        <label for="file" type="file">
+                            <input type="file" name="video" id="file" accept="video/*">
+                            <span>选择视频</span>
+                        </label>
+                        <label for="stop" type="button">
+                            <input type="button" name="video" id="stop" value="退出播放">
+                            <span>退出播放</span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="in-box">123</div>
+        <div class="in-box">
+            <div class="box">
+                <div class="flex v address">
+                    <div  class="flex h"><span>本机地址：</span><input type="text" name="" id="" class="fc"><button>复制</button></div>
+                    <div  class="flex h"><span>远程地址：</span><input type="text" name="" id="" class="fc"><button>加入</button></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="text/javascript" src="js/index.js"></script>
