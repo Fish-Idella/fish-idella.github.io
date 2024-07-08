@@ -440,7 +440,7 @@ span.bg {
 
 	#search.only #input-box,
 	#input-box {
-		top: 2rem;
+		top: 1rem;
 		width: 80%;
 		max-width: 90%;
 	}

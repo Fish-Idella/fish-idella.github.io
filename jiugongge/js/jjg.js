@@ -95,7 +95,7 @@
             position.sw = Math.max(10, position.sw + offset);
             position.ss = boxWidth / position.sw;
             const ss = old * 1000000 / position.sw;
-            console.log(ss)
+            // console.log(ss)
             draw(Object.assign(position, {
                 // 鼠标滚轮
                 sx: position.sx + ev.offsetX * (ss - 1000000) / ss,
