@@ -1,14 +1,14 @@
 const vm_password = function () {
     "use strict";
 
-    const json = JSON.parse(window.localStorage.getItem("puset-password") || "{}");
+    const json = JSON.parse(window.localStorage.getItem("puset-password") || "[]");
 
-    const $password = $("#password");
+    const $password = PuSet("#password");
     const password = $password.get(0);
 
     const fillEmail = function (li, obj) {
 
-        return $.View({
+        return PuSet.View({
             target: li.querySelector(".list"),
             selector: "li[v-hide]",
             insert: "li.add",
@@ -27,7 +27,7 @@ const vm_password = function () {
 
     const fillSub = function (target, obj) {
 
-        return $.View({
+        return PuSet.View({
             target: target.querySelector(".info"),
             selector: "li[v-hide]",
             insert: "li.add",
@@ -46,7 +46,7 @@ const vm_password = function () {
 
     };
 
-    const vm_password = $.View({
+    const vm_password = PuSet.View({
         target: password,
         selector: "div.box",
         insert: "div.add",
@@ -64,8 +64,8 @@ const vm_password = function () {
             title.innerHTML = value.name;
             const img = target.querySelector(".icon");
             img.onload = function () {
-                $.View.show(title, false);
-                $.View.show(img, true);
+                PuSet.View.show(title, false);
+                PuSet.View.show(img, true);
             };
             img.src = value.icon;
             target.querySelector(".icon_box").href = value.href;
@@ -108,7 +108,7 @@ const vm_password = function () {
     $password.on("input.save", "input[type=text]", function (ev) {
         const target = ev.srcEvent.target;
         const prop = target.name;
-        const path = $(ev.getComposedPath()).filter("[data-path]");
+        const path = PuSet(ev.getComposedPath()).filter("[data-path]");
         const index = arr.shift.call(path).dataset.path;
 
         let data = vm_password;
@@ -128,7 +128,7 @@ const vm_password = function () {
     
     
     .on("click.onedit", "button.onedit", function (ev) {
-        const path = $(ev.getComposedPath()).filter("[data-path]");
+        const path = PuSet(ev.getComposedPath()).filter("[data-path]");
         const data = json[editKey = path.get(0).dataset.path];
         input.forEach(function (elem) {
             elem.value = data[elem.name]
@@ -138,11 +138,11 @@ const vm_password = function () {
     
     
     .on("click.onmin", ".title_bar>.onmin", function (ev) {
-        $(ev.getComposedPath()).filter(".box").each(function (target) {
+        PuSet(ev.getComposedPath()).filter(".box").each(function (target) {
             target.classList.toggle("min");
         });
     }).on("click.onmin", "ul.item .onmin", function (ev) {
-        $(ev.getComposedPath()).filter("ul.item").each(function (target) {
+        PuSet(ev.getComposedPath()).filter("ul.item").each(function (target) {
             target.classList.toggle("min");
         });
     })
@@ -150,7 +150,7 @@ const vm_password = function () {
     
     
     .on("click.add", "ol.info>li.add", function (ev) {
-        const path = $(ev.getComposedPath()).filter("[data-path]");
+        const path = PuSet(ev.getComposedPath()).filter("[data-path]");
 
         let data = vm_password;
         arr.reverse.call(path).each(function (elem) {
@@ -160,7 +160,7 @@ const vm_password = function () {
         data.data.push(getNewInfo());
 
     }).on("click.add", "ol.list>li.add", function (ev) {
-        const path = $(ev.getComposedPath()).filter("[data-path]");
+        const path = PuSet(ev.getComposedPath()).filter("[data-path]");
         let data = vm_password;
         arr.reverse.call(path).each(function (elem) {
             data = data.layoutData[elem.dataset.path]

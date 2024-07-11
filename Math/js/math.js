@@ -1,4 +1,6 @@
-let PuSet = (function (PuSet) {
+let PuSet = (function (getPuSet) {
+
+    const PuSet = getPuSet();
 
     var figures = "〇一二三四五六七八九十百千万亿";
     var wordFigures = "零壹贰叁肆伍陆柒捌玖拾佰仟萬億";
@@ -63,6 +65,8 @@ let PuSet = (function (PuSet) {
 
     return PuSet;
 
-}(window.PuSet || {}));
+}(function() {
+    return this.PuSet || {};
+}));
 
 console.log(PuSet.Math.round(3.9));

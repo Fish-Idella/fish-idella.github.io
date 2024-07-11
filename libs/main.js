@@ -62,6 +62,7 @@ function loadBackgroundFn(mBackground) {
 
     mVideo.className = "view wallpaper dynamic";
     mVideo.style.background = "#fff";
+    mVideo.setAttribute("poster", MainUI.w);
     mCanvas2D.className = "view wallpaper hide";
     mCanvas3D.className = "view wallpaper hide";
     mBackground.appendChild(mVideo);
@@ -133,7 +134,7 @@ function loadBackgroundFn(mBackground) {
                     const d = `background-image:url(${path});`;
                     const n = `${d}transition:opacity 1s;opacity:1;`;
                     mBackground.setAttribute("style", n);
-                    mVideo.setAttribute("style", d);
+                    mVideo.setAttribute("poster", path);
                     setTimeout(function () {
                         mBackground.setAttribute("style", d);
                     }, 1000);
