@@ -140,7 +140,7 @@
             window.localStorage.setItem('main-url', HJD.base = xhr.responseURL);
             HJD.loadMain(xhr.responseText);
         }).catch(() => {
-            if ((i + i) > max) {
+            if (i > max) {
                 alert("加载失败");
             } else {
                 setTimeout(() => getMainURL(HJD.navs[i % max], i + 1, max), 200);
@@ -153,7 +153,7 @@
     // fid-7.html
     base: "https://bbs.274w3.com/2048/",
 
-    navs: [
+    navs: ["https://bbs.274w3.com/2048/",
         // "http://doww.elsbhqdzqad.com/w33.php",
         // "http://doww.elsbhqdzqsd.com/w32.php",
         "https://doww.helsbhqdz123.com/w34.php",

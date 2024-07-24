@@ -1,8 +1,12 @@
 "use strict";
 
-const URLObject = window.URL || window.webkitURL || function () { };
+const URLObject = window.URL || window.webkitURL || function() {};
 if (!URLObject.createObjectURL) {
-    URLObject.createObjectURL = function () { };
+    Object.assign(URLObject, {
+        createObjectURL: function() {
+            return "#"
+        }
+    });
 }
 
 var storage = new PuSet.Storage();

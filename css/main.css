@@ -76,7 +76,7 @@ body>.view {
 
 #main {
 	grid-template-columns: 20rem 1fr 5rem;
-	grid-template-rows: 3rem 1fr 2fr 2rem;
+	grid-template-rows: 3rem 1fr 2fr 5rem;
 	/* background-color: rgba(0, 0, 0, 0.199); */
 	color: var(--color-link);
 }
@@ -129,6 +129,7 @@ body>.view {
 	align-content: center;
 	align-items: center;
 	position: relative;
+	-webkit-user-select: none;
 	user-select: none;
 }
 
@@ -210,8 +211,10 @@ body>.view {
 	line-height: 2rem;
 }
 
+.hide,
+#input-box .s_btn_wr,
 #add-link-button.hide {
-	display: none;
+	display: none !important;
 }
 
 
@@ -309,8 +312,8 @@ span.bg {
 	border: none;
 	border-radius: 0;
 	vertical-align: middle;
-	appearance: none;
 	-webkit-appearance: none;
+	appearance: none;
 }
 
 #word {
@@ -412,8 +415,18 @@ span.bg {
 	line-height: 3rem;
 }
 
+#trash {
+	grid-area: 4/1/5/2;
+	font-size: 2.6rem;
+	padding: 0.5rem;
+}
+
+#trash.dragover {
+	font-size: 2.7rem;
+}
+
 #about {
-	grid-area: 4/1/5/4;
+	grid-area: 4/2/5/4;
 	padding-right: 1rem;
 	text-align: right;
 	line-height: 2rem;

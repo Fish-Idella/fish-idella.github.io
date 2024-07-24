@@ -43,6 +43,8 @@ window.Mm = (function (props) {
             return new Promise((resolve, reject) => {
                 let xhr = new XMLHttpRequest;
                 xhr.open("GET", url);
+                xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                 xhr.onload = () => resolve(xhr);
                 xhr.onerror = reject;
                 xhr.send();

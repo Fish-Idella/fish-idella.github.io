@@ -1,7 +1,7 @@
 const PuSetting = (function (attrs) {
     const rs = /\s+/g, refalse = () => false;
     return Object.assign(t => {
-        let [a, b, ...args] = ("" + t).split(rs);
+        const [a, b, ...args] = ("" + t).split(rs);
         "--set" === a && (PuSetting[b] || refalse).apply(PuSetting, args);
     }, attrs);
 }({

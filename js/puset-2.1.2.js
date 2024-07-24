@@ -1,9 +1,3 @@
-// ||||||||||  |||     |||   ||||||||  ||||||||||  |||||||||||
-// |||     ||| |||     |||  |||        |||             |||    
-// ||||||||||  |||     |||    |||||||  ||||||||||      |||    
-// |||         |||     ||| ||      ||| |||             |||    
-// |||          |||||||||   |||||||||  ||||||||||      |||    
-
 /**
  * 𝙿𝚞𝚂𝚎𝚝 JavaScript Library v2.1.0
  * 一款侧重移动端Touch事件的Javascript库
@@ -12,7 +6,7 @@
  * 修改的地方使用了 ECMAScript 6.0 标准，可能不支持旧版的浏览器。
  * 如果你需要在你的代码中使用它，请确保你的浏览器支持 ECMAScript 6.0
  * 
- * ！！！ 选择器语法遵循 document.querySelectorAll() 规则，与 jQuery 的选择器语法规则不同，不可平替
+ * ！！！ 选择器语法遵循 element.querySelectorAll() 规则，与 jQuery 的选择器语法规则不同，不可完全平替
  *
  * Date: 2022年10月20日
  */
@@ -99,6 +93,21 @@
     }
 
     /**
+     * 创建类
+     * @param {{constructor:Function}} obj 包含构造器 constructor 的对象原型
+     * @param {object} props 公共方法
+     * 
+     */
+    function createClass(obj, props) {
+        const fn = obj.constructor;
+        if (obj && "function" === typeof fn) {
+            fn.prototype = obj;
+            Object.assign(fn, props);
+        }
+        return fn;
+    }
+
+    /**
      * convert array-like objects to real arrays
      * @param {Object} obj
      * @returns {Array}
@@ -113,112 +122,374 @@
 
         version = "2.1.1",
 
-        // Define a local copy of PuSet
-        PuSet = function PuSet(selector, context) {
+        PuSet = createClass({
 
-            // The PuSet object is actually just the init constructor 'enhanced'
-            // Need init if PuSet is called (just allow error to be thrown if not included)
-            return new PuSet.fn.init(selector, context);
-        };
+            puset: version,
 
-    PuSet.fn = PuSet.prototype = {
+            // Define a local copy of PuSet
+            constructor: function PuSet(selector, context) {
 
-        puset: version,
+                // The PuSet object is actually just the init constructor 'enhanced'
+                // Need init if PuSet is called (just allow error to be thrown if not included)
+                return new PuSet.fn.init(selector, context);
+            },
 
-        constructor: PuSet,
+            length: 0,
 
-        length: 0,
-
-        toArray: function () {
-            return toArray(this);
-        },
-
-        // Get the Nth element in the matched element set OR
-        // Get the whole matched element set as a clean array
-        get: function (num) {
-
-            // Return all the elements in a clean array
-            if (num == null) {
+            toArray: function () {
                 return toArray(this);
+            },
+
+            // Get the Nth element in the matched element set OR
+            // Get the whole matched element set as a clean array
+            get: function (num) {
+
+                // Return all the elements in a clean array
+                if (num == null) {
+                    return toArray(this);
+                }
+
+                // Return just the one element from the set
+                return num < 0 ? this[num + this.length] : this[num];
+            },
+
+            // Take an array of elements and push it onto the stack
+            // (returning the new matched element set)
+            pushStack: function (elems) {
+
+                // Build a new PuSet matched element set
+                const ret = PuSet.merge(this.constructor(), elems);
+
+                // Add the old object onto the stack (as a reference)
+                ret.prevObject = this;
+
+                // Return the newly-formed element set
+                return ret;
+            },
+
+            // Execute a callback for every element in the matched set.
+            each: function (callback) {
+                return PuSet.each(this, callback);
+            },
+
+            map: function (callback) {
+                return this.pushStack(PuSet.map(this, function (elem, i) {
+                    return callback.call(elem, i, elem);
+                }));
+            },
+
+            slice: function () {
+                return this.pushStack(slice.apply(this, arguments));
+            },
+
+            first: function () {
+                return this.eq(0);
+            },
+
+            last: function () {
+                return this.eq(-1);
+            },
+
+            even: function () {
+                return this.pushStack(PuSet.grep(this, function (_elem, i) {
+                    return (i + 1) % 2;
+                }));
+            },
+
+            odd: function () {
+                return this.pushStack(PuSet.grep(this, function (_elem, i) {
+                    return i % 2;
+                }));
+            },
+
+            eq: function (i) {
+                const len = this.length,
+                    j = +i + (i < 0 ? len : 0);
+                return this.pushStack(j >= 0 && j < len ? [this[j]] : []);
+            },
+
+            end: function () {
+                return this.prevObject || this.constructor();
+            },
+
+            // For internal use only.
+            // Behaves like an Array's method, not like a PuSet method.
+            push: push,
+            sort: arr.sort,
+            splice: arr.splice,
+            indexOf: indexOf
+
+        }, {
+
+            // Unique for each copy of PuSet on the page
+            expando: "PuSet" + (version + Math.random()).replace(/\D/g, ""),
+
+            // Assume PuSet is ready without the ready module
+            isReady: true,
+
+            createClass: createClass,
+
+            error: function (msg) {
+                throw new Error(msg);
+            },
+
+            noop: function () { },
+
+            isPlainObject: function (obj) {
+                let proto, Ctor;
+
+                // Detect obvious negatives
+                // Use toString instead of toType to catch host objects
+                if (!obj || toString.call(obj) !== "[object Object]") {
+                    return false;
+                }
+
+                proto = getProto(obj);
+
+                // Objects with no prototype (e.g., `Object.create( null )`) are plain
+                if (!proto) {
+                    return true;
+                }
+
+                // Objects with prototype are plain iff they were constructed by a global Object function
+                Ctor = hasOwn.call(proto, "constructor") && proto.constructor;
+                return typeof Ctor === TYPE_FUNCTION && fnToString.call(Ctor) === ObjectFunctionString;
+            },
+
+            isEmptyObject: function (obj) {
+
+                /* eslint-disable no-unused-vars */
+                // See https://github.com/eslint/eslint/issues/6125
+
+                for (let key in obj) {
+                    return false;
+                }
+                return true;
+            },
+
+            isXML: function (elem) {
+                const documentElement = elem && (elem.ownerDocument || elem).documentElement;
+                return documentElement ? documentElement.nodeName !== "HTML" : false;
+            },
+
+            isArray: Array.isArray || function (obj) {
+                return "array" == toType(obj);
+            },
+
+            isFunction: isFunction,
+
+            isWindow: isWindow,
+
+            isNumeric: function (obj) {
+
+                // As of PuSet 3.0, isNumeric is limited to
+                // strings and numbers (primitives or objects)
+                // that can be coerced to finite numbers (gh-2662)
+                const type = toType(obj);
+                return (type === "number" || type === "string") &&
+
+                    // parseFloat NaNs numeric-cast false positives ("")
+                    // ...but misinterprets leading-number strings, particularly hex literals ("0x...")
+                    // subtraction forces infinities to NaN
+                    !isNaN(obj - parseFloat(obj));
+            },
+
+            type: toType,
+
+            each: function (obj, callback) {
+                let length, i = 0;
+
+                if (isArrayLike(obj)) {
+                    for (length = obj.length; i < length; i++) {
+                        if (callback(obj[i], i) === false) {
+                            break;
+                        }
+                    }
+                } else {
+                    for (i in obj) {
+                        if (callback(obj[i], i) === false) {
+                            break;
+                        }
+                    }
+                }
+
+                return obj;
+            },
+
+            // results is for internal usage only
+            makeArray: function (arr, results) {
+                let ret = results || [];
+
+                if (arr != null) {
+                    if (isArrayLike(Object(arr))) {
+                        PuSet.merge(ret,
+                            typeof arr === "string" ?
+                                [arr] : arr
+                        );
+                    } else {
+                        push.call(ret, arr);
+                    }
+                }
+
+                return ret;
+            },
+
+            inArray: function (elem, arr, i) {
+                return arr == null ? -1 : indexOf.call(arr, elem, i);
+            },
+
+            /**
+             * 追加属性：将 src 中的属性添加到 dest，如果 dest 存在同名属性则跳过
+             * @param {object} dest 
+             * @param {object} src 
+             */
+            append: function (dest, src) {
+                PuSet.each(Object.keys(src), function (key) {
+                    if (dest[key] === undefined) {
+                        dest[key] = src[key];
+                    }
+                });
+                return dest;
+            },
+
+            /**
+             * 将第二个数组中的值添加到第一个数组中，并返回第一个数组。
+             * 
+             * ES6: first.push(...second);
+             * 
+             * Support: Android <=4.0 only, PhantomJS 1 only
+             * push.apply(_, arraylike) throws on ancient WebKit
+             * 
+             * @param {*} first 
+             * @param {*} second 
+             * @returns 
+             */
+            merge: function (first, second) {
+                let len = +second.length,
+                    j = 0,
+                    i = first.length;
+
+                for (; j < len; j++) {
+                    first[i++] = second[j];
+                }
+
+                first.length = i;
+
+                return first;
+            },
+
+            /**
+             * 使用指定的函数过滤数组中的元素，并返回过滤后的数组。
+             * 
+             * Array.filter
+             * 
+             * @param {Array} elems 
+             * @param {Function} callback 
+             * @param {Boolean} invert 
+             * @returns 
+             */
+            grep: function (elems, callback, invert) {
+                let callbackInverse,
+                    matches = [],
+                    i = 0,
+                    length = elems.length,
+                    callbackExpect = !invert;
+
+                // Go through the array, only saving the items
+                // that pass the validator function
+                for (; i < length; i++) {
+                    callbackInverse = !callback(elems[i], i);
+                    if (callbackInverse !== callbackExpect) {
+                        matches.push(elems[i]);
+                    }
+                }
+
+                return matches;
+            },
+
+            /**
+             * 使用指定函数处理数组中的每个元素(或对象的每个属性)，并将处理结果封装为新的数组返回。
+             * 
+             * @param {Any} elems 需要处理的元素
+             * @param {Function} callback 
+             * @param {Any} arg 给 callback 传入的额外参数
+             * @returns {Any[]} 数组
+             */
+            map: function (elems, callback, arg) {
+                let length, value,
+                    i = 0,
+                    ret = [];
+
+                // Go through the array, translating each of the items to their new values
+                if (isArrayLike(elems)) {
+                    length = elems.length;
+                    for (; i < length; i++) {
+                        value = callback(elems[i], i, arg);
+
+                        if (value != null) {
+                            ret.push(value);
+                        }
+                    }
+
+                    // Go through every key on the object,
+                } else {
+                    for (i in elems) {
+                        value = callback(elems[i], i, arg);
+
+                        if (value != null) {
+                            ret.push(value);
+                        }
+                    }
+                }
+
+                // 展平任何嵌套数组 
+                return concat.apply([], ret);
+            },
+
+            dir: function (obj, elem) {
+
+                let type = null === obj ? "null" : typeof obj;
+
+                if (TYPE_OBJECT != type && TYPE_FUNCTION != type) {
+                    return type + " is primitive type.";
+                }
+
+                let key, value, ret = [toType(obj), " = {", "\n\n\t"];
+
+                for (key in obj) {
+                    try {
+                        value = obj[key];
+                    } catch (ex) {
+                        value = "[object UnknownObject]";
+                    } finally {
+                        type = toType(value);
+                        ret.push(rstandardizedAttributeName.test(key) ? key : JSON.stringify(key), ": ",
+                            ("string" == typeof value
+                                ? JSON.stringify(value)
+                                : "array" == type
+                                    ? "[object Array]"
+                                    : TYPE_FUNCTION == type
+                                        ? ObjectFunctionString.replace("Object", key)
+                                        : "" + value)
+                            , ",\n\n\t");
+                    }
+                }
+                ret.splice(-1, 1, "\n\n}");
+
+                return (elem || {}).innerText = ret.join("");
+            },
+
+            alert: function (obj) {
+                window.alert(this.dir(obj, false));
             }
 
-            // Return just the one element from the set
-            return num < 0 ? this[num + this.length] : this[num];
-        },
-
-        // Take an array of elements and push it onto the stack
-        // (returning the new matched element set)
-        pushStack: function (elems) {
-
-            // Build a new PuSet matched element set
-            const ret = PuSet.merge(this.constructor(), elems);
-
-            // Add the old object onto the stack (as a reference)
-            ret.prevObject = this;
-
-            // Return the newly-formed element set
-            return ret;
-        },
-
-        // Execute a callback for every element in the matched set.
-        each: function (callback) {
-            return PuSet.each(this, callback);
-        },
-
-        map: function (callback) {
-            return this.pushStack(PuSet.map(this, function (elem, i) {
-                return callback.call(elem, i, elem);
-            }));
-        },
-
-        slice: function () {
-            return this.pushStack(slice.apply(this, arguments));
-        },
-
-        first: function () {
-            return this.eq(0);
-        },
-
-        last: function () {
-            return this.eq(-1);
-        },
-
-        even: function () {
-            return this.pushStack(PuSet.grep(this, function (_elem, i) {
-                return (i + 1) % 2;
-            }));
-        },
-
-        odd: function () {
-            return this.pushStack(PuSet.grep(this, function (_elem, i) {
-                return i % 2;
-            }));
-        },
-
-        eq: function (i) {
-            const len = this.length,
-                j = +i + (i < 0 ? len : 0);
-            return this.pushStack(j >= 0 && j < len ? [this[j]] : []);
-        },
-
-        end: function () {
-            return this.prevObject || this.constructor();
-        },
-
-        // For internal use only.
-        // Behaves like an Array's method, not like a PuSet method.
-        push: push,
-        sort: arr.sort,
-        splice: arr.splice,
-        indexOf: indexOf
-
-    };
+        });
 
     /**
      *  $.extend( [deep ], target, object1 [, objectN ] )
      * @param {boolean} [deep] 深度复制
      */
-    PuSet.extend = PuSet.fn.extend = function () {
+    PuSet.extend = (PuSet.fn = PuSet.prototype).extend = function () {
         let options, name, src, copy, copyIsArray, clone,
             target = arguments[0] || {},
             i = 1,
@@ -290,281 +561,7 @@
         return target;
     };
 
-    PuSet.extend({
-
-        // Unique for each copy of PuSet on the page
-        expando: "PuSet" + (version + Math.random()).replace(/\D/g, ""),
-
-        // Assume PuSet is ready without the ready module
-        isReady: true,
-
-        /**
-         * 创建类
-         * @param {{constructor:Function}} obj 包含构造器 constructor 的对象原型
-         * @param {object} props 公共方法
-         */
-        createClass: function createClass(obj, props) {
-            if (obj && "function" === typeof obj.constructor) {
-                obj.constructor.prototype = obj;
-                return PuSet.extend(obj.constructor, props);
-            }
-        },
-
-        error: function (msg) {
-            throw new Error(msg);
-        },
-
-        noop: function () { },
-
-        isPlainObject: function (obj) {
-            let proto, Ctor;
-
-            // Detect obvious negatives
-            // Use toString instead of toType to catch host objects
-            if (!obj || toString.call(obj) !== "[object Object]") {
-                return false;
-            }
-
-            proto = getProto(obj);
-
-            // Objects with no prototype (e.g., `Object.create( null )`) are plain
-            if (!proto) {
-                return true;
-            }
-
-            // Objects with prototype are plain iff they were constructed by a global Object function
-            Ctor = hasOwn.call(proto, "constructor") && proto.constructor;
-            return typeof Ctor === TYPE_FUNCTION && fnToString.call(Ctor) === ObjectFunctionString;
-        },
-
-        isEmptyObject: function (obj) {
-
-            /* eslint-disable no-unused-vars */
-            // See https://github.com/eslint/eslint/issues/6125
-
-            for (let key in obj) {
-                return false;
-            }
-            return true;
-        },
-
-        isXML: function (elem) {
-            const documentElement = elem && (elem.ownerDocument || elem).documentElement;
-            return documentElement ? documentElement.nodeName !== "HTML" : false;
-        },
-
-        isArray: Array.isArray || function (obj) {
-            return "array" == toType(obj);
-        },
-
-        isFunction: isFunction,
-
-        isWindow: isWindow,
-
-        isNumeric: function (obj) {
-
-            // As of PuSet 3.0, isNumeric is limited to
-            // strings and numbers (primitives or objects)
-            // that can be coerced to finite numbers (gh-2662)
-            const type = toType(obj);
-            return (type === "number" || type === "string") &&
-
-                // parseFloat NaNs numeric-cast false positives ("")
-                // ...but misinterprets leading-number strings, particularly hex literals ("0x...")
-                // subtraction forces infinities to NaN
-                !isNaN(obj - parseFloat(obj));
-        },
-
-        type: toType,
-
-        each: function (obj, callback) {
-            let length, i = 0;
-
-            if (isArrayLike(obj)) {
-                for (length = obj.length; i < length; i++) {
-                    if (callback(obj[i], i) === false) {
-                        break;
-                    }
-                }
-            } else {
-                for (i in obj) {
-                    if (callback(obj[i], i) === false) {
-                        break;
-                    }
-                }
-            }
-
-            return obj;
-        },
-
-        // results is for internal usage only
-        makeArray: function (arr, results) {
-            let ret = results || [];
-
-            if (arr != null) {
-                if (isArrayLike(Object(arr))) {
-                    PuSet.merge(ret,
-                        typeof arr === "string" ?
-                            [arr] : arr
-                    );
-                } else {
-                    push.call(ret, arr);
-                }
-            }
-
-            return ret;
-        },
-
-        inArray: function (elem, arr, i) {
-            return arr == null ? -1 : indexOf.call(arr, elem, i);
-        },
-
-        /**
-         * 追加属性：将 src 中的属性添加到 dest，如果 dest 存在同名属性则跳过
-         * @param {object} dest 
-         * @param {object} src 
-         */
-        append: function (dest, src) {
-            PuSet.each(Object.keys(src), function (key) {
-                if (dest[key] === undefined) {
-                    dest[key] = src[key];
-                }
-            });
-            return dest;
-        },
-
-        /**
-         * 将第二个数组中的值添加到第一个数组中，并返回第一个数组。
-         * 
-         * ES6: first.push(...second);
-         * 
-         * Support: Android <=4.0 only, PhantomJS 1 only
-         * push.apply(_, arraylike) throws on ancient WebKit
-         * 
-         * @param {*} first 
-         * @param {*} second 
-         * @returns 
-         */
-        merge: function (first, second) {
-            let len = +second.length,
-                j = 0,
-                i = first.length;
-
-            for (; j < len; j++) {
-                first[i++] = second[j];
-            }
-
-            first.length = i;
-
-            return first;
-        },
-
-        /**
-         * 使用指定的函数过滤数组中的元素，并返回过滤后的数组。
-         * 
-         * Array.filter
-         * 
-         * @param {Array} elems 
-         * @param {Function} callback 
-         * @param {Boolean} invert 
-         * @returns 
-         */
-        grep: function (elems, callback, invert) {
-            let callbackInverse,
-                matches = [],
-                i = 0,
-                length = elems.length,
-                callbackExpect = !invert;
-
-            // Go through the array, only saving the items
-            // that pass the validator function
-            for (; i < length; i++) {
-                callbackInverse = !callback(elems[i], i);
-                if (callbackInverse !== callbackExpect) {
-                    matches.push(elems[i]);
-                }
-            }
-
-            return matches;
-        },
-
-        /**
-         * 使用指定函数处理数组中的每个元素(或对象的每个属性)，并将处理结果封装为新的数组返回。
-         * 
-         * @param {Any} elems 需要处理的元素
-         * @param {Function} callback 
-         * @param {Any} arg 给 callback 传入的额外参数
-         * @returns {Any[]} 数组
-         */
-        map: function (elems, callback, arg) {
-            let length, value,
-                i = 0,
-                ret = [];
-
-            // Go through the array, translating each of the items to their new values
-            if (isArrayLike(elems)) {
-                length = elems.length;
-                for (; i < length; i++) {
-                    value = callback(elems[i], i, arg);
-
-                    if (value != null) {
-                        ret.push(value);
-                    }
-                }
-
-                // Go through every key on the object,
-            } else {
-                for (i in elems) {
-                    value = callback(elems[i], i, arg);
-
-                    if (value != null) {
-                        ret.push(value);
-                    }
-                }
-            }
-
-            // 展平任何嵌套数组 
-            return concat.apply([], ret);
-        },
-
-        dir: function (obj, elem) {
-
-            let type = null === obj ? "null" : typeof obj;
-
-            if (TYPE_OBJECT != type && TYPE_FUNCTION != type) {
-                return type + " is primitive type.";
-            }
-
-            let key, value, ret = [toType(obj), " = {", "\n\n\t"];
-
-            for (key in obj) {
-                try {
-                    value = obj[key];
-                } catch (ex) {
-                    value = "[object UnknownObject]";
-                } finally {
-                    type = toType(value);
-                    ret.push(rstandardizedAttributeName.test(key) ? key : JSON.stringify(key), ": ",
-                        ("string" == typeof value
-                            ? JSON.stringify(value)
-                            : "array" == type
-                                ? "[object Array]"
-                                : TYPE_FUNCTION == type
-                                    ? ObjectFunctionString.replace("Object", key)
-                                    : "" + value)
-                        , ",\n\n\t");
-                }
-            }
-            ret.splice(-1, 1, "\n\n}");
-
-            return (elem || {}).innerText = ret.join("");
-        },
-
-        alert: function (obj) {
-            window.alert(this.dir(obj, false));
-        }
-
-    });
+    // PuSet.extend();
 
     // Populate the class2type map
     PuSet.each("Boolean Number String Function Array Date RegExp Object Error Symbol".split(" "), function (name) {
@@ -804,7 +801,7 @@
 
     // ActionEvent is based on DOM3 Events as specified by the ECMAScript Language Binding
     // https://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
-    const ActionEvent = PuSet.createClass({
+    const ActionEvent = createClass({
         "target": null,
         "type": "",
         "srcEvent": null,
@@ -935,7 +932,7 @@
 
     const HANDLER_ATTRS = ["isCustom", "handler", "selector", "namespace"];
 
-    const ActionInput = PuSet.createClass({
+    const ActionInput = createClass({
 
         /**
          * 抑制器：触发 dblclick 时，不触发 click
@@ -1253,8 +1250,6 @@
         }
 
     };
-
-    window.ActionInputMap = ActionInputMap;
 
     PuSet.extend({
 
