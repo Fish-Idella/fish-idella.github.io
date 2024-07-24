@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESET</title>
+</head>
+
+<body>
+
+    <div style="color: red;">即将重置用户数据，如果你不知道此操作的后果，请关闭此页面。</div>
+    <div>继续请点击<button id="reset">确认</button>按钮。</div>
+
+    <script src="/js/puset-2.0.0.js"></script>
+    <script src="/libs/puset.storage.js"></script>
+    <script src="/libs/lz-string.min.js"></script>
+    <script>
+        document.getElementById("reset").addEventListener("click", function () {
+            var script = document.createElement("script");
+            script.src = `js/save.js?${Date.now()}`;
+            new PuSet.Storage().then(function (a) {
+                script.onload = function () {
+                    a.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set))).then(function () {
+                        window.location.replace("/main");
+                    })
+                }
+            }).catch(function (ex) {
+                console.log(ex);
+                alert("浏览器过于老旧");
+            });
+            document.head.appendChild(script);
+        })
+    </script>
+</body>
+
+</html>
