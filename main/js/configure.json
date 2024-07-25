@@ -73,6 +73,26 @@
         "inner": [
             {
                 "type": "sub-title",
+                "text": "显示链接",
+                "psid": "main_show_add_button",
+                "inner": [
+                    {
+                        "type": "switch",
+                        "text": "主界面显示常用链接",
+                        "psid": "boolean_main_show_links"
+                    },
+                    {
+                        "show": [
+                            "boolean_main_show_links"
+                        ],
+                        "type": "switch",
+                        "text": "主界面显示添加链接按钮",
+                        "psid": "boolean_main_show_add_button"
+                    }
+                ]
+            },
+            {
+                "type": "sub-title",
                 "text": "主题颜色",
                 "psid": "themes_color",
                 "inner": [
@@ -127,46 +147,17 @@
                         "long_text": "自定义Style.Background的值"
                     }
                 ]
-            }
-        ]
-    },
-    {
-        "type": "main-title",
-        "icon": "<i class=\"fa-solid fa-link\"></i>",
-        "text": "常用链接",
-        "psid": "links",
-        "inner": [
-            {
-                "type": "sub-title",
-                "text": "显示链接",
-                "psid": "main_show_add_button",
-                "inner": [
-                    {
-                        "type": "switch",
-                        "text": "主界面显示常用链接",
-                        "psid": "boolean_main_show_links"
-                    },
-                    {
-                        "show": [
-                            "boolean_main_show_links"
-                        ],
-                        "type": "switch",
-                        "text": "主界面显示添加链接按钮",
-                        "psid": "boolean_main_show_add_button"
-                    }
-                ]
             },
             {
                 "type": "sub-title",
-                "text": "链接列表",
-                "long_text": "",
-                "psid": "link_lists",
+                "text": "其他组件",
+                "psid": "themes_icp",
                 "inner": [
                     {
-                        "psid": "map_all_links",
-                        "type": "array-list",
-                        "text": "链接列表",
-                        "long_text": "如需排序，可在首页显示链接的状态下拖动排序"
+                        "type": "switch",
+                        "text": "ICP",
+                        "psid": "boolean_show_icp",
+                        "long_text": "是否显示主页面右下角的ICP备案信息"
                     }
                 ]
             }

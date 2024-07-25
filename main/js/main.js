@@ -298,6 +298,14 @@ var MainUI = {
                 MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
                 break;
             }
+            case "boolean_show_icp": {
+                if (value){
+                document.getElementById("about").classList.remove("hide")
+            } else {
+                document.getElementById("about").classList.add("hide")
+            }
+                break;
+            }
             default: {
                 console.log(psid)
                 console.dir(MainUI.GS)

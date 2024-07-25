@@ -475,6 +475,14 @@ new Promise(function(resolve, reject) {
         return div;
     }, function (target, value) {
         target.querySelector(".value").checked = MainUI.GS[value.psid];
+        storage.getItem(value.value).then(function (request) {
+            const file = request.result;
+            if (file) {
+                target.querySelector("#bgPreBoxInnerCustom").style.backgroundImage = `url(${URLObject.createObjectURL(file)})`;
+            } else {
+                target.querySelector("#bgPreBoxInnerCustom").style.backgroundImage = "";
+            }
+        });
     });
 
 
