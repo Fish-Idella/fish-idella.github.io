@@ -14,7 +14,7 @@
     // DON'T use "const indexedDB = ..." if you're not in a function.
     // Moreover, you may need references to some window.IDB* objects:
     window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
-    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
     // (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
 
     const DATABASE_NAME = "puset_key_value_db";

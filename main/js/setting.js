@@ -71,6 +71,10 @@ const PuSetting = (function (attrs) {
         MainUI.updataWeather(window.vm_weather);
     },
 
+    "default_configuration": function() {
+        window.location.href = "reset.html"
+    },
+
     "import_configuration": function(url) {
         fetch(url).then(a => a.text()).then(function(code) {
             try {
@@ -89,9 +93,7 @@ const PuSetting = (function (attrs) {
         save_link.download = `网页配置 ${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`;
 
         storage.getItem("puset-local-configure").then(function(request) {
-            save_link.href = URLObject.createObjectURL( new Blob([
-                LZString.decompress(request.result)
-            ]) );
+            save_link.href = URLObject.createObjectURL( new Blob([LZString.decompress(request.result)]) );
             save_link.dispatchEvent(new MouseEvent('click', {
                 'view': window,
                 'bubbles': true,
