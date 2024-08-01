@@ -1,9 +1,9 @@
 "use strict";
 
-const URLObject = window.URL || window.webkitURL || function() {};
+const URLObject = window.URL || window.webkitURL || function () { };
 if (!URLObject.createObjectURL) {
     Object.assign(URLObject, {
-        createObjectURL: function() {
+        createObjectURL: function () {
             return "#"
         }
     });
@@ -189,7 +189,7 @@ var MainUI = {
 
     // 透明图片
     a: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-    
+
     // 黑色图片
     b: "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=",
 
@@ -198,7 +198,7 @@ var MainUI = {
 
     isFirst: true,
 
-    loadImage: function(src, origin) {
+    loadImage: function (src, origin) {
         return new Promise((resolve, reject) => {
             let img = new Image;
             if (origin) {
@@ -225,7 +225,7 @@ var MainUI = {
             callback = null;
         });
         script.addEventListener("error", callback);
-    
+
         // Use native DOM manipulation to avoid our domManip AJAX trickery
         document.head.appendChild(script);
     },
@@ -299,11 +299,11 @@ var MainUI = {
                 break;
             }
             case "boolean_show_icp": {
-                if (value){
-                document.getElementById("about").classList.remove("hide")
-            } else {
-                document.getElementById("about").classList.add("hide")
-            }
+                if (value) {
+                    document.getElementById("about").classList.remove("hide")
+                } else {
+                    document.getElementById("about").classList.add("hide")
+                }
                 break;
             }
             default: {
@@ -386,10 +386,19 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
         layout: function (target, value, key) {
             target.dataset.key = key;
             target.href = value.href;
-            target.querySelector("span.bg").style["background-image"] = `url(${value.local_icon || value.icon || (new URLObject("/favicon.ico", value.href)).href})`;
+            const background = target.querySelector("span.bg");
+            background.style["background-image"] = `url(${value.local_icon || value.icon || (new URLObject("/favicon.ico", value.href)).href})`;
+            if (value.transparent) {
+                background.classList.add("transparent");
+            } else {
+                background.classList.remove("transparent");
+            }
             target.querySelector("span.title").innerHTML = value.title;
         }
     });
+    // document.addEventListener("click", function() {
+    //     _menu_links.classList.add("hide");
+    // });
 
     // 搜索建议提示列表
     const mList = document.getElementById("list");
@@ -414,7 +423,7 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
         clearTimeout(window.op.t);
 
         const value = mWord.value.trim();
-        
+
         if (value) {
             window.op.t = setTimeout(function () {
                 if (value.startsWith("--set")) {
@@ -466,7 +475,7 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
 
             if (src.startsWith("data:")) {
                 target.querySelector("button").innerHTML = '<img src="' + src + '">';
-            } else fetch(src).then(a=>a.text()).then(function (data) {
+            } else fetch(src).then(a => a.text()).then(function (data) {
                 target.querySelector("button").innerHTML = data;
             });
 

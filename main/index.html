@@ -32,11 +32,15 @@
                 <a class="link-button" v-hide="true" draggable="true"><span class="bg"></span><span
                         class="title"></span></a>
                 <a id="add-link-button" href="#l-add-link" draggable="false" v-hide>
-                    <span class="bg"
-                        style="background-image: url(/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);"></span>
+                    <span class="bg" style="background-image: url(/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);"></span>
                     <span class="title">添加</span>
                 </a>
             </div>
+            <ul id="menu-links" class="hide">
+                <li data-id="change">修改</li>
+                <li data-id="delete">删除</li>
+                <li data-id="cancel">取消</li>
+            </ul>
         </div>
         <form id="search" class="flex-horizontal" action="https://cn.bing.com/search">
             <label id="input-box" for="word" class="flex-vertical">
@@ -48,7 +52,7 @@
                         <a href="javascript:;" id="quickdelete" title="清空搜索框" class="quickdelete">
                             <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle-xmark" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-circle-xmark"><path fill="currentColor" d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" class=""></path></svg>
                         </a>
-                        <span class="soutu-hover-tip" style="display: none;">按图片搜索</span>
+                        <span class="soutu-hover-tip" class="hide">按图片搜索</span>
                     </span>
                     <span v-hide="true" class="bg s_btn_wr">
                         <button type="submit" title="Bing 搜索" class="bg s_btn" id="engine_baidu" value="">
@@ -119,6 +123,10 @@
                 </div>
             </div>
             <div class="button-bar">
+                <label for="alert-transparent" type="button">
+                    <input id="alert-transparent" type="checkbox">
+                    <span>不填充背景</span>
+                </label>
                 <input id="alert-add" type="button" value="添加/修改">
                 <input id="alert-cancel" type="button" value="取消">
             </div>

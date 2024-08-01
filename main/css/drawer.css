@@ -478,6 +478,7 @@ label>input[type=file]+span {
     /* place-content: center; */
     /* place-items: center; */
     line-height: 1.5rem;
+    overflow: hidden;
 }
 
 .bgPreviewBox {

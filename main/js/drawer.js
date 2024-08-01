@@ -1,4 +1,4 @@
-new Promise(function(resolve, reject) {
+new Promise(function (resolve, reject) {
     storage.then(function () {
         resolve(fetch("js/configure.json", {
             method: 'GET',
@@ -21,6 +21,7 @@ new Promise(function(resolve, reject) {
     const mAlert_title = mAlert.querySelector("input.input-title");
     const mAlert_icon = mAlert.querySelector("input.input-icon");
     const mAlert_url = mAlert.querySelector("input.input-url");
+    const mAlert_transparent = mAlert.querySelector("#alert-transparent");
 
     function getPsId(target) {
         const psid = target.dataset.psid;
@@ -128,7 +129,7 @@ new Promise(function(resolve, reject) {
         });
     }
 
-    
+
 
     Interpreter.set("main-title", function () {
 
@@ -540,7 +541,7 @@ new Promise(function(resolve, reject) {
         }
     }).on("click", function (ev) {
         const target = ev.srcEvent ? ev.srcEvent.target : ev.target;
-        
+
         if (target.type == "button") {
             const fn = PuSetting[getPsId(target)];
             if (fn) { fn() }
@@ -570,6 +571,32 @@ new Promise(function(resolve, reject) {
                 });
             }
         });
+    });
+
+    const _menu_links = document.querySelector("#links>#menu-links");
+    _menu_links.addEventListener("click", function (ev) {
+        const index = _menu_links.dataset.key;
+        switch (ev.target.dataset.id) {
+            case "change": {
+                Interpreter.get("object-list").fn("show-alert", "map_all_links", MainUI.vm_scroll.originalData, index);
+                break;
+            }
+            case "delete": {
+                MainUI.vm_scroll.data.splice(index, 1);
+                setLocalConfig("puset-local-configure", MainUI.GS);
+                break;
+            }
+        }
+        _menu_links.classList.add("hide");
+    });
+
+    PuSet("#scroll").on("contextmenu", "a.link-button", function (sev) {
+        const ev = sev.srcEvent || window.event;
+        ev.preventDefault();
+        _menu_links.dataset.key = this.dataset.key;
+        _menu_links.style.left = ev.pageX + 'px';
+        _menu_links.style.top = ev.pageY + 'px';
+        _menu_links.classList.remove("hide");
     });
 
     document.getElementById("add-link-button").addEventListener("click", function () {
@@ -602,14 +629,16 @@ new Promise(function(resolve, reject) {
                     "title": mAlert_title.value,
                     "href": mAlert_url.value,
                     "icon": mAlert_icon.value,
-                    "local_icon": mIcon.src
+                    "local_icon": mIcon.src,
+                    "transparent": mAlert_transparent.checked
                 });
             } else {
                 result = {
                     "title": (key = mAlert_title.value),
                     "href": mAlert_url.value,
                     "icon": mAlert_icon.value,
-                    "local_icon": mIcon.src
+                    "local_icon": mIcon.src,
+                    "transparent": mAlert_transparent.checked
                 };
 
                 if (Array.isArray(data)) {
@@ -651,26 +680,26 @@ new Promise(function(resolve, reject) {
         }
     });
 
-    const _trash = PuSet("#trash").on("dragover", function({ srcEvent: ev }) {
-        ev.preventDefault();
-        ev.dataTransfer.dropEffect = "move";
-    }).on("dragover", function ({ srcEvent: ev }) {
-        ev.preventDefault();
-        ev.dataTransfer.dropEffect = "move";
+    // const _trash = PuSet("#trash").on("dragover", function({ srcEvent: ev }) {
+    //     ev.preventDefault();
+    //     ev.dataTransfer.dropEffect = "move";
+    // }).on("dragover", function ({ srcEvent: ev }) {
+    //     ev.preventDefault();
+    //     ev.dataTransfer.dropEffect = "move";
 
-        _trash.classList.add("dragover")
-    }).on("dragleave", function ({ srcEvent: ev }) {
-        ev.preventDefault();
-        ev.dataTransfer.dropEffect = "move";
+    //     _trash.classList.add("dragover")
+    // }).on("dragleave", function ({ srcEvent: ev }) {
+    //     ev.preventDefault();
+    //     ev.dataTransfer.dropEffect = "move";
 
-        _trash.classList.remove("dragover")
-    }).on("drop", function ({ srcEvent: ev }) {
-        ev.preventDefault();
-        var data = ev.dataTransfer.getData("text/plain");
-            // MainUI.GS.map_all_links.splice(data, 1);
-            MainUI.vm_scroll.data.splice(data, 1);
-            setLocalConfig("puset-local-configure", MainUI.GS);
-    }).get(0);
+    //     _trash.classList.remove("dragover")
+    // }).on("drop", function ({ srcEvent: ev }) {
+    //     ev.preventDefault();
+    //     var data = ev.dataTransfer.getData("text/plain");
+    //         // MainUI.GS.map_all_links.splice(data, 1);
+    //         MainUI.vm_scroll.data.splice(data, 1);
+    //         setLocalConfig("puset-local-configure", MainUI.GS);
+    // }).get(0);
 
     PuSet("#scroll").on("dragstart", function ({ srcEvent: ev }) {
         ev.dataTransfer.dropEffect = "move";
@@ -681,7 +710,7 @@ new Promise(function(resolve, reject) {
         ev.dataTransfer.dropEffect = "move";
     }).on("dragend", "a.link-button", function ({ srcEvent: ev }) {
         ev.preventDefault();
-        
+
         _trash.classList.add("hide");
     }).on("drop", "a.link-button", function ({ srcEvent: ev }) {
         ev.preventDefault();

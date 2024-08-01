@@ -9,7 +9,7 @@
 
     /**
      * 
-     * @param {CreateView} options 
+     * @param {Rules} options 
      * @param {Element} target 
      * @param {any} value 
      * @param {string} key 
@@ -37,9 +37,9 @@
      * }} options 参数
      * @returns {View}
      */
-    const CreateView = function (options) {
+    const Rules = function (options) {
 
-        /** @type {CreateView} */
+        /** @type {Rules} */
         const self = Object.assign(this, options);
         
         // 初始化子元素集
@@ -110,10 +110,10 @@
     };
 
     const View = PuSet.View = function (options) {
-        return new CreateView(options);
+        return new Rules(options);
     };
 
-    View.prototype = CreateView.prototype = {
+    View.prototype = Rules.prototype = {
 
         /** @type {string} */
         selector: "",
