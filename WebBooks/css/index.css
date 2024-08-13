@@ -1,6 +1,12 @@
-body,html,input,button,select,td,th {
+body,
+html,
+input,
+button,
+select,
+td,
+th {
 	font-size: 14px;
-	font-family: Helvetica,Arial,sans-serif!important;
+	font-family: Helvetica, Arial, sans-serif !important;
 }
 
 .view {
@@ -13,7 +19,7 @@ body,html,input,button,select,td,th {
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
-	background: transparent;
+	/* background: transparent; */
 	background: white;
 }
 
@@ -37,23 +43,10 @@ body,html,input,button,select,td,th {
 	flex-direction: column;
 }
 
-.dynamic {
-	position: fixed;
-	min-width: 100%;
-	min-height: 100%;
-	object-fit: cover;
-}
-
-.wallpaper {
-	display: block;
-	background-color: #efefef;
-	/* background-image: linear-gradient(#acacac, #114785); */
-	background-position: 50%;
-	background-size: cover;
-	background-repeat: no-repeat;
-	background-attachment: fixed;
-	background-blend-mode: darken;
-	backface-visibility: hidden;
+.relative {
+	position: relative;
+	width: 100%;
+	height: 100%;
 }
 
 .fc {
@@ -61,16 +54,9 @@ body,html,input,button,select,td,th {
 	position: relative;
 }
 
-html>body .hide {
-	display: none;
+body .hide {
+	display: none !important;
 }
-
-/* 
-@media screen and (max-height: 300px ), (max-width: 450px) {
-	body,.view {
-		display: none;
-	}
-} */
 
 .title {
 	width: 100%;
@@ -88,24 +74,30 @@ html>body .hide {
 	display: none;
 }
 
+#shujia {
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
 #icon-box,
 #shujia-box {
 	width: 100%;
 	height: auto;
-	flex-wrap: wrap;
+	/* flex-wrap: wrap; */
 	align-items: center;
 	justify-items: center;
 	align-content: flex-start;
 	justify-content: space-evenly;
 	grid-row-gap: 1rem;
-	grid-template-columns: repeat(auto-fill, 33.3333vmin);
+	grid-template-columns: 1fr 1fr 1fr;
 }
 
 #icon-box>div,
 #shujia-box>div {
 	position: relative;
 	width: 100%;
-	height: 45vmin;
+	height: 50vmin;
 	/* justify-content: center; */
 	align-items: center;
 }
@@ -123,7 +115,7 @@ html>body .hide {
 #icon-box .shuming,
 #shujia-box .shuming {
 	width: 100%;
-	/* line-height: 6vmin; */
+	line-height: 5vmin;
 	text-align: center;
 	overflow: hidden;
 	appearance: none;
@@ -161,6 +153,115 @@ html>body .hide {
 	left: 50%;
 	margin-top: -2px;
 	margin-left: -25px;
+}
+
+#shuben>.content {
+	overflow: hidden scroll;
+	font-size: 20px;
+	padding: 10px;
+}
+
+#shuben>.content h2 {
+	text-align: center;
+}
+
+#shuben>.content p {
+	text-indent: 2em;
+}
+
+#shuben>.list .scroll {
+	position: absolute;
+	overflow: hidden scroll;
+	-webkit-user-select: none;
+	user-select: none;
+	display: block;
+	margin: 0;
+	list-style: none;
+	padding: 0px;
+}
+
+#shuben>.list .scroll>li {
+	line-height: 3rem;
+	background-color: floralwhite;
+	padding: 0 10px;
+	border-bottom: 1px solid #ddd;
+}
+
+#shuben>.list .scroll>li:nth-child(even) {
+	background-color: gainsboro;
+}
+
+#shuben>.list>.title {
+	position: relative;
+	height: 3rem;
+	line-height: 3rem;
+	font-size: 1.6rem;
+}
+
+#shuben>.list #list-close {
+	position: absolute;
+	width: 100px;
+	border: none;
+	background: none;
+	outline: none;
+	text-align: start;
+	padding: 0 10px;
+}
+
+#shuben>.menu {
+	background: none;
+	background-color: #ffffff80;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#shuben>.menu>.auto-height {
+	position: absolute;
+	background-color: #ffffff;
+	width: 100%;
+	height: auto;
+	left: 0;
+	border-top: 1px solid #ddd;
+	line-height: 30px;
+	bottom: 0;
+	/* padding: 10px 0; */
+}
+
+#shuben>.menu>.auto-height>.range {
+	padding: 10px 5px;
+}
+
+.range>label {
+	/* display: block; */
+	/* position: relative; */
+	height: 30px;
+}
+
+.range>label>input {
+	position: relative;
+	height: 100%;
+	border: 1px solid #ddd;
+	border-radius: 15px;
+	appearance: none;
+	text-align: center;
+	background-color: aliceblue;
+	-webkit-user-select: none;
+	user-select: none;
+	outline: none;
+}
+
+.menu .button-box {
+	place-content: space-between;
+	place-items: center;
+	height: 60px;
+	padding: 0 5px;
+}
+
+.menu .button-box>button {
+	width: 20%;
+	height: 30px;
+	border: 1px solid #ddd;
+	border-radius: 15px;
 }
 
 #menu {
