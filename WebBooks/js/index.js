@@ -130,6 +130,7 @@ storage.then(function () {
         _shuben_list.classList.add("hide");
     });
 
+
     storage.getItem("BOOKS").then(function (request) {
         const SHU_INFO = request.result || {};
         window.SHU_INFO = SHU_INFO;
@@ -285,5 +286,33 @@ storage.then(function () {
         storage.setItem("BOOKS", {}).then(function () {
             alert("需要重新启动")
         });
+    });
+
+    const _style_content = document.getElementById("style-content");
+    let settings;
+    function parseSettings() {
+        _style_content.textContent = `#shuben>.content{font-size: ${settings['text-size']}px;}#shuben>.content p{margin-inline: ${settings['text-margin']}px;line-height: ${settings['text-spaced']}px}`;
+        storage.setItem("SETTINGS", settings);
+    }
+
+    storage.getItem("SETTINGS").then(function(request) {
+        parseSettings(settings = (request.result || {
+            'text-size': 20,
+            'text-margin': 10,
+            'text-spaced': 30
+        }));
+        for (let key in settings) {
+            _shuben_menu.querySelector('#' + key).value = settings[key];
+        }
+    });
+
+    PuSet(_shuben_menu.querySelectorAll(".range input[type=text]")).on("click", function(ev) {
+        if (ev.srcEvent.clientX > (innerWidth / 2)) {
+            settings[this.id]++;
+        } else {
+            settings[this.id]--;
+        }
+        this.value = settings[this.id];
+        parseSettings();
     });
 });
