@@ -193,6 +193,10 @@ body .hide {
 	background-color: gainsboro;
 }
 
+#shuben>.list .scroll>li.select {
+	color: chocolate;
+}
+
 #shuben>.list>.title {
 	position: relative;
 	height: 3rem;

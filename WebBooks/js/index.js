@@ -1,5 +1,23 @@
 // // document.addEventListener('deviceready', function() {
 // // document.addEventListener('DOMContentLoaded', function() {
+const WEB_BOOK_PARSE = {
+    "www.bxwx.tv": {
+        "bookName": "#info>h1",
+        "cover": "#fmimg>img",
+        "firstListURL": "",
+        "list": "div.listmain>dl>*",
+        "content": "#content"
+    },
+    "www.bigee.cc": {
+        "bookName": "body > div.book > div.info > h1",
+        "cover": "body > div.book > div.info > div.cover > img",
+        "firstListURL": "",
+        "list": "body div.listmain dd>a",
+        "content": "#chaptercontent"
+    },
+};
+
+PuSet.fn.reverse = Array.prototype.reverse;
 
 const storage = new PuSet.Storage("WEB_BOOKS_DB", "1.0");
 storage.then(function () {
@@ -9,11 +27,28 @@ storage.then(function () {
     let CurrentBook;
     let loading = false;
 
+
+    function getImageBase64(src) {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = function () {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = this.naturalHeight;
+                canvas.width = this.naturalWidth;
+                context.drawImage(this, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            }
+            image.onerror = reject;
+            image.src = src;
+        });
+    }
+
     function saveShuInfo(data) {
         storage.setItem("BOOKS", data).then(function () {
-            console.log("Save ")
+            // console.log("Save ")
         }).catch(function () {
-            console.log("error")
+            alert("error");
         });
     }
 
@@ -57,7 +92,7 @@ storage.then(function () {
                 }
                 // chapter.html = html;
                 const text = PuSet.parseHTML(html).querySelector(obj.content).innerHTML;
-                const result = text.split(/<br[^>]*\/?>/).map(function(srt) {
+                const result = text.split(/<br[^>]*\/?>/).map(function (srt) {
                     const result = srt.trim();
                     if (result) {
                         return `<p>${result}</p>`;
@@ -72,6 +107,11 @@ storage.then(function () {
         storage.getItem(bookInfo.chapter).then(function (request) {
             const list_obj = request.result;
             const chapter = list_obj[id];
+            if (!chapter) {
+                console.log("全书完")
+                return;
+            }
+            // console.log(list_obj, id)
             if (chapter.id) {
                 storage.getItem(chapter.id).then(function (request) {
                     const text = request.result;
@@ -87,13 +127,23 @@ storage.then(function () {
         });
     }
 
-    function openBook(chapter_index, update) {
+    /**
+     * 
+     * @param {number} chapter_index 章节
+     * @param {number} index 段落
+     * @param {boolean} update 更新章节列表
+     */
+    function openBook(chapter_index, index, update) {
         _shuben_content.innerHTML = "";
-        getChapter(CurrentBook, chapter_index, function (name, text, c) {
-            if (update && Object.assign(vm_chapter.data, c));
+        getChapter(CurrentBook, chapter_index, function (name, text, list) {
+            if (update && Object.assign(vm_chapter.data, list));
             const div = document.createElement("div");
+            div.dataset.chapter = chapter_index;
             div.innerHTML = `<h2>${name}</h2>` + text;
             _shuben_content.appendChild(div);
+            if (index > 0) {
+                _shuben_content.scrollTo(0, div.children.item(index).offsetTop);
+            }
         });
         _shuben.classList.remove("hide");
     }
@@ -108,25 +158,28 @@ storage.then(function () {
     const _shuben_menu = _shuben.querySelector(".menu");
     const _menu = document.querySelector("#menu");
 
+    const _shuben_list_scroll = _shuben_list.querySelector("ul.scroll");
+
     const vm_chapter = PuSet.View({
-        target: _shuben_list.querySelector("ul"),
+        target: _shuben_list_scroll,
         template: document.createElement("li"),
         data: [],
-        item: function(i) {
+        item: function (i) {
             return this.data[i];
         },
-        layout: function(target, value, key) {
+        layout: function (target, value, key) {
             target.innerHTML = value.name;
             target.title = key;
         }
     });
 
-    _shuben_list.querySelector("button#list-close").addEventListener("click", function() {
+    _shuben_list.querySelector("button#list-close").addEventListener("click", function () {
         _shuben_list.classList.add("hide");
     });
 
-    PuSet(_shuben_list.querySelector("ul.scroll")).on("click", "li", function() {
-        openBook(CurrentBook.yddId = +this.title, false);
+    // 选择章节
+    PuSet(_shuben_list.querySelector("ul.scroll")).on("click", "li", function () {
+        openBook(CurrentBook.yddId = +this.title, 0, false);
         _shuben_list.classList.add("hide");
     });
 
@@ -167,11 +220,14 @@ storage.then(function () {
             }
         });
 
+        // TODO
         // 添加新书
         _button_tianjia.addEventListener("click", function (ev) {
 
-            const url = prompt("输入书籍首页的网址", "网页中应当包含书名和封面")?.trim();
-            if (!url) return;
+            const base = prompt("输入书籍首页的网址", "网页中应当包含书名和封面")?.trim();
+            if (!base) return;
+
+            const url = new URL(base).href;
 
             getAndParseHtml(url, function (text, type) {
 
@@ -188,16 +244,9 @@ storage.then(function () {
                     firstListURL: url, // 章节列表首页链接
                     currentListURL: url, // 当前章节页面链接
                     yhcId: 0, // 当前已经缓存到的最新章节的id
-                    yddId: 0, // 已经读到的位置
-                    chapter: "CHAPTER" + Date.now() // 章节缓存
-                    // eg
-                    // {
-                    // 	name: "",           // 章节名
-                    //  html: "",           // 章节内容链接的初始HTML
-                    // 	url: "",            // 章节内容链接
-                    //  absURL: "",         // 章节内容链接的绝对路径，已设置表示已缓存
-                    // 	id: "",             // 章节缓存在本地的id
-                    // }
+                    yddId: 0, // 已经读到的章节
+                    duanluo: 0, // 段落
+                    chapter: "CHAPTER" + Date.now() // 章节目录缓存
                 };
 
                 const html = PuSet.parseHTML(noscript);
@@ -219,11 +268,9 @@ storage.then(function () {
                         };
                     });
                     storage.setItem(bookInfo.chapter, list_obj);
+                } else {
+                    alert("不支持的网站，请联系开发者QQ：565713022");
                 }
-                // else {
-                //     _preview.classList.remove("hide");
-                //     _preview.contentDocument.documentElement.innerHTML = noscript;
-                // }
 
                 vm_books.data[url] = bookInfo;
                 saveShuInfo(SHU_INFO);
@@ -231,25 +278,49 @@ storage.then(function () {
         });
 
 
+        // 打开书本
         PuSet(_shujia).on("click", ".book", function () {
             CurrentBook = SHU_INFO[this.title];
             CurrentBook.index = 0;
-            openBook(CurrentBook.yddId, true);
+            openBook(CurrentBook.yddId, CurrentBook.duanluo, true);
         });
 
+        let saveShuInfoTimeout = 0;
 
+        // 正文滑动
         _shuben_content.addEventListener("scroll", function () {
+
+            // 更新当前阅读进度
+            clearTimeout(saveShuInfoTimeout);
+            PuSet(_shuben_content.children).reverse().each((target) => {
+                const height = target.offsetTop - this.scrollTop;
+                if (height < 0) {
+                    CurrentBook.yddId = (target.dataset.chapter - 0);
+                    PuSet(target.children).each((child, i) => {
+                        if ((height + child.offsetTop) > 0) {
+                            CurrentBook.duanluo = Math.max(0, i - 1);
+                            saveShuInfoTimeout = setTimeout(() => saveShuInfo(SHU_INFO), 1000);
+                            return false;
+                        }
+                    });
+                    return false;
+                }
+            });
+
+
+            // 判断是否需要加载下一章节
             if (loading) return;
             if (this.scrollHeight - this.scrollTop < this.clientHeight + 50) {
                 loading = true;
-                CurrentBook.yddId++;
-                getChapter(CurrentBook, CurrentBook.yddId, function (name, text) {
+                const chapter_index = CurrentBook.yddId + 1;
+                getChapter(CurrentBook, chapter_index, function (name, text) {
                     loading = false;
                     saveShuInfo(SHU_INFO);
                     const children = _shuben_content.querySelectorAll("div");
                     const div = children.length > 5 ? children.item(0) : document.createElement("div");
+                    div.dataset.chapter = chapter_index;
                     div.innerHTML = `<h2>${name}</h2>` + text;
-                    _shuben_content.appendChild(div)
+                    _shuben_content.appendChild(div);
                 });
             }
         });
@@ -259,24 +330,34 @@ storage.then(function () {
         });
 
         const MENU_FUNCTION = {
-            "chapter": function(target) {
+            /**
+             * 打开目录
+             * @param {Element} target 
+             */
+            "chapter": function (target) {
+                _shuben_list_scroll.querySelectorAll(".select").forEach(function(li) {
+                    li.classList.remove("select");
+                });
                 _shuben_list.classList.remove("hide");
                 _shuben_menu.classList.add("hide");
+                const _current_item = _shuben_list_scroll.children.item(CurrentBook.yddId);
+                _current_item.classList.add("select");
+                _shuben_list_scroll.scrollTo(0, _current_item.offsetTop - 50);
             },
-            "home": function(target) {
+            "home": function (target) {
                 _shuben.classList.add("hide");
                 _shuben_menu.classList.add("hide");
             },
-            "reset": function(target) {
+            "reset": function (target) {
 
             },
-            "cancel": function(target) {
+            "cancel": function (target) {
                 _shuben_menu.classList.add("hide");
             }
         }
 
-        PuSet(_shuben_menu.querySelector(".button-box")).on("click", "button", function() {
-            const fn = MENU_FUNCTION[ this.className ];
+        PuSet(_shuben_menu.querySelector(".button-box")).on("click", "button", function () {
+            const fn = MENU_FUNCTION[this.className];
             if ("function" == typeof fn) {
                 fn(this);
             }
@@ -295,7 +376,7 @@ storage.then(function () {
         storage.setItem("SETTINGS", settings);
     }
 
-    storage.getItem("SETTINGS").then(function(request) {
+    storage.getItem("SETTINGS").then(function (request) {
         parseSettings(settings = (request.result || {
             'text-size': 20,
             'text-margin': 10,
@@ -306,7 +387,7 @@ storage.then(function () {
         }
     });
 
-    PuSet(_shuben_menu.querySelectorAll(".range input[type=text]")).on("click", function(ev) {
+    PuSet(_shuben_menu.querySelectorAll(".range input[type=text]")).on("click", function (ev) {
         if (ev.srcEvent.clientX > (innerWidth / 2)) {
             settings[this.id]++;
         } else {
