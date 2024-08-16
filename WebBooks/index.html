@@ -7,10 +7,9 @@
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Cache-control" content="no-cache">
 	<meta http-equiv="Cache" content="no-cache">
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<!-- <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> -->
 	<meta name="format-detection" content="telephone=no" />
-	<meta name="viewport"
-		content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+	<meta name="viewport" content="width=device-width, height=device-height" />
 	<link rel="stylesheet" type="text/css" href="css/index.css" />
 	<title>阅读器</title>
 </head>
@@ -56,19 +55,19 @@
 				<div class="range">
 					<div>文字大小</div>
 					<label for="text-size" class="flex-vertical">
-						<input id="text-size" type="text" value="0" readonly="readonly" title="">
+						<input id="text-size" type="text" value="0" readonly="readonly" title="text-size">
 					</label>
 				</div>
 				<div class="range">
 					<div>文字边距</div>
 					<label for="text-margin" class="flex-vertical">
-						<input id="text-margin" type="text" value="0" readonly="readonly" title="">
+						<input id="text-margin" type="text" value="0" readonly="readonly" title="text-margin">
 					</label>
 				</div>
 				<div class="range">
 					<div>文字行距</div>
 					<label for="text-spaced" class="flex-vertical">
-						<input id="text-spaced" type="text" value="0" readonly="readonly" title="">
+						<input id="text-spaced" type="text" value="0" readonly="readonly" title="text-spaced">
 					</label>
 				</div>
 				<div class="theme">
@@ -117,6 +116,48 @@
 			<input class="changeIcon" value="修改封面" type="button">
 			<input class="barrier goBack" value="返回" type="button">
 			<input class="barrier removeBook red" value="移除书籍" type="button">
+		</div>
+	</div>
+	<div id="add" class="view flex-vertical hide">
+		<div class="flex-horizontal search-box">
+			<input type="text" title="search" id="search-value" class="fc" placeholder="书名，作者名，网址">
+			<input type="button" value="Search" id="search-button">
+			<input type="button" value="Cancel" id="search-cancel">
+		</div>
+		<div class="fc">
+			<ul class="view scroll">
+				<li class="flex-horizontal">
+					<img class="cover" src="img/nocover.jpg" alt="cover" srcset="" />
+					<div class="small">
+						<h1 class="book-name">神墓</h1>
+						<span>作者：辰东</span>
+						<span>状态：已经完本</span>
+						<span class="last">更新：2008-11-24 00:40:40</span>
+						<span class="last">最新：<a href="/book/3794/749.html">第513章 大结局（请将推荐票投给我的新书《长生界》）</a></span>
+						<span class="intro">一个死去万载岁月的平凡青年从远古神墓中复活而出……</span>
+					</div>
+				</li>
+				<li class="flex-horizontal">
+					<img class="cover" src="img/nocover.jpg" alt="cover" srcset="" />
+					<div class="small">
+						<span>作者：辰东</span>
+						<span>状态：已经完本</span>
+						<span class="last">更新：2008-11-24 00:40:40</span>
+						<span class="last">最新：<a href="/book/3794/749.html">第513章 大结局（请将推荐票投给我的新书《长生界》）</a></span>
+						<span class="intro">一个死去万载岁月的平凡青年从远古神墓中复活而出……</span>
+					</div>
+				</li>
+				<li class="flex-horizontal">
+					<img class="cover" src="img/nocover.jpg" alt="cover" srcset="" />
+					<div class="small">
+						<span>作者：辰东</span>
+						<span>状态：已经完本</span>
+						<span class="last">更新：2008-11-24 00:40:40</span>
+						<span class="last">最新：<a href="/book/3794/749.html">第513章 大结局（请将推荐票投给我的新书《长生界》）</a></span>
+						<span class="intro">一个死去万载岁月的平凡青年从远古神墓中复活而出……</span>
+					</div>
+				</li>
+			</ul>
 		</div>
 	</div>
 

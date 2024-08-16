@@ -19,7 +19,6 @@ th {
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
-	/* background: transparent; */
 	background: white;
 }
 
@@ -52,10 +51,6 @@ th {
 .fc {
 	flex-grow: 1;
 	position: relative;
-}
-
-body .hide {
-	display: none !important;
 }
 
 .title {
@@ -171,7 +166,7 @@ body .hide {
 	line-height: 10px;
 }
 
-#shuben>.list .scroll {
+ul.scroll {
 	position: absolute;
 	overflow: hidden scroll;
 	-webkit-user-select: none;
@@ -264,22 +259,27 @@ body .hide {
 	height: 60px;
 	padding: 0 5px;
 }
+
 .menu .radio-box {
 	height: 30px;
+	padding: 0;
 }
+
 .menu .radio-box>label {
 	position: relative;
-	width: 10%;
+	width: 15%;
 	height: 30px;
 	overflow: hidden;
 }
-.menu .radio-box>label>div{
+
+.menu .radio-box>label>div {
 	border-radius: 7px;
-	border: 1px solid rgb(140, 140, 140);
+	border: 1px solid rgb(100 11 19);
 	box-sizing: border-box;
 	margin: 0;
 }
-.menu .radio-box>label>input:checked+div{
+
+.menu .radio-box>label>input:checked+div {
 	border: 3px solid rgb(255 0 211);
 }
 
@@ -361,4 +361,55 @@ body .hide {
 
 .red {
 	color: red;
+}
+
+#add>div.search-box {
+	height: 3rem;
+	margin: 2px;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+}
+
+#add > div.fc > ul > li {
+	padding: 5px 2px;
+}
+
+#add > div.fc > ul > li > img.cover {
+	width: 115px;
+	height: 152px;
+	margin: 0 5px 0 2px;
+}
+
+#add > div.fc > ul > li > div {
+	position: relative;
+	line-height: 1.8rem;
+	/* padding: 0 0 0 2px; */
+}
+#add > div.fc > ul > li > div > h1 {
+	margin: 5px 0;
+	font-size: 1.5em;
+	font-weight: 400;
+}
+#add > div.fc > ul > li > div > span {
+	display: block;
+	float: left;
+	min-width: 50%;
+}
+.small .last a, 
+.listmain .more a {
+    color: #FD5500;
+}
+
+
+
+
+
+
+
+
+
+
+
+body .hide {
+	display: none !important;
 }

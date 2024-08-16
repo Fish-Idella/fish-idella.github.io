@@ -22,11 +22,6 @@ PuSet.fn.reverse = Array.prototype.reverse;
 const storage = new PuSet.Storage("WEB_BOOKS_DB", "1.0");
 storage.then(function () {
 
-    // 初始化主题
-    storage.getItem("THEME").then(function(request) {
-        _shuben_content.setAttribute("theme", request.result || "default");
-    });
-
     const TYPE_NOT = "not is url";
 
     let CurrentBook;
@@ -156,12 +151,12 @@ storage.then(function () {
     const _shujia = document.querySelector("#shujia > div.body.fc > #shujia-box");
     const _button_tianjia = document.querySelector("#shujia > div.body.fc > #shujia-box > #tianjia");
 
-    const _preview = document.getElementById("preview");
     const _shuben = document.querySelector("#shuben");
     const _shuben_content = _shuben.querySelector(".content");
     const _shuben_list = _shuben.querySelector(".list");
     const _shuben_menu = _shuben.querySelector(".menu");
     const _menu = document.querySelector("#menu");
+    const _preview = document.getElementById("preview");
 
     const _shuben_list_scroll = _shuben_list.querySelector("ul.scroll");
 
@@ -178,16 +173,13 @@ storage.then(function () {
         }
     });
 
-    _shuben_list.querySelector("button#list-close").addEventListener("click", function () {
-        _shuben_list.classList.add("hide");
-    });
 
-    // 选择章节
-    PuSet(_shuben_list.querySelector("ul.scroll")).on("click", "li", function () {
-        openBook(CurrentBook.yddId = +this.title, 0, false);
-        _shuben_list.classList.add("hide");
+    // 初始化主题
+    storage.getItem("THEME").then(function(request) {
+        const key = request.result || "default";
+        _shuben_content.setAttribute("theme", key);
+        _shuben_menu.querySelector(`.theme .radio-box input[type=radio][title=${key}]`).checked = true;
     });
-
 
     storage.getItem("BOOKS").then(function (request) {
         const SHU_INFO = request.result || {};
@@ -378,6 +370,17 @@ storage.then(function () {
         storage.setItem("BOOKS", {}).then(function () {
             alert("需要重新启动")
         });
+    });
+
+    // 关闭目录
+    _shuben_list.querySelector("button#list-close").addEventListener("click", function () {
+        _shuben_list.classList.add("hide");
+    });
+
+    // 选择章节
+    PuSet(_shuben_list.querySelector("ul.scroll")).on("click", "li", function () {
+        openBook(CurrentBook.yddId = +this.title, 0, false);
+        _shuben_list.classList.add("hide");
     });
 
 
