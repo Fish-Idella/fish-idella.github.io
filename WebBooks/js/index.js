@@ -1,5 +1,5 @@
-// // document.addEventListener('deviceready', function() {
-// // document.addEventListener('DOMContentLoaded', function() {
+// document.addEventListener('deviceready', function() {
+// document.addEventListener('DOMContentLoaded', function() {
 const WEB_BOOK_PARSE = {
     "www.bxwx.tv": {
         "bookName": "#info>h1",
@@ -21,6 +21,11 @@ PuSet.fn.reverse = Array.prototype.reverse;
 
 const storage = new PuSet.Storage("WEB_BOOKS_DB", "1.0");
 storage.then(function () {
+
+    // 初始化主题
+    storage.getItem("THEME").then(function(request) {
+        _shuben_content.setAttribute("theme", request.result || "default");
+    });
 
     const TYPE_NOT = "not is url";
 
@@ -309,8 +314,7 @@ storage.then(function () {
 
 
             // 判断是否需要加载下一章节
-            if (loading) return;
-            if (this.scrollHeight - this.scrollTop < this.clientHeight + 50) {
+            if (loading == false && ((this.scrollHeight - this.scrollTop) < (this.clientHeight * 3))) {
                 loading = true;
                 const chapter_index = CurrentBook.yddId + 1;
                 getChapter(CurrentBook, chapter_index, function (name, text) {
@@ -335,7 +339,7 @@ storage.then(function () {
              * @param {Element} target 
              */
             "chapter": function (target) {
-                _shuben_list_scroll.querySelectorAll(".select").forEach(function(li) {
+                _shuben_list_scroll.querySelectorAll(".select").forEach(function (li) {
                     li.classList.remove("select");
                 });
                 _shuben_list.classList.remove("hide");
@@ -349,7 +353,14 @@ storage.then(function () {
                 _shuben_menu.classList.add("hide");
             },
             "reset": function (target) {
-
+                parseSettings(settings = {
+                    'text-size': 20,
+                    'text-margin': 10,
+                    'text-spaced': 30
+                });
+                for (let key in settings) {
+                    _shuben_menu.querySelector('#' + key).value = settings[key];
+                }
             },
             "cancel": function (target) {
                 _shuben_menu.classList.add("hide");
@@ -369,6 +380,8 @@ storage.then(function () {
         });
     });
 
+
+
     const _style_content = document.getElementById("style-content");
     let settings;
     function parseSettings() {
@@ -387,13 +400,26 @@ storage.then(function () {
         }
     });
 
-    PuSet(_shuben_menu.querySelectorAll(".range input[type=text]")).on("click", function (ev) {
-        if (ev.srcEvent.clientX > (innerWidth / 2)) {
-            settings[this.id]++;
-        } else {
-            settings[this.id]--;
+    _shuben_menu.addEventListener("click", function (ev) {
+        if (ev.target === _shuben_menu) {
+            _shuben_menu.classList.add("hide");
         }
-        this.value = settings[this.id];
+    })
+
+    PuSet(_shuben_menu.querySelectorAll(".range input[type=text]")).on("click", function (ev) {
+        const key = this.id;
+        if (ev.srcEvent.clientX > (this.clientWidth / 2)) {
+            this.value = settings[key] = Math.min(settings[key] + 1, 100);
+        } else {
+            this.value = settings[key] = Math.max(settings[key] - 1, 0);
+        }
         parseSettings();
     });
+
+    PuSet(_shuben_menu.querySelectorAll(".theme .radio-box input[type=radio]")).on("change", function() {
+        const theme = this.title;
+        _shuben_content.setAttribute("theme", theme);
+        storage.setItem("THEME", theme);
+    });
+
 });

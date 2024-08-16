@@ -216,14 +216,14 @@ body .hide {
 
 #shuben>.menu {
 	background: none;
-	background-color: #ffffff80;
+	background-color: #ffffff00;
 	-webkit-user-select: none;
 	user-select: none;
 }
 
 #shuben>.menu>.auto-height {
 	position: absolute;
-	background-color: #ffffff;
+	background-color: #d1d8d9;
 	width: 100%;
 	height: auto;
 	left: 0;
@@ -233,8 +233,9 @@ body .hide {
 	/* padding: 10px 0; */
 }
 
-#shuben>.menu>.auto-height>.range {
-	padding: 10px 5px;
+#shuben>.menu>.auto-height>.range,
+#shuben>.menu>.auto-height>.theme {
+	padding: 5px;
 }
 
 .range>label {
@@ -256,11 +257,61 @@ body .hide {
 	outline: none;
 }
 
+.menu .radio-box,
 .menu .button-box {
 	place-content: space-between;
 	place-items: center;
 	height: 60px;
 	padding: 0 5px;
+}
+.menu .radio-box {
+	height: 30px;
+}
+.menu .radio-box>label {
+	position: relative;
+	width: 10%;
+	height: 30px;
+	overflow: hidden;
+}
+.menu .radio-box>label>div{
+	border-radius: 7px;
+	border: 1px solid rgb(140, 140, 140);
+	box-sizing: border-box;
+	margin: 0;
+}
+.menu .radio-box>label>input:checked+div{
+	border: 3px solid rgb(255 0 211);
+}
+
+
+#shuben>.content[theme="dark"],
+.menu .radio-box>label>input[title="dark"]+div {
+	background-color: #C0C0C0;
+	color: #50538c;
+}
+
+#shuben>.content[theme="olive"],
+.menu .radio-box>label>input[title="olive"]+div {
+	background-color: #e5dcc7;
+	color: #212121;
+}
+
+#shuben>.content[theme="teal"],
+.menu .radio-box>label>input[title="teal"]+div {
+	background-color: #008080;
+	color: #d3d0a6;
+}
+
+#shuben>.content[theme="navy"],
+.menu .radio-box>label>input[title="navy"]+div {
+	background-color: #292623;
+	color: #575757;
+}
+
+#shuben>.content[theme="black"],
+.menu .radio-box>label>input[title="black"]+div {
+	background-color: #000000;
+	color: #fff;
 }
 
 .menu .button-box>button {

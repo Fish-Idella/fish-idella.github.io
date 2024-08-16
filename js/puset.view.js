@@ -3,10 +3,10 @@
     "use strict";
 
     const HIDE_ATTR = "v-hide";
-    const LENGTH = "length";
+    const KEY_LENGTH = "length";
 
     const mStyle = document.createElement("style");
-    mStyle.innerHTML = `*[${HIDE_ATTR}] {display: none !important;}`;
+    mStyle.textContent = `*[${HIDE_ATTR}],*[pu-hide] {display: none !important;}`;
     document.head.appendChild(mStyle);
 
     /**
@@ -59,7 +59,7 @@
 
         const isArray = Array.isArray(options.data);
 
-        const isFunction = PuSet.isFunction(self.onresize);
+        const hasResizeListener = PuSet.isFunction(self.onresize);
 
         // 实例化后的模板
         const hasTemplate = self.__IT();
@@ -73,12 +73,12 @@
                         // console.log("hasTemplate")
                         if (isArray) {
                             // console.log("isArray")
-                            if (LENGTH === prop) {
+                            if (KEY_LENGTH === prop) {
                                 if (obj.length > value) {
                                     // 隐藏溢出的元素
                                     self.hide(value);
 
-                                    if (isFunction) {
+                                    if (hasResizeListener) {
                                         self.onresize(self.target, value, prop);
                                     }
                                 }
@@ -114,8 +114,8 @@
 
         if (!self.hidden) { self.update(); }
 
-        if (isArray && isFunction) {
-            self.onresize(self.target, self.data[LENGTH], LENGTH);
+        if (isArray && hasResizeListener) {
+            self.onresize(self.target, self.data[KEY_LENGTH], KEY_LENGTH);
         }
 
     };
