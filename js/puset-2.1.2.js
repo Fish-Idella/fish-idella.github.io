@@ -1170,37 +1170,36 @@
             }
 
             const handlers = this.handlers[type];
-
-            event = new ActionEvent(event);
-            event.type = type;
-            event.namespace = namespaces.join(".");
-            event.rnamespace = event.namespace ?
+            const actionEvent = new ActionEvent(event);
+            actionEvent.type = type;
+            actionEvent.namespace = namespaces.join(".");
+            actionEvent.rnamespace = actionEvent.namespace ?
                 new RegExp("(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)") :
                 null;
 
-            if (!event.target) {
-                event.target = actionInput.target;
+            if (!actionEvent.target) {
+                actionEvent.target = actionInput.target;
             }
 
-            const path = event.getComposedPath(actionInput.target);
+            const path = actionEvent.getComposedPath(actionInput.target);
 
             PuSet.each(handlers, function (handleObj, i) {
 
-                if (event.isCustom === handleObj.isCustom) {
+                if (actionEvent.isCustom === handleObj.isCustom) {
 
-                    let entrus = function (elem) {
+                    const entrus = function (elem) {
 
                         // If the event is namespaced, then each handler is only invoked if it is
                         // specially universal or its namespaces are a superset of the event's.
-                        if (!event.rnamespace || handleObj.namespace === false ||
-                            event.rnamespace.test(handleObj.namespace)) {
+                        if (!actionEvent.rnamespace || handleObj.namespace === false ||
+                            actionEvent.rnamespace.test(handleObj.namespace)) {
 
-                            handleObj.handler.call(elem, event);
+                            handleObj.handler.call(elem, actionEvent);
                         }
                     };
 
                     if (handleObj.selector) {
-                        let selector = toArray(PuSet(handleObj.selector, actionInput.target));
+                        const selector = toArray(PuSet(handleObj.selector, actionInput.target));
                         if (selector.length) {
                             PuSet.each(path.filter(item => selector.includes(item)), entrus);
                         }
