@@ -9,13 +9,21 @@ const WEB_BOOK_PARSE = {
         "content": "#content"
     },
     "www.bigee.cc": {
+        "search": "https://www.bigee.cc/s?q={query}",
+        'searchList': "body > div.wrap > div.so_list.bookcase > div.type_show > div.bookbox",
+        'searchCover': "div.box > div.bookimg > a > img",
+        "searchName": 'div.box > div.bookinfo > h4 > a',
+        "searchAuthor": "div.box > div.bookinfo > div.author",
+        "searchUptime": "div.box > div.bookinfo > div.uptime",
+
         "bookName": "body > div.book > div.info > h1",
         "cover": "body > div.book > div.info > div.cover > img",
         "firstListURL": "",
-        "list": "body div.listmain dd>a",
+        "list": "body div.listmain dd > a",
         "content": "#chaptercontent"
     },
 };
+
 
 PuSet.fn.reverse = Array.prototype.reverse;
 
@@ -177,12 +185,18 @@ storage.then(function () {
         }
     });
 
+    function search(value) {
+        // TODO 搜索
+        alert(value)
+    }
 
     // 初始化主题
     storage.getItem("THEME").then(function (request) {
         const key = request.result || "default";
         _shuben_content.setAttribute("theme", key);
-        _shuben_menu.querySelector(`.theme .radio-box input[type=radio][title=${key}]`).checked = true;
+        const _theme = _shuben_menu.querySelector(`.theme .radio-box input[type=radio][title=${key}]`);
+        _theme.checked = true;
+        window.PuSetWebView?.setBackgroundColor(_theme.getAttribute("backgroundColor"));
     });
 
     storage.getItem("BOOKS").then(function (request) {
@@ -285,8 +299,7 @@ storage.then(function () {
                 });
                 _add.classList.add("hide");
             } else {
-                // TODO 搜索
-                alert("功能开发中")
+                search(base);
             }
         });
 
@@ -433,6 +446,7 @@ storage.then(function () {
         const theme = this.title;
         _shuben_content.setAttribute("theme", theme);
         storage.setItem("THEME", theme);
+        window.PuSetWebView?.setBackgroundColor(this.getAttribute("backgroundColor"));
     });
 
 });

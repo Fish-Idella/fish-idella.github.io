@@ -194,8 +194,8 @@ ul.scroll {
 
 #shuben>.list>.title {
 	position: relative;
-	height: 3rem;
-	line-height: 3rem;
+	height: 4rem;
+	line-height: 4rem;
 	font-size: 1.6rem;
 }
 
@@ -374,23 +374,24 @@ ul.scroll {
 	padding: 5px 2px;
 }
 
-#add > div.fc > ul > li > img.cover {
+#add > div.fc > ul > li  img.cover {
 	width: 115px;
 	height: 152px;
 	margin: 0 5px 0 2px;
 }
 
-#add > div.fc > ul > li > div {
+#add > div.fc > ul > li  div.small {
 	position: relative;
-	line-height: 1.8rem;
+	line-height: 1.4rem;
 	/* padding: 0 0 0 2px; */
 }
-#add > div.fc > ul > li > div > h1 {
-	margin: 5px 0;
-	font-size: 1.5em;
+#add > div.fc > ul > li  div.small > h1 {
+	margin: 0 0 5px 0;
+	font-size: 1.8em;
+	line-height: 1.6em;
 	font-weight: 400;
 }
-#add > div.fc > ul > li > div > span {
+#add > div.fc > ul > li  div.small > span {
 	display: block;
 	float: left;
 	min-width: 50%;
@@ -400,7 +401,9 @@ ul.scroll {
     color: #FD5500;
 }
 
-
+#add > div.fc > ul > li > div.intro {
+	text-indent: 2em;
+}
 
 
 
