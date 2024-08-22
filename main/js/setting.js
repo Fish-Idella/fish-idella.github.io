@@ -71,17 +71,17 @@ const PuSetting = (function (attrs) {
         MainUI.updataWeather(window.vm_weather);
     },
 
-    "default_configuration": function() {
-        window.location.href = "reset.html"
+    "default_configuration": function () {
+        window.location.href = "/main/reset.html"
     },
 
-    "import_configuration": function(url) {
-        fetch(url).then(a => a.text()).then(function(code) {
+    "import_configuration": function (url) {
+        fetch(url).then(a => a.text()).then(function (code) {
             try {
-                storage.setItem("puset-local-configure", LZString.compress( code )).then(() => {
+                storage.setItem("puset-local-configure", LZString.compress(code)).then(() => {
                     window.location.reload(true);
                 });
-            } catch(ex) {
+            } catch (ex) {
                 alert("文件格式不正确或已损坏")
             }
         })
@@ -90,10 +90,10 @@ const PuSetting = (function (attrs) {
     "export_configuration": function () {
         const save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
         const date = new Date;
-        save_link.download = `网页配置 ${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`;
+        save_link.download = `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`;
 
-        storage.getItem("puset-local-configure").then(function(request) {
-            save_link.href = URLObject.createObjectURL( new Blob([LZString.decompress(request.result)]) );
+        storage.getItem("puset-local-configure").then(function (request) {
+            save_link.href = URLObject.createObjectURL(new Blob([LZString.decompress(request.result)]));
             save_link.dispatchEvent(new MouseEvent('click', {
                 'view': window,
                 'bubbles': true,

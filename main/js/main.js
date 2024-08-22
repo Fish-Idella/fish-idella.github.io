@@ -348,7 +348,7 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
     MainUI.today = new Date;
     MainUI.GS = settings;
 
-    null == MainUI.GS && window.location.replace("/reset.html?" + Date.now());
+    null == MainUI.GS && window.location.replace("/main/reset.html?" + Date.now());
 
     // console.info('%cconsole.info', 'color: green;');
 

@@ -371,6 +371,10 @@ storage.then(function () {
                 _current_item.classList.add("select");
                 _shuben_list_scroll.scrollTo(0, _current_item.offsetTop - 50);
             },
+            "details": function() {
+                _menu.classList.remove("hide");
+                _shuben_menu.classList.add("hide");
+            },
             "home": function (target) {
                 _shuben.classList.add("hide");
                 _shuben_menu.classList.add("hide");
