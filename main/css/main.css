@@ -1,8 +1,8 @@
 body,
 body[theme=default] {
-	--value-text-shadow: .1rem 0 .1rem #000;
+	--value-text-shadow: 0 0 .1rem #000;
 	--value-box-shadow: 1px 1px 3px rgb(158, 158, 158);
-
+	--text-shadow: #3d0505c9;
 	--color-transparent: transparent;
 	--color-text: #000;
 	--color-link: #fff;
@@ -17,7 +17,6 @@ body[theme=default] {
 	--color-long-text: #353535;
 	--color-border: #757575;
 	--color-border-hover: #4f4f4f;
-
 	--background-view: rgba(0, 0, 0, 0.1);
 	--background-search: #f4f4f4;
 	--background-tips: rgba(255, 255, 255, 0.568);
@@ -84,13 +83,13 @@ body>.view {
 
 #main a {
 	color: var(--color-link);
-	;
 }
 
 #weather {
 	grid-area: 1/1/2/2;
 	line-height: 3rem;
 	-webkit-user-drag: none;
+	font-weight: 400;
 	text-shadow: var(--value-text-shadow);
 }
 
@@ -178,10 +177,12 @@ body>.view {
 	place-items: center;
 	text-align: center;
 	text-decoration: none;
-	text-shadow: .1rem 0 .1rem var(--text-shadow);
+	text-shadow: 0 0 5px var(--text-shadow);
 	font-size: .8rem;
+	font-weight: 400;
 	transition: transform .1s;
 	flex-flow: column;
+	/* background-color: #9d9d9d26; */
 }
 
 #links a.link-button.hide {
@@ -190,6 +191,7 @@ body>.view {
 
 #links #scroll a:hover {
 	transform: scale(1.2);
+	font-weight: 500;
 }
 
 .perview a span.bg,
@@ -209,6 +211,7 @@ body>.view {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	line-height: 2rem;
+	width: 100%;
 }
 
 .hide,

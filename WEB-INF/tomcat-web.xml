@@ -22,6 +22,8 @@
   version="5.0"
   metadata-complete="true">
 
+    <!-- tomcat-10, jdk-11  -->
+
     <servlet>
         <servlet-name>Get</servlet-name>
         <servlet-class>GetFile</servlet-class>

@@ -287,6 +287,7 @@ var MainUI = {
 
                 } else {
                     const file = MainUI.GS.boolean_file_wallpaper;
+                    MainUI.GS.boolean_file_wallpaper = true;
                     storage.setItem("local_wallpaper_file", file).then(() => {
                         MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
                     });
