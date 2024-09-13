@@ -193,14 +193,16 @@
 
         var promise = new Promise((resolve, reject) => {
 
-            getLocalConfig("puset-local-weather", {
+            const def = {
                 "lastUpdate": "1994/10/01 20:00",
                 "msg": "success",
                 "code": 0,
                 "data": {
                     "lastUpdate": "1994/10/01 20:00"
                 }
-            }, function (weather) {
+            };
+
+            getLocalConfig("puset-local-weather", def, function (weather) {
                 // 当前时间距离上次刷新超过12小时
                 if ((today.getTime() - (new Date(weather.lastUpdate || weather.data.lastUpdate || weather.data.date)).getTime()) > 43200000) {
 
@@ -226,6 +228,7 @@
                 return response.json();
             }).then(function (weather) {
                 if (weather && weather.msg == "success") {
+                    // setLocalConfig("puset-local-current-weather", weather);
                     callback(new ParseWeather(today, weather, city));
                 }
             }).catch(function () {
