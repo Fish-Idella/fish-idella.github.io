@@ -45,7 +45,12 @@ window.Mm = (function (props) {
                 xhr.open("GET", url);
                 xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                xhr.onload = () => resolve(xhr);
+                // xhr.onload = () => resolve(xhr);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === xhr.DONE) {
+                        resolve(xhr)
+                    }
+                }
                 xhr.onerror = reject;
                 xhr.send();
             });

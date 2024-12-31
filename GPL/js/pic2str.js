@@ -94,13 +94,9 @@
 
                 this.onImageloaded(this.canvas, this);
 
-            }, false);
+            }, this.loaded = false);
 
-            if (arguments.length > 1) {
-                this.setOnImageloadedEventListener(callback);
-            }
-
-            this.loaded = false;
+            this.setOnImageloadedEventListener(callback);
             img.src = url;
         }
 
@@ -114,9 +110,10 @@
                     for (i = 0; i < this.rowcount; i++) {
                         if (checked) {
                             for (p = 0, y = 0; y < 5; y++) {
-                                for (x = 0; x < 2; x++) {
-                                    p += tools.getGreen(this.context.getImageData(7 * i + (x * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data);
-                                }
+                                // for (x = 0; x < 2; x++) {
+                                    p += tools.getGreen(this.context.getImageData(7 * i + (0 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data);
+                                    p += tools.getGreen(this.context.getImageData(7 * i + (1 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data);
+                                // }
                             }
 
                             n = Math.floor((p / 10) * length) - 1;
@@ -126,11 +123,14 @@
                             result.push(tools.an.charAt(n));
                         } else {
                             for (p = 0, y = 0; y < 5; y++) {
-                                for (x = 0; x < 2; x++) {
-                                    if (tools.getGreen(this.context.getImageData(7 * i + (x * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data) > 125) {
-                                        p |= (1 << (9 - (y * 2 + x)));
+                                // for (x = 0; x < 2; x++) {
+                                    if (tools.getGreen(this.context.getImageData(7 * i + (0 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data) < 128) {
+                                        p |= (1 << (9 - (y * 2 + 0)));
                                     }
-                                }
+                                    if (tools.getGreen(this.context.getImageData(7 * i + (1 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data) < 128) {
+                                        p |= (1 << (9 - (y * 2 + 1)));
+                                    }
+                                // }
                             }
                             result.push(tools.braille.charAt(p & 255));
                         }

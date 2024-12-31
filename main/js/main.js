@@ -139,6 +139,7 @@ function loadBackgroundFn(mBackground) {
                     const n = `${d}transition:opacity 1s;opacity:1;`;
                     mBackground.setAttribute("style", n);
                     mVideo.setAttribute("poster", path);
+                    mVideo.src = "#background";
                     setTimeout(function () {
                         mBackground.setAttribute("style", d);
                     }, 1000);
@@ -185,7 +186,7 @@ function loadBackgroundFn(mBackground) {
     }
 };
 
-var MainUI = {
+let GS, MainUI = {
 
     // 透明图片
     a: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
@@ -239,64 +240,64 @@ var MainUI = {
                 break;
             }
             case "boolean_main_show_add_button": {
-                this.showAddLinkButton(MainUI.GS.boolean_main_show_add_button);
+                this.showAddLinkButton(GS.boolean_main_show_add_button);
                 break;
             }
             case "boolean_main_show_links": {
-                this.showLinks(MainUI.GS.boolean_main_show_links);
+                this.showLinks(GS.boolean_main_show_links);
                 break;
             }
             case "map_search_engine":
             case "map_search_engine_show": {
-                Object.assign(MainUI.vm_search_engine.data, MainUI.GS.map_search_engine_show);
+                Object.assign(MainUI.vm_search_engine.data, GS.map_search_engine_show);
                 break;
             }
             case "boolean_random_wallpaper": {
                 if (value) {
-                    if (MainUI.GS.boolean_bing_wallpaper) {
-                        MainUI.GS.string_background_type = 'bing';
+                    if (GS.boolean_bing_wallpaper) {
+                        GS.string_background_type = 'bing';
                     } else {
-                        MainUI.GS.string_background_type = 'random';
-                        MainUI.GS.string_background_src = 'portrait';
+                        GS.string_background_type = 'random';
+                        GS.string_background_src = 'portrait';
                     }
                 } else {
-                    MainUI.GS.string_background_type = 'file';
+                    GS.string_background_type = 'file';
                 }
-                MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+                MainUI.loadBackground(GS.string_background_src, GS.string_background_type);
                 break;
             }
             case "boolean_bing_wallpaper": {
                 if (value) {
-                    MainUI.GS.string_background_type = 'bing';
+                    GS.string_background_type = 'bing';
                 } else {
-                    MainUI.GS.string_background_type = 'random';
-                    MainUI.GS.string_background_src = 'portrait';
+                    GS.string_background_type = 'random';
+                    GS.string_background_src = 'portrait';
                 }
-                MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+                MainUI.loadBackground(GS.string_background_src, GS.string_background_type);
                 break;
             }
             case "boolean_file_wallpaper": {
                 if (type == "checkbox") {
 
                     if (value) {
-                        MainUI.GS.string_background_type = 'file';
-                        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+                        GS.string_background_type = 'file';
+                        MainUI.loadBackground(GS.string_background_src, GS.string_background_type);
                     } else {
-                        MainUI.GS.string_background_type = 'color';
+                        GS.string_background_type = 'color';
                     }
 
                 } else {
-                    const file = MainUI.GS.boolean_file_wallpaper;
-                    MainUI.GS.boolean_file_wallpaper = true;
+                    const file = GS.boolean_file_wallpaper;
+                    GS.boolean_file_wallpaper = true;
                     storage.setItem("local_wallpaper_file", file).then(() => {
-                        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+                        MainUI.loadBackground(GS.string_background_src, GS.string_background_type);
                     });
                 }
                 break;
             }
             case "string_background_src": {
-                MainUI.GS.string_background_type = 'color';
-                MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+                GS.string_background_type = 'color';
+                MainUI.loadBackground(GS.string_background_src, GS.string_background_type);
                 break;
             }
             case "boolean_show_icp": {
@@ -309,7 +310,7 @@ var MainUI = {
             }
             default: {
                 console.log(psid)
-                console.dir(MainUI.GS)
+                console.dir(GS)
             }
         }
     },
@@ -320,13 +321,13 @@ var MainUI = {
 
     updataWeather: function () {
         const vm_weather = this.vm_weather;
-        if (MainUI.GS.boolean_show_weather) {
+        if (GS.boolean_show_weather) {
             PuSet.View.show(vm_weather.target, true);
-            ParseWeather.getWeatherInfo(MainUI.GS.boolean_auto_ip ? ParseWeather.AUTO : MainUI.GS.string_local_city, MainUI.today, function (info) {
+            ParseWeather.getWeatherInfo(GS.boolean_auto_ip ? ParseWeather.AUTO : GS.string_local_city, MainUI.today, function (info) {
                 // console.dir(info)
                 const hours = MainUI.today.getHours();
                 const isNight = (hours < 7 || hours > 18);
-                vm_weather.data.location = MainUI.GS.boolean_auto_ip;
+                vm_weather.data.location = GS.boolean_auto_ip;
                 vm_weather.data.city = info.name;
                 vm_weather.data.temperature = {
                     temperature: ParseWeather.ifDefault(info.temperature, (info.low + "&#126;" + info.high), info.temperature),
@@ -347,9 +348,9 @@ var MainUI = {
 storage.then(() => getLocalConfig("puset-local-configure", null, function (settings) {
 
     MainUI.today = new Date;
-    MainUI.GS = settings;
+    MainUI.GS = GS = settings;
 
-    null == MainUI.GS && window.location.replace("/main/reset.html?" + Date.now());
+    null == GS && window.location.replace("/main/reset.html?" + Date.now());
 
     // console.info('%cconsole.info', 'color: green;');
 
@@ -371,14 +372,14 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
         }
     }
 
-    MainUI.showLinks(MainUI.GS.boolean_main_show_links);
+    MainUI.showLinks(GS.boolean_main_show_links);
     MainUI.add_link_button = document.getElementById("add-link-button");
-    MainUI.showAddLinkButton(MainUI.GS.boolean_main_show_add_button);
+    MainUI.showAddLinkButton(GS.boolean_main_show_add_button);
     MainUI.vm_scroll = PuSet.View({
         target: document.getElementById("scroll"),
         selector: "a.link-button",
         insert: "#add-link-button",
-        data: MainUI.GS.map_all_links,
+        data: GS.map_all_links,
         onresize: function (target, value, key) {
             if ("length" === key) {
                 target.style.width = `${(+value + 1) * 96}px`;
@@ -465,10 +466,10 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
     MainUI.vm_search_engine = PuSet.View({
         target: document.getElementById("search-input"),
         selector: "span.bg.s_btn_wr",
-        data: MainUI.GS.map_search_engine_show,
+        data: GS.map_search_engine_show,
         layout: function (target, value, key) {
             const button = target.querySelector("button");
-            const list = MainUI.GS.map_search_engine[value];
+            const list = GS.map_search_engine[value];
             button.id = "engine_" + value;
             button.title = list.title;
 
@@ -499,7 +500,7 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
         } else if (ev.submitter) {
             const [type, engine] = ev.submitter.id.split("_");
             if ("engine" == type) {
-                window.location.href = (MainUI.GS.map_search_engine[engine].href + encodeURIComponent(value));
+                window.location.href = (GS.map_search_engine[engine].href + encodeURIComponent(value));
             }
         }
     });
@@ -536,6 +537,6 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
 
     // 背景图片或视频
     MainUI.loadBackground = loadBackgroundFn(mBackground);
-    MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+    MainUI.loadBackground(GS.string_background_src, GS.string_background_type);
 
 }));

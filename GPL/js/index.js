@@ -6,7 +6,7 @@
 
     var c = document.getElementById("checkbox");
 
-    var p = new Pic2Str(document.getElementById("canvas"), 500).setOnCompletedEventListener(function (text) {
+    var p = new Pic2Str(document.getElementById("canvas"), 30).setOnCompletedEventListener(function (text) {
         t.value = text;
         t.classList.remove("hide");
         b.disabled = false;

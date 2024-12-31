@@ -118,7 +118,7 @@ textarea.view {
 	outline: none;
 	resize: none;
 	overflow: auto;
-	font-size: .2rem;
+	font-size: 1rem;
 	font-family: Consolas, 'Courier New', monospace;
 }
 

@@ -1,0 +1,30 @@
+header {
+    background-color: darkslateblue;
+    color: white;
+    height: 50px;
+    line-height: 50px;
+    font-size: 1.4rem;
+}
+
+#list {
+    overflow: hidden scroll;
+}
+
+#list a {
+    display: block;
+    min-height: 40px;
+}
+
+#list a>.title {
+    line-height: 40px;
+    border-bottom: 1px ridge #dddd;
+}
+
+#list a>.title.group {
+    line-height: 40px;
+    background-color: chocolate;
+}
+
+#list a>.context {
+    padding-left: 1rem;
+}

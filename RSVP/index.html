@@ -12,38 +12,52 @@
     <div class="view rsvp">
         <div class="out-box">
             <div id="player" class="content">
-                <video id="video" class="main" width="100%" height="auto"
-                    poster="/images/5ff86b7c37fbe15dae262fd75bbba305.jpg"></video>
-                <div id="controls" class="view">
-                    <div class="bottom hide">
-                        <input id="progress-bar" title="进度" type="range" max="100" value="0" />
-                        <div class="buttons">
-                            <div class="left fc">
-                                <div class="bt bt-play" title="播放/暂停">
-                                    <img data-a="svg/play.svg" data-b="svg/pause.svg" src="svg/play.svg" alt="播放/暂停">
-                                    <div class="bpx-player-ctrl-time-label">
-                                        <span class="bpx-player-ctrl-time-current">00:00</span>
-                                        <span class="bpx-player-ctrl-time-divide">/</span>
-                                        <span class="bpx-player-ctrl-time-duration">00:00</span>
-                                    </div>
+                <div id="player-video-layer" class="video-layer">
+                    <video class="video view" poster="/images/0x300a0a0.png" src="#" muted></video>
+                    <div class="controls view">
+                        <div class="bottom hide">
+                            <div class="progress-bar">
+                                <div class="progress">
+                                    <div class="view buffered"></div>
+                                    <div class="view played"></div>
                                 </div>
                             </div>
-                            <div class="right">
-                                <div class="bt" title="音量">
-                                    <img data-a="svg/volume.svg" data-b="svg/muted.svg" src="svg/volume.svg" alt="音量">
+                            <div class="buttons">
+                                <div class="left fc">
+                                    <div class="bt bt-play">
+                                        <img data-a="svg/play.svg" data-b="svg/pause.svg" src="svg/play.svg"
+                                            alt="播放/暂停">
+                                        <div class="bpx-player-ctrl-time-label">
+                                            <span class="bpx-player-ctrl-time-current">00:00</span>
+                                            <span class="bpx-player-ctrl-time-divide">/</span>
+                                            <span class="bpx-player-ctrl-time-duration">00:00</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="bt" title="全屏">
-                                    <img id="fullscreen" data-a="svg/separate.svg" data-b="svg/combined.svg"
-                                        src="svg/separate.svg" alt="全屏">
+                                <div class="right">
+                                    <div class="bt bt-volume" title="音量">
+                                        <div class="volume-box flex v hide">
+                                            <div class="volume-value" >0</div>
+                                            <div class="flex fc">
+                                                <input type="range" name="volume" class="volume-bar" title="音量滑块" min="0" max="10" step="1" value="0">
+                                            </div>
+                                        </div>
+                                        <img data-a="svg/volume.svg" data-b="svg/volume.svg" src="svg/muted.svg"
+                                            alt="音量">
+                                    </div>
+                                    <div class="bt bt-fullscreen" title="全屏">
+                                        <img id="fullscreen" data-a="svg/separate.svg" data-b="svg/combined.svg"
+                                            src="svg/separate.svg" alt="全屏">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="dashboard">
+            <div class="dashboard flex v">
                 <div class="box">
-                    <div  class="flex h">
+                    <div class="flex h">
                         <label for="file" type="file">
                             <input type="file" name="video" id="file" accept="video/*">
                             <span>选择视频</span>
@@ -54,14 +68,20 @@
                         </label>
                     </div>
                 </div>
+                <div class="box fc mt info"></div>
             </div>
         </div>
-        <div class="in-box">
+        <div class="in-box flex v">
             <div class="box">
                 <div class="flex v address">
-                    <div  class="flex h"><span>本机地址：</span><input type="text" name="" id="" class="fc"><button>复制</button></div>
-                    <div  class="flex h"><span>远程地址：</span><input type="text" name="" id="" class="fc"><button>加入</button></div>
+                    <div class="flex h"><span>本机地址：</span><input type="text" name="" id=""
+                            class="fc"><button>复制</button></div>
+                    <div class="flex h"><span>远程地址：</span><input type="text" name="" id=""
+                            class="fc"><button>加入</button></div>
                 </div>
+            </div>
+            <div class="box fc mt">
+                <div>1</div>
             </div>
         </div>
     </div>

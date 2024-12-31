@@ -58,7 +58,7 @@ const GameBackgroundImage = PuSetAnimation.createClass({
         return obj;
     },
 
-    animation: function (animation, ctx, MAIN_WIDTH, MAIN_HEIGHT) {
+    animation: function (animation, ctx, timestamp, MAIN_WIDTH, MAIN_HEIGHT) {
         this.list.forEach(obj => {
             let img = obj.getImage();
 
@@ -144,14 +144,14 @@ function (animation, MAIN_WIDTH, MAIN_HEIGHT, document, view) {
              * @param {CanvasRenderingContext2D} ctx 画布的2d上下文
              * @returns 
              */
-            fn: ctx => backgroundImages.animation(animation, ctx, MAIN_WIDTH, MAIN_HEIGHT)
+            fn: (ctx, timestamp) => backgroundImages.animation(animation, ctx, timestamp, MAIN_WIDTH, MAIN_HEIGHT)
         });
     });
 
     let ren = new Ren("郎", "念", 0);
     animation.add({
         keep: true,
-        fn: ctx => ren.animation(animation, ctx, MAIN_WIDTH, MAIN_HEIGHT)
+        fn: (ctx, timestamp) => ren.animation(animation, ctx, timestamp, MAIN_WIDTH, MAIN_HEIGHT)
     });
 
 });

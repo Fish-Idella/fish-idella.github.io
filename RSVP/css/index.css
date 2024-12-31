@@ -1,6 +1,6 @@
 body.theme-default {
     --theme-background-color: #efefef;
-    --theme-text-color: #112233;
+    --theme-text-color: #123;
 }
 
 body {
@@ -8,69 +8,82 @@ body {
     background-color: var(--theme-background-color);
 }
 
-/** 横屏 */
-@media (min-aspect-ratio: 10/9) {
+@font-face {
+    font-family: 'Fira Sans';
+    src: local("FiraSans-Regular"), url(/fonts/FiraSans-Regular.woff2) format("woff2");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@media (min-aspect-ratio:10/9) {
     div.rsvp {
         display: flex;
-        flex-direction: row;
+        flex-direction: row
     }
 
     .out-box {
-        width: 70%;
+        width: 70%
     }
 
     .in-box {
         width: 30%;
-        border-left: 1px solid #ddd;
+        padding: 10px 10px 10px 0
     }
 }
 
-/** 竖屏 */
-@media (max-aspect-ratio: 10/9) {
+@media (max-aspect-ratio:10/9) {
     div.rsvp {
         display: flex;
-        flex-direction: column;
+        flex-direction: column
     }
 
     .out-box {
-        width: 100%;
+        width: 100%
+    }
+
+    .out-box>.dashboard>.info {
+        display: none !important
     }
 
     .in-box {
         width: 100%;
-        flex-grow: 1;
+        padding: 0 10px 10px;
+        flex-grow: 1
     }
 }
 
 .view {
-    position: absolute;
     top: 0;
     left: 0;
-    margin: 0;
-    padding: 0;
+    position: absolute;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    overflow: hidden
 }
 
 .fc {
     position: relative;
-    flex-grow: 1;
+    flex-grow: 1
 }
 
 .out-box {
     display: flex;
     flex-direction: column;
+    user-select: none
 }
 
 .out-box>#player.content {
     position: relative;
     width: 100%;
     box-sizing: border-box;
-    background-color: rgb(0 0 0);
+    padding: 10px
 }
 
-.out-box>.content>#controls>.bottom {
+.controls>.bottom {
     position: absolute;
     display: flex;
     flex-direction: column;
@@ -79,108 +92,153 @@ body {
     padding: 0;
     width: 100%;
     height: 4rem;
-    background-image: linear-gradient(#ffffff00 0%, #00000053 50%, #00000053 100%);
+    background-image: linear-gradient(transparent, rgba(0, 0, 0, .76) 40%, rgba(0, 0, 0, .76))
 }
 
-input[type="range"] {
+input[type=range] {
     -webkit-appearance: none;
     appearance: none;
     margin: 0;
     outline: 0;
-    background-color: transparent;
+    background-color: transparent
 }
 
-input[type="range"]::-webkit-slider-runnable-track {
+input[type=range]::-webkit-slider-runnable-track {
     height: 4px;
-    background: #6aa8ef;
+    background: #ffffff
 }
 
-input[type="range" i]::-webkit-slider-container {
+input[type=range]::-webkit-slider-container {
     height: 20px;
-    overflow: hidden;
+    overflow: hidden
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 10px;
     height: 10px;
-    border-radius: 50%;
-    background-color: #f44336;
-    border: 1px solid rgb(0, 255, 55);
-    margin-top: -3px;
+    background-color: #006aff;
+    margin-top: -3px
 }
 
-#progress-bar {
-    height: 1rem;
+.progress-bar {
+    height: 1.6rem;
     margin: 0 10px;
+    display: flex;
+    place-items: center;
+    place-content: center;
+    cursor: pointer
+}
+
+.progress-bar>.progress {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background-color: hsla(0, 0%, 100%, .27)
+}
+
+.progress-bar>.progress>.played {
+    width: 0;
+    border-radius: 2px;
+    background-color: #fff
+}
+
+.progress-bar:hover>.progress {
+    height: 6px
 }
 
 .buttons {
     flex-grow: 1;
     display: flex;
     position: relative;
-    padding: 0 10px;
+    padding: 0 10px
 }
 
-#controls .buttons .bt {
+.controls .buttons .bt {
     position: relative;
     display: inline-block;
     width: auto;
     height: 2.6rem;
     line-height: 2.6rem;
-    overflow: hidden;
-    color: white;
+    color: #fff;
     word-wrap: normal;
     white-space: nowrap;
-    margin: 0 2px;
+    margin: 0 2px
 }
 
-#controls .buttons .bt>img {
+.controls .buttons .bt>img {
     width: 1.4rem;
-    height: 100%;
+    height: 100%
 }
 
-#controls .buttons .bt.bt-play {
-    display: inline-flex;
+.controls .buttons .bt.bt-play {
+    display: inline-flex
 }
 
 .bpx-player-ctrl-time-label {
-    padding: 0px 10px;
-    font-size: 1rem;
-    font-family: 'Consolas', monospace;
+    padding: 0 10px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Fira Sans', sans-serif
 }
 
+.volume-box {
+    position: absolute;
+    width: 50px;
+    height: 160px;
+    left: -15px;
+    bottom: 4rem;
+    background-color: #2b2b2b;
+    border-radius: 6px;
+    text-align: center;
+    line-height: 2rem;
+    place-items: center
+}
 
-
+.volume-bar {
+    position: absolute;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    left: -2px;
+    top: 0;
+    width: 4px;
+    height: 115px;
+}
 
 .out-box>.dashboard {
-    position: relative;
     flex-grow: 1;
-    box-sizing: border-box;
-    padding: 10px;
-    overflow: hidden auto;
+    padding: 0 10px 10px;
+    overflow: hidden auto
 }
 
-video.main {
-    /* aspect-ratio: 1920 / 1080; */
-    margin: 0;
-    padding: 0;
-    border: none;
-    outline: none;
-    /* overflow-clip-margin: border-box; */
+.out-box>.dashboard,
+.video-layer {
+    position: relative;
+    box-sizing: border-box
+}
+
+.video-layer {
+    width: 100%;
+    aspect-ratio: 1920/1080;
+    background-color: rgb(53 73 61);
+    border: 1px solid #000
+}
+
+.video-layer:fullscreen {
+    background-color: #000
 }
 
 .in-box {
     position: relative;
     box-sizing: border-box;
-    padding: 10px;
-    overflow: hidden auto;
+    overflow: hidden;
 }
 
-
-label[type=file],
-label[type=button] {
+label[type=button],
+label[type=file] {
     display: inline-block;
     position: relative;
     overflow: hidden;
@@ -189,9 +247,8 @@ label[type=button] {
     text-align: center;
     line-height: 2rem;
     border: 1px solid #123;
-    margin: 5px;
+    margin: 5px
 }
-
 
 label[type=button]>input[type=button],
 label[type=button]>span,
@@ -207,57 +264,64 @@ label[type=file]>span {
     background: none;
     border: none;
     outline: none;
-    background-color: white;
+    background-color: #fff;
     color: #000;
-    display: inline-block;
+    display: inline-block
 }
 
 .hide {
-    display: none !important;
+    display: none !important
 }
 
 .box {
     position: relative;
     height: auto;
-    background-color: white;
+    background-color: #fff;
     border-radius: 5px;
-    padding: 10px;
+    padding: 10px
+}
+
+.box.mt {
+    margin-top: 10px
+}
+
+.box.mb {
+    margin-bottom: 10px
 }
 
 .flex {
-    display: flex;
+    display: flex
 }
 
 .flex.h {
-    flex-direction: row;
+    flex-direction: row
 }
 
 .flex.v {
-    flex-direction: column;
+    flex-direction: column
 }
 
 .address {
-    /* margin-bottom: 10px; */
     line-height: 2rem;
     word-wrap: normal;
     white-space: nowrap;
-    overflow: hidden;
+    overflow: hidden
 }
 
 .address input {
     appearance: none;
-    border: none;
     border-radius: 0;
     outline: none;
+    border: none;
     border-bottom: 1px dashed #000;
     margin: 3px 10px;
-    font-family: 'Consolas', monospace;
+    font-family: Consolas, monospace
 }
 
 .address input:focus {
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #000
 }
 
 .address button {
-    margin: 3px 0;
+    margin: 3px 0
 }

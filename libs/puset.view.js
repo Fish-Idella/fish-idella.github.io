@@ -99,10 +99,9 @@
         self.data = new Proxy(self.originalData, validator);
 
         if (!self.hidden) {
-            for (let key in self.originalData) {
-                self.data[key] = self.originalData[key];
-            }
+            self.update(self.originalData);
         }
+
         if (isArray && isFunction) {
             self.onresize(self.target, self.data[LENGTH], LENGTH);
         }
@@ -196,6 +195,14 @@
                 }
             }
             return child;
+        },
+
+        /**
+         * 更新数据
+         * @param {object | Array} data 
+         */
+        update: function(data) {
+            Object.assign(this.data, data);
         },
 
         /**

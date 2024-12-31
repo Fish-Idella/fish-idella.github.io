@@ -133,12 +133,20 @@
     (function getMainURL(url, i, max) {
         HJD.elems.main.innerHTML = `正在第${i}次加载列表`;
         Mm.get(HJD.formatURL("?" + Date.now(), url)).then(xhr => {
-            let href = xhr.responseText.match(/window.location.href\s*\=\s*('|")(http(s)?:\/\/[^\s'"]+)\1/);
+            const context = xhr.responseText;
+            let href = context.match(/window.location.href\s*\=\s*('|")(http(s)?:\/\/[^\s'"]+)\1/);
             if (href) {
                 return getMainURL(href[2], i, max);
             }
+            
+
+        if (html.includes("404")) {
+            i++
+            throw new Error("404")
+            return;
+        }
             window.localStorage.setItem('main-url', HJD.base = xhr.responseURL);
-            HJD.loadMain(xhr.responseText);
+            HJD.loadMain(context);
         }).catch(() => {
             if (i > max) {
                 alert("加载失败");
@@ -222,6 +230,8 @@
 
     loadMain: function (html) {
 
+        console.log(html)
+
         if (html.includes("反诈中心")) {
             return alert("网站已被反诈中心拦截");
         }
@@ -246,7 +256,7 @@
             }
         } else {
             // window.localStorage.removeItem('main-url');
-            window.location.href = "update.html";
+            // window.location.href = "update.html";
         }
 
     },

@@ -105,14 +105,14 @@ const PuSetAnimation = (function (mWindow, mDocument) {
      */
     const PuSetAnimation = createClass({
 
-        constructor: function Animation() {
+        constructor: function Animation(timestamp) {
 
             const context = Animation.context;
             context.clearRect(0, 0, MAIN_WIDTH, MAIN_HEIGHT);
 
             Animation.animationList.forEach(value => {
                 // 执行动画
-                value.fn(context);
+                value.fn(context, timestamp);
 
                 if (!value.keep) {
                     Animation.remove(value);
@@ -219,8 +219,6 @@ const PuSetAnimation = (function (mWindow, mDocument) {
         setStyle: setStyle,
         createClass: createClass,
         addEventListener: addEventListener,
-
-
 
     });
 
