@@ -599,6 +599,10 @@ new Promise(function (resolve, reject) {
         _menu_links.classList.remove("hide");
     });
 
+    document.addEventListener("click", function () {
+        _menu_links.classList.add("hide");
+    });
+
     document.getElementById("add-link-button").addEventListener("click", function () {
         Interpreter.get("object-list").fn("show-alert", "map_all_links");
     });
@@ -679,27 +683,6 @@ new Promise(function (resolve, reject) {
             }
         }
     });
-
-    // const _trash = PuSet("#trash").on("dragover", function({ srcEvent: ev }) {
-    //     ev.preventDefault();
-    //     ev.dataTransfer.dropEffect = "move";
-    // }).on("dragover", function ({ srcEvent: ev }) {
-    //     ev.preventDefault();
-    //     ev.dataTransfer.dropEffect = "move";
-
-    //     _trash.classList.add("dragover")
-    // }).on("dragleave", function ({ srcEvent: ev }) {
-    //     ev.preventDefault();
-    //     ev.dataTransfer.dropEffect = "move";
-
-    //     _trash.classList.remove("dragover")
-    // }).on("drop", function ({ srcEvent: ev }) {
-    //     ev.preventDefault();
-    //     var data = ev.dataTransfer.getData("text/plain");
-    //         // MainUI.GS.map_all_links.splice(data, 1);
-    //         MainUI.vm_scroll.data.splice(data, 1);
-    //         setLocalConfig("puset-local-configure", MainUI.GS);
-    // }).get(0);
 
     PuSet("#scroll").on("dragstart", function ({ srcEvent: ev }) {
         ev.dataTransfer.dropEffect = "move";

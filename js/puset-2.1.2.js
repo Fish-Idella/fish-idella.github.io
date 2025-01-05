@@ -811,29 +811,6 @@
         "namespace": "",
         "rnamespace": null,
 
-        "center": null,
-        "pointers": null,
-        "changedPointers": null,
-        "pointerType": "mouse",
-        "eventType": 4,
-        "timeStamp": 0,
-        "deltaTime": 0,
-        "angle": 0,
-        "distance": 0,
-        "deltaX": 0,
-        "deltaY": 0,
-        "offsetDirection": 1,
-        "overallVelocityX": 0,
-        "overallVelocityY": 0,
-        "overallVelocity": 0,
-        "scale": 1,
-        "rotation": 0,
-        "maxPointers": 1,
-        "velocity": 0,
-        "velocityX": 0,
-        "velocityY": 0,
-        "direction": 1,
-
         /**
          * 
          * @param {string|ActionEvent|Event} src 
@@ -874,24 +851,19 @@
         },
 
         getComposedPath: function (target) {
-            let originalPath, event, parent;
-            if (event = this.srcEvent) {
-                if (event.composedPath) {
-                    originalPath = event.composedPath();
-                } else if (event.path) {
-                    originalPath = event.path;
+            let path, obj;
+            if (obj = this.srcEvent) {
+                if (obj.composedPath) {
+                    path = obj.composedPath();
+                } else if (obj.path) {
+                    path = obj.path;
                 } else {
-                    originalPath = [parent = event.target];
-                    while (parent = parent.parentNode) {
-                        originalPath.push(parent);
-                    }
-                    originalPath.push(window);
+                    for (path = [obj = obj.target]; obj = obj.parentNode; path.push(obj));
+                    path.push(window);
                 }
             }
-            originalPath = toArray(originalPath || []);
-            const index = 1 + originalPath.indexOf(target || this.target);
-
-            return originalPath.slice(0, index);
+            path = toArray(path || []);
+            return path.slice(0, 1 + path.indexOf(target || this.target));
         }
 
     });
@@ -907,8 +879,7 @@
         let elem, all, length;
         if (isArrayLike(arr) && (length = arr.length) > 0) {
             if (isFunction(attrs)) {
-                func = attrs,
-                    attrs = obj == null ? null : Object.keys(obj);
+                func = attrs, attrs = obj == null ? null : Object.keys(obj);
             }
             while (length--) {
                 elem = arr[length], all = true;

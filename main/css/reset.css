@@ -2,3 +2,28 @@ body {
     background: linear-gradient(rgb(120, 180, 236), rgb(67, 98, 197));
     background: linear-gradient(#e66465, #9198e5);
 }
+
+.header {
+    background-color: #365671;
+    padding: 20px;
+    text-align: center;
+    height: 40px;
+}
+
+.header img {
+    height: 40px;
+    vertical-align: middle;
+    border-radius: 50%;
+}
+
+.header h1 {
+    line-height: 40px;
+    margin: 0 0 0 10px;
+    font-size: 30px;
+    color: #ffffff;
+}
+
+.crimson {
+    color: crimson;
+    font-weight: bold;
+}

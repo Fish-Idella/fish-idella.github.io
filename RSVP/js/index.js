@@ -5,6 +5,7 @@
     let animationFrameId = 0;
     let isLongVideo = false;
     let hideVolumeBoxTimer = 0;
+    let pointerDownElement = null;
 
     const playerContainer = document.getElementById("player-video-layer");
     const videoElement = playerContainer.querySelector("video.video");
@@ -68,23 +69,37 @@
 
     volumeBar.addEventListener("change", () => setVolume(volumeBar.value));
 
-    progressBarContainer.addEventListener("click", function (ev) {
-        if (videoElement.duration) {
-            videoElement.currentTime = videoElement.duration * ev.offsetX / this.offsetWidth;
+    progressBarContainer.addEventListener("pointerdown", function (ev) {
+        ev.preventDefault();
+        // left click
+        if (ev.button == 0) {
+            pointerDownElement = progressBarContainer;
+            playedBar.style.width = `${100 * ev.offsetX / this.offsetWidth}%`;
         }
     });
+    playerContainer.addEventListener("pointermove", function (ev) {
+        if (pointerDownElement === progressBarContainer) {
+            playedBar.style.width = `${100 * ev.offsetX / pointerDownElement.offsetWidth}%`;
+        }
+    });
+    playerContainer.addEventListener("pointerup", function (ev) {
+        if (pointerDownElement === progressBarContainer && videoElement.duration) {
+            videoElement.currentTime = videoElement.duration * ev.offsetX / pointerDownElement.offsetWidth;
+            pointerDownElement = null;
+        }
+    });
+    playerContainer.addEventListener("pointerleave", () => pointerDownElement = null);
 
     /**
      * Formats a given time value to a two-digit string.
      * 
      * @param {number|string} time - The time value to format.
+     * @param {number} i - The length.
      * @returns {string} The formatted time string.
      */
-    function formatTime(time) {
-        const string = "" + time;
-        return string.length < 2 ? ("0" + string) : string;
+    function formatTime(time, i = 2) {
+        return time.toString().padStart(i, "0");
     }
-
 
     /**
      * Parses a duration in seconds to a formatted time string (HH:MM:SS).
@@ -98,7 +113,7 @@
             formatTime(Math.floor(duration / 3600)),
             formatTime(Math.floor(duration / 60 % 60)),
             formatTime(Math.floor(duration % 60))
-        ].join(":").slice(show ? 0 : -5);
+        ].slice(show ? 0 : 1).join(":");
     }
 
     /**
@@ -116,30 +131,32 @@
      */
     function timeUpdate() {
         const current = videoElement.currentTime;
-        playedBar.style.width = `${100 * current / videoElement.duration}%`;
         currentTimeDisplay.innerHTML = parseDuration(current, isLongVideo);
-    }
-
-    /**
-     * Handles the mousemove event for the controls container.
-     * Shows the controls and resets the hide timer.
-     * 
-     * @param {MouseEvent} ev - The mousemove event.
-     */
-    function mouseMove(ev) {
-        clearTimeout(hideControlsTimer);
-        playerContainer.style.cursor = "default";
-        bottomControls.classList.remove("hide");
-        if (Object.is(ev.target, controlsContainer)) {
-            hideControlsTimer = setTimeout(mouseLeave, 5000);
+        if (pointerDownElement !== progressBarContainer) {
+            playedBar.style.width = `${100 * current / videoElement.duration}%`;
         }
     }
 
     /**
-     * Handles the mouseleave event for the controls container.
+     * Handles the pointermove event for the controls container.
+     * Shows the controls and resets the hide timer.
+     * 
+     * @param {PointerEvent} ev - The pointermove event.
+     */
+    function pointerMove(ev) {
+        clearTimeout(hideControlsTimer);
+        playerContainer.style.cursor = "default";
+        bottomControls.classList.remove("hide");
+        if (Object.is(ev.target, controlsContainer)) {
+            hideControlsTimer = setTimeout(pointerLeave, 5000);
+        }
+    }
+
+    /**
+     * Handles the pointerleave event for the controls container.
      * Hides the controls and sets the cursor to none.
      */
-    function mouseLeave() {
+    function pointerLeave() {
         volumeBox.classList.add("hide");
         bottomControls.classList.add("hide");
         playerContainer.style.cursor = "none";
@@ -151,30 +168,24 @@
      * @param {number} i - The volume level to set (0 to 10).
      */
     function setVolume(i) {
-        console.log(i);
         if (videoElement.muted) {
             videoElement.muted = false;
             volumeButton.src = "svg/volume.svg";
         }
-        videoElement.volume = Math.min(Math.max(0, i / 10), 10);
+        videoElement.volume = Math.min(Math.max(0, i / 10), 1);
     }
 
-
     /**
-     * Handles the keypress event for the document.
+     * Handles the keydown event for the document.
      * Provides keyboard shortcuts for play/pause, seeking, and volume control.
      * 
-     * @param {KeyboardEvent} ev - The keypress event.
+     * @param {KeyboardEvent} ev - The keydown event.
      */
-    function onKeyboardPressEventListener(ev) {
-        console.log('onKeyboardPressEventListener')
+    function onKeyboardDownEventListener(ev) {
         const activeElement = document.activeElement || document.fullscreenElement;
         if (activeElement == document.body || activeElement == playerContainer) {
 
-            // console.log(ev.keyCode);
-            // console.log(ev.code);
-            // console.log(ev.key);
-
+            // play/pause
             if (ev.keyCode === 32 || ev.code === "Space" || ev.key === "Space") {
                 if (videoElement.paused) {
                     videoElement.play();
@@ -190,10 +201,11 @@
             }
             // volume
             else if (ev.keyCode === 38 || ev.code === "ArrowUp" || ev.key === "ArrowUp") {
-                setVolume(volumeBar.value++);
+                setVolume(Number(volumeBar.value) + 1);
             } else if (ev.keyCode === 40 || ev.code === "ArrowDown" || ev.key === "ArrowDown") {
-                setVolume(volumeBar.value--);
+                setVolume(Number(volumeBar.value) - 1);
             }
+
         }
     }
 
@@ -222,7 +234,7 @@
         const max = buffered.length;
         if (max) {
             const duration = videoElement.duration;
-            const arr = [];
+            const arr = new Array();
             for (let i = 0, next, end; i < max; i++) {
                 end = 100 * buffered.end(i) / duration;
                 arr.push(`#ffffff44 ${100 * buffered.start(i) / duration}% ${end}%`);
@@ -231,7 +243,9 @@
                 arr.push(`#00000000 ${end}% ${(next < max) ? (100 * buffered.start(next) / duration) : 100}%`);
             }
 
-            bufferedBar.style.background = `linear-gradient(90deg,${arr.join(",")})`;
+            for (let i; (i = arr.indexOf("#00000000 100% 100%")) >= 0; arr.splice(i, 1));
+
+            bufferedBar.style.background = `linear-gradient(90deg,${arr.join()})`;
         }
     });
     videoElement.addEventListener("volumechange", function () {
@@ -240,39 +254,39 @@
         volumeValue.textContent = volume;
     });
 
-    controlsContainer.addEventListener("mousemove", mouseMove);
-    controlsContainer.addEventListener("mouseleave", mouseLeave);
+    controlsContainer.addEventListener("pointermove", pointerMove);
+    controlsContainer.addEventListener("pointerleave", pointerLeave);
 
     // volume box display toggle
-    volumeBox.addEventListener("mouseleave", hideVolumeBox);
-    volumeButton.addEventListener("mouseleave", hideVolumeBox);
-    volumeBox.addEventListener("mouseenter", () => clearTimeout(hideVolumeBoxTimer));
-    volumeButton.addEventListener("mouseenter", () => {
+    volumeBox.addEventListener("pointerleave", hideVolumeBox);
+    volumeButton.addEventListener("pointerleave", hideVolumeBox);
+    volumeBox.addEventListener("pointerenter", () => clearTimeout(hideVolumeBoxTimer));
+    volumeButton.addEventListener("pointerenter", () => {
         clearTimeout(hideVolumeBoxTimer);
         volumeBox.classList.remove("hide")
     });
 
-    document.addEventListener("keypress", onKeyboardPressEventListener);
+    document.addEventListener("keydown", onKeyboardDownEventListener);
 
 }());
 
 (function () {
+    const dashboard = document.querySelector("div.dashboard.flex.v");
+    const url = dashboard.querySelector(".url-box>input[type=url]");
     const videoElement = document.querySelector("#player-video-layer>video.video");
 
-    /**
-     * Handles the change event for the file input element.
-     * Loads the selected video file into the video element.
-     * 
-     * @param {Event} ev - The change event.
-     */
-    function fileChange(ev) {
+    dashboard.querySelector("#play").addEventListener("click", function () {
+        videoElement.currentTime = 0;
+        videoElement.src = url.value;
+    });
+
+    dashboard.querySelector("#file").addEventListener("change", function fileChange(ev) {
         const file = ev.target.files.item(0);
         if (file !== null) {
             videoElement.currentTime = 0;
-            videoElement.src = URL.createObjectURL(file);
+            videoElement.src = url.value = URL.createObjectURL(file);
         }
-    }
-
-    document.getElementById("file").addEventListener("change", fileChange);
-    document.getElementById("stop").addEventListener("click", () => videoElement.pause() || (videoElement.src = "#"));
+    });
+    
+    dashboard.querySelector("#stop").addEventListener("click", () => videoElement.pause() || (videoElement.src = "#"));
 }());

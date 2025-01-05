@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>远程视频同步播放</title>
+    <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="css/index.css">
 </head>
 
@@ -58,9 +59,17 @@
             <div class="dashboard flex v">
                 <div class="box">
                     <div class="flex h">
+                        <div class="url-box fc flex h">
+                            <!-- http://localhost/video/2902006578/SpankBang.com_jynamorel+seviliyager+unicorngirls_1080p.mp4 -->
+                            <input type="url" name="video" value="http://" class="cda fc" placeholder="请输入视频地址">
+                            <label for="play" type="button" class="bt-play">
+                                <input type="button" name="video" id="play" value="播放">
+                                <span>播放</span>
+                            </label>
+                        </div>
                         <label for="file" type="file">
                             <input type="file" name="video" id="file" accept="video/*">
-                            <span>选择视频</span>
+                            <span>本地视频</span>
                         </label>
                         <label for="stop" type="button">
                             <input type="button" name="video" id="stop" value="退出播放">

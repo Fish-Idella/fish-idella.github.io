@@ -15,29 +15,40 @@
 
 <body>
 
-    <img class="logo" src="/icons/logo.png" alt=""/>
-    <div class="tips">即将重置用户数据，如果你不知道此操作的后果，请关闭此页面。</div>
-    <div>继续请点击<button id="reset">确认</button>按钮。</div>
+    <div class="view flex-vertical">
+        <div class="header flex-horizontal">
+            <img class="logo" src="/icons/logo.png" alt="" />
+            <h1>重置用户数据</h1>
+        </div>
+
+        <div class="tips">即将重置用户在本网站的本地数据，如果你不知道此操作的后果，请关闭此页面。</div>
+        <div><span class="crimson">继续重置操作</span><span>请点击</span><button id="reset" type="button">确认</button><span>。</span></div>
+    </div>
 
     <script src="/js/puset-2.0.0.js"></script>
     <script src="/libs/puset.storage.js"></script>
     <script src="/libs/lz-string.min.js"></script>
     <script>
-        document.getElementById("reset").addEventListener("click", function () {
-            var script = document.createElement("script");
-            script.src = `js/save.js?${Date.now()}`;
-            new PuSet.Storage().then(function (a) {
+        new PuSet.Storage().then(function (storage) {
+            const init = function init() {
+                const script = document.createElement("script");
+                script.src = `js/save.js?${Date.now()}`;
                 script.onload = function () {
-                    a.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set))).then(function () {
-                        window.location.replace("/main");
-                    })
+                    storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set))).then(() => window.location.replace("/main"));
                 }
-            }).catch(function (ex) {
-                console.log(ex);
-                alert("浏览器过于老旧");
+                document.head.appendChild(script);
+            };
+
+            storage.getItem("puset-local-configure").then(function (request) {
+                if (!request.result) {
+                    init();
+                } else {
+                    document.getElementById("reset").addEventListener("click", init);
+                }
             });
-            document.head.appendChild(script);
-        })
+        }).catch(function (ex) {
+            alert("浏览器过于老旧");
+        });
     </script>
 </body>
 

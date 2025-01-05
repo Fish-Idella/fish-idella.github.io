@@ -161,7 +161,7 @@ body>.view {
 }
 
 #scroll::-webkit-scrollbar {
-	display: none;
+	display: none !important;
 	width: 0 !important;
 	background-color: transparent;
 }
