@@ -162,8 +162,8 @@
     base: "https://bbs.274w3.com/2048/",
 
     navs: ["https://bbs.274w3.com/2048/",
-        // "http://doww.elsbhqdzqad.com/w33.php",
-        // "http://doww.elsbhqdzqsd.com/w32.php",
+        "https://2048.cc/2048/",
+        "https://ri.bi/",
         "https://doww.helsbhqdz123.com/w34.php",
         "https://release.302-properties.net/bbs.php",
         "https://release.302-homes.net/bbs1.php",

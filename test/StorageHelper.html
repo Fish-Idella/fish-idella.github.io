@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="/js/puset/puset.storage.js"></script>
+    <script>
+
+        const obj = {};
+        Object.keys(StorageHelper).forEach(function(key) {
+            obj[key] = new StorageHelper(key);
+        });
+        
+
+        for (let key in obj) {
+            obj[key].then(function(storage) {
+                storage.removeItem("12", "123").then(function(event) {
+                    console.log(event)
+                })
+            })
+        }
+
+    </script>
+</body>
+</html>

@@ -28,40 +28,4 @@
 	</form>
 </body>
 
-
-<!-- <script type="text/javascript" src="js/Person.js"></script> -->
-<script type="text/javascript">
-
-	var a = "⣿⣾⣽⣼⣻⣺⣹⣸⣷⣶⣵⣴⣳⣲⣱⣰⣯⣮⣭⣬⣫⣪⣩⣨⣧⣦⣥⣤⣣⣢⣡⣠⣟⣞⣝⣜⣛⣚⣙⣘⣗⣖⣕⣔⣓⣒⣑⣐⣏⣎⣍⣌⣋⣊⣉⣈⣇⣆⣅⣄⣃⣂⣁⣀⢿⢾⢽⢼⢻⢺⢹⢸⢷⢶⢵⢴⢳⢲⢱⢰⢯⢮⢭⢬⢫⢪⢩⢨⢧⢦⢥⢤⢣⢢⢡⢠⢟⢞⢝⢜⢛⢚⢙⢘⢗⢖⢕⢔⢓⢒⢑⢐⢏⢎⢍⢌⢋⢊⢉⢈⢇⢆⢅⢄⢃⢂⢁⢀⡿⡾⡽⡼⡻⡺⡹⡸⡷⡶⡵⡴⡳⡲⡱⡰⡯⡮⡭⡬⡫⡪⡩⡨⡧⡦⡥⡤⡣⡢⡡⡠⡟⡞⡝⡜⡛⡚⡙⡘⡗⡖⡕⡔⡓⡒⡑⡐⡏⡎⡍⡌⡋⡊⡉⡈⡇⡆⡅⡄⡃⡂⡁⡀⠿⠾⠽⠼⠻⠺⠹⠸⠷⠶⠵⠴⠳⠲⠱⠰⠯⠮⠭⠬⠫⠪⠩⠨⠧⠦⠥⠤⠣⠢⠡⠠⠟⠞⠝⠜⠛⠚⠙⠘⠗⠖⠕⠔⠓⠒⠑⠐⠏⠎⠍⠌⠋⠊⠉⠈⠇⠆⠅⠄⠃⠂⠁⠀";
-
-
-	var data = {
-		name: "蒲z",
-		gender: 1,
-		father: 1
-	};
-
-
-	var xhr = new XMLHttpRequest();
-
-	xhr.onload = function () {
-		console.log(xhr.responseText);
-	};
-
-	xhr.open("POST", "php/add.php", true);
-	// 设置POST请求的请求头
-	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-	var result = [];
-	var value;
-
-	for (let key in data) {
-		value = data[key];
-		result.push(key + "=" + (Array.isArray(value) ? JSON.stringify(value): value));
-	}
-
-	// xhr.send(result.join("&"));
-
-</script>
-
 </html>

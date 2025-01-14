@@ -6,7 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>身份证号码校验</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
@@ -56,14 +57,15 @@
                 <td class="color-9 selected"><input type="text" maxlength="1" value="X"></td>
             </tr>
             <tr class="outer">
-                <td id="region"></td>
-                <td id="province"></td>
+                <td id="province" colspan="2"></td>
                 <td id="city" colspan="2"></td>
                 <td id="county" colspan="2"></td>
                 <td id="birthday" colspan="8"></td>
                 <td id="gender" colspan="3"></td>
                 <td id="checkcode"></td>
             </tr>
+        </tbody>
+        <tfoot>
             <tr>
                 <td colspan="4">数据参考：</td>
                 <td colspan="14">
@@ -73,7 +75,7 @@
                         2260-2007</a>
                 </td>
             </tr>
-        </tbody>
+        </tfoot>
     </table>
 
     <script src="js/city.js"></script>

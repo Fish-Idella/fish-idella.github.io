@@ -1,6 +1,6 @@
 @font-face {
     font-family: orcb;
-    src: url(../fonts/OCR-B_10_BT.ttf);
+    src: url(/fonts/OCR-B_10_BT.ttf);
 }
 
 table#main {

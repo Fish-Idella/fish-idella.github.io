@@ -1,4 +1,4 @@
-(function () {
+;window.ParseWeather = (function () {
 
     const provincial = {
         AZJ: "浙江省",
@@ -76,8 +76,7 @@
     };
 
     function formatTime(i, n = 2) {
-        i = "" + i;
-        return i.length < n ? formatTime("0" + i) : i.substring(0, n);
+        return i.toString().padStart(n, '0');
     }
 
     function updateTime() {
@@ -99,30 +98,31 @@
         });
     }
 
-    const ParseWeather = window.ParseWeather = function (today, weather, city) {
-        const self = this;
-        // console.log(city)
-        self.now = false;
-        self.today = today;
+    const ParseWeather = PuSet.createClass({
 
-        // 自动定位
-        if (weather.data.location) {
-            // console.log(weather)
-            PuSet.extend(self, weather.data.alarm[0], weather.data.location, weather.data.daily[0], weather.data.now);
-            self.now = true;
-        } else {
-            self.date = weather.data.date;
-            PuSet.each(weather.data.city, function (value) {
-                if (city == value[1]) {
-                    attrs.forEach((key, i) => self[key] = value[i]);
-                    return false;
-                }
-            });
-        }
-        return self;
-    };
+        constructor: function ParseWeather(today, weather, city) {
+            const self = this;
+            // console.log(city)
+            self.now = false;
+            self.today = today;
 
-    ParseWeather.prototype = {
+            // 自动定位
+            if (weather.data.location) {
+                // console.log(weather)
+                PuSet.extend(self, weather.data.alarm[0], weather.data.location, weather.data.daily[0], weather.data.now);
+                self.now = true;
+            } else {
+                self.date = weather.data.date;
+                PuSet.each(weather.data.city, function (value) {
+                    if (city == value[1]) {
+                        attrs.forEach((key, i) => self[key] = value[i]);
+                        return false;
+                    }
+                });
+            }
+            return self;
+        },
+
         "now": true,
         "today": "2022-08-24T01:05:57.045Z",
         // 城市ID
@@ -175,79 +175,78 @@
         // 风速
         "windSpeed": 3.7,
         "windScale": "3级"
-    };
+    }, {
+        AUTO: "--PALW",
 
-    ParseWeather.getDateString = getDateString;
+        def: {
+            "lastUpdate": "1994/10/01 20:00",
+            "msg": "success",
+            "code": 0,
+            "data": {
+                "lastUpdate": "1994/10/01 20:00"
+            }
+        },
 
-    ParseWeather.AUTO = "--PALW";
+        getDateString: getDateString,
 
-    ParseWeather.ifDefault = function (value, a, b) {
-        return (value == 9999 || ("" + value).includes("9999")) ? a : b;
-    };
+        ifDefault: function (value, a, b) {
+            return (value == 9999 || ("" + value).includes("9999")) ? a : b;
+        },
 
-    ParseWeather.getWeatherInfo = function (city = ParseWeather.AUTO, today, callback) {
+        ss: function(a, b) {
+            return a.getTime() - b.getTime();
+        },
 
-        if (!PuSet.isFunction(callback)) {
-            return;
-        }
+        getWeatherInfo: function (city = ParseWeather.AUTO, today, callback) {
+            if (!PuSet.isFunction(callback)) {
+                return;
+            }
 
-        var promise = new Promise((resolve, reject) => {
-
-            const def = {
-                "lastUpdate": "1994/10/01 20:00",
-                "msg": "success",
-                "code": 0,
-                "data": {
-                    "lastUpdate": "1994/10/01 20:00"
-                }
-            };
-
-            getLocalConfig("puset-local-weather", def, function (weather) {
-                // 当前时间距离上次刷新超过12小时
-                if ((today.getTime() - (new Date(weather.lastUpdate || weather.data.lastUpdate || weather.data.date)).getTime()) > 43200000) {
-
-                    corsGet(getWeatherURL(), 'application/json').then(function (response) {
-                        return response.json();
-                    }).then(function (weather) {
+            new Promise((resolve, reject) => {
+                getLocalConfig("puset-local-weather", ParseWeather.def, function (weather) {
+                    // 当前时间距离上次刷新超过12小时
+                    if (ParseWeather.ss(today, new Date(weather.lastUpdate || weather.data.lastUpdate || weather.data.date)) > 43200000) {
+                        corsGet(getWeatherURL(), 'application/json').then(response => response.json()).then(function (weather) {
+                            if (weather && weather.msg == "success") {
+                                weather.lastUpdate = weather.data.lastUpdate;
+                                setLocalConfig("puset-local-weather", weather);
+                                resolve(weather);
+                            }
+                        }).catch(reject);
+                    } else {
+                        resolve(weather);
+                    }
+                });
+            }).then(function (allWeather) {
+                getLocalConfig("puset-local-current-weather", null, function (weather) {
+                    if (weather && (ParseWeather.ss(today, new Date(weather.lastUpdate || weather.data.lastUpdate || weather.data.date)) < 3600000)) {
+                        callback(new ParseWeather(today, weather, city));
+                    } else corsGet(getLocationWeatherURL(city, allWeather), 'application/json').then(response => response.json()).then(function (weather) {
                         if (weather && weather.msg == "success") {
-                            weather.lastUpdate = weather.data.lastUpdate;
-                            setLocalConfig("puset-local-weather", weather);
-                            resolve(weather);
+                            setLocalConfig("puset-local-current-weather", weather);
+                            callback(new ParseWeather(today, weather, city));
                         }
-                    }).catch(reject);
-                } else {
-                    resolve(weather);
-                }
+                    }).catch(function () {
+                        callback(new ParseWeather(today, allWeather, city));
+                    });
+                });
+            }).catch(ex => console.log(ex));
+        },
 
-            });
+        /**
+         * 通过地名部分名字自动补全
+         * @param {string} str 地名
+         * @param {function} callback 回执
+         */
+        autoComplete: function (str, callback) {
 
-        });
-
-        promise.then(function (allWeather) {
-            corsGet(getLocationWeatherURL(city, allWeather), 'application/json').then(function (response) {
-                return response.json();
-            }).then(function (weather) {
-                if (weather && weather.msg == "success") {
-                    // setLocalConfig("puset-local-current-weather", weather);
-                    callback(new ParseWeather(today, weather, city));
-                }
-            }).catch(function () {
-                callback(new ParseWeather(today, allWeather, city));
-            });
-        });
-    };
-
-    /**
-     * 通过地名部分名字自动补全
-     * @param {string} str 地名
-     * @param {function} callback 回执
-     */
-    ParseWeather.autoComplete = function (str, callback) {
-
-        if (PuSet.isFunction(callback)) {
-            const url = `https://weather.cma.cn/api/autocomplete?q=${encodeURIComponent(str)}&limit=10&timestamp=${Date.now()}`;
-            corsGet(url, 'application/json').then(r => r.json()).then(callback);
+            if (PuSet.isFunction(callback)) {
+                const url = `https://weather.cma.cn/api/autocomplete?q=${encodeURIComponent(str)}&limit=10&timestamp=${Date.now()}`;
+                corsGet(url, 'application/json').then(r => r.json()).then(callback);
+            }
         }
-    }
+    });
+
+    return ParseWeather;
 
 }());

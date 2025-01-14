@@ -9,7 +9,7 @@ if (!URLObject.createObjectURL) {
     });
 }
 
-var storage = new PuSet.Storage();
+var storage = new PuSet.StorageHelper();
 
 // 获取本地配置信息
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,8 +20,7 @@ var storage = new PuSet.Storage();
  * @returns defaultCofig
  */
 function getLocalConfig(item, defaultCofig, then) {
-    storage.getItem(item).then(function (request) {
-        const result = request.result;
+    storage.getItem(item).then(function (result) {
         then(JSON.parse(result ? LZString.decompress(result) : "null") || defaultCofig);
     });
 }
@@ -145,8 +144,7 @@ function loadBackgroundFn(mBackground) {
                     }, 1000);
                 });
             } else if (type.startsWith("file")) {
-                storage.getItem("local_wallpaper_file").then(function (request) {
-                    const file = request.result;
+                storage.getItem("local_wallpaper_file").then(function (file) {
                     if (file) {
                         loadBackground(URLObject.createObjectURL(file), file.type);
                     } else {
@@ -236,7 +234,10 @@ let GS, MainUI = {
             case "boolean_show_weather":
             case "boolean_auto_ip":
             case "string_local_city": {
-                this.updataWeather();
+                storage.removeItem("puset-local-current-weather").then(x => {
+                    console.log(x);
+                    this.updataWeather();
+                });
                 break;
             }
             case "boolean_main_show_add_button": {
@@ -331,7 +332,7 @@ let GS, MainUI = {
                 vm_weather.data.city = info.name;
                 vm_weather.data.temperature = {
                     temperature: ParseWeather.ifDefault(info.temperature, (info.low + "&#126;" + info.high), info.temperature),
-                    title: info.title || "气温",
+                    title: info.title || "",
                     color: info.severity
                 };
                 vm_weather.data.text = isNight ? info.nightText : info.dayText;
@@ -371,20 +372,22 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
             mLinks.classList.add("hide")
         }
     }
-
     MainUI.showLinks(GS.boolean_main_show_links);
+
+    // 添加按钮
     MainUI.add_link_button = document.getElementById("add-link-button");
     MainUI.showAddLinkButton(GS.boolean_main_show_add_button);
+
     MainUI.vm_scroll = PuSet.View({
         target: document.getElementById("scroll"),
         selector: "a.link-button",
         insert: "#add-link-button",
         data: GS.map_all_links,
-        onresize: function (target, value, key) {
-            if ("length" === key) {
-                target.style.width = `${(+value + 1) * 96}px`;
-            }
-        },
+        // onresize: function (target, value, key) {
+        //     if ("length" === key) {
+        //         target.style.width = `${(+value + 1) * 96}px`;
+        //     }
+        // },
         layout: function (target, value, key) {
             target.dataset.key = key;
             target.href = value.href;
@@ -398,9 +401,6 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
             target.querySelector("span.title").innerHTML = value.title;
         }
     });
-    // document.addEventListener("click", function() {
-    //     _menu_links.classList.add("hide");
-    // });
 
     // 搜索建议提示列表
     const mList = document.getElementById("list");
@@ -416,7 +416,6 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
 
     window.op = Object.assign(function op(obj) {
         mList.classList.remove("hide");
-        // console.dir(obj)
         Object.assign(vm_list.data, obj.s);
     }, { t: 0 });
 
@@ -425,7 +424,6 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
         clearTimeout(window.op.t);
 
         const value = mWord.value.trim();
-
         if (value) {
             window.op.t = setTimeout(function () {
                 if (value.startsWith("--set")) {
@@ -505,6 +503,8 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
         }
     });
 
+    MainUI.onchange('boolean_show_icp', null, GS.boolean_show_icp);
+
     // 天气
     MainUI.vm_weather = PuSet.View({
         target: document.getElementById("weather"),
@@ -517,11 +517,11 @@ storage.then(() => getLocalConfig("puset-local-configure", null, function (setti
                     break;
                 }
                 case "temperature": {
+                    const tips = target.querySelector('.tips');
+                    tips.innerHTML = value.title;
+                    tips.style.color = value.color;
 
-                    target.title = value.title;
-                    target.style.color = value.color;
-
-                    item.innerHTML = value.temperature + "&#32;&#8451;";
+                    item.innerHTML = value.temperature + "&#8451;";
                     break;
                 }
                 default: {

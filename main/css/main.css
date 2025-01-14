@@ -76,25 +76,20 @@ body>.view {
 
 #main {
 	grid-template-columns: 20rem 1fr 5rem;
-	grid-template-rows: 3rem 1fr 2fr 5rem;
-	/* background-color: rgba(0, 0, 0, 0.199); */
-	color: var(--color-link);
-}
-
-#main a {
+	grid-template-rows: 3rem 1fr 2fr 3rem;
 	color: var(--color-link);
 }
 
 #weather {
-	grid-area: 1/1/2/2;
+	grid-area: 1/1/2/3;
 	line-height: 3rem;
 	-webkit-user-drag: none;
 	font-weight: 400;
 	text-shadow: var(--value-text-shadow);
 }
 
-#weather span,
-#weather>i {
+#weather a>span,
+#weather a>i {
 	margin-left: .5rem;
 }
 
@@ -149,9 +144,8 @@ body>.view {
 	overflow: hidden scroll;
 	width: auto;
 	min-width: 100px;
-	max-width: 60%;
+	max-width: 70%;
 	height: 80%;
-
 	scrollbar-width: none;
 	/* Firefox */
 	place-items: center;
@@ -454,17 +448,19 @@ span.bg {
 
 #about {
 	grid-area: 4/2/5/4;
-	padding-right: 1rem;
-	text-align: right;
-	line-height: 2rem;
-	font-size: .8rem;
+	text-align: end;
+	font-size: .9rem;
 }
 
-#about .inline {
+#about>* {
 	display: inline-block;
 	border-radius: 1rem;
-	padding: 0 1rem;
-	height: 1.8rem;
+	padding: .1rem .5rem;
+	margin: auto;
+	background-color: transparent;
+}
+
+#about>*:hover {
 	background-color: var(--background-about);
 }
 
@@ -482,7 +478,7 @@ span.bg {
 	#input-box {
 		top: 1rem;
 		width: 80%;
-		max-width: 90%;
+		max-width: 96%;
 	}
 
 	#scroll {

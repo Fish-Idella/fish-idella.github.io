@@ -17,7 +17,7 @@
 
     <div class="view flex-vertical">
         <div class="header flex-horizontal">
-            <img class="logo" src="/icons/logo.png" alt="" />
+            <img class="logo" src="/mediae/icons/logo.png" alt="" />
             <h1>重置用户数据</h1>
         </div>
 
@@ -25,22 +25,23 @@
         <div><span class="crimson">继续重置操作</span><span>请点击</span><button id="reset" type="button">确认</button><span>。</span></div>
     </div>
 
-    <script src="/js/puset-2.0.0.js"></script>
-    <script src="/libs/puset.storage.js"></script>
-    <script src="/libs/lz-string.min.js"></script>
-    <script>
-        new PuSet.Storage().then(function (storage) {
+    <script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
+    <script type="text/javascript" src="/js/puset/puset.storage.js"></script>
+    <script type="text/javascript" src="/js/lz-string.min.js"></script>
+    <script type="text/javascript">
+        new PuSet.StorageHelper().then(function (storage) {
             const init = function init() {
                 const script = document.createElement("script");
                 script.src = `js/save.js?${Date.now()}`;
                 script.onload = function () {
-                    storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set))).then(() => window.location.replace("/main"));
+                    storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set)))
+                    .then(() => window.location.replace("/main"));
                 }
                 document.head.appendChild(script);
             };
 
-            storage.getItem("puset-local-configure").then(function (request) {
-                if (!request.result) {
+            storage.getItem("puset-local-configure").then(function (result) {
+                if (!result) {
                     init();
                 } else {
                     document.getElementById("reset").addEventListener("click", init);

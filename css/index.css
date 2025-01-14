@@ -68,6 +68,11 @@ body, .view {
     display: none !important;
 }
 
+::-webkit-scrollbar {
+    background-color: #ffffff42;
+    width: 0.5rem;
+}
+
 ::-webkit-scrollbar-thumb {
 	background-color: #636363;
 	border-radius: 50%;
