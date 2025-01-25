@@ -429,7 +429,7 @@ new Promise(function (resolve, reject) {
     })
 
     Interpreter.set("radio", function () {
-        const radio = '<label><input type="radio"><span></span></label>';
+        const radio = '<label><div><input type="radio"><span><i class="fa-solid fa-circle"></i></span></div></label>';
         return Interpreter.parseHtml(radio);
     })
 
@@ -440,16 +440,27 @@ new Promise(function (resolve, reject) {
     }, function (target, value) {
         let psid;
         let arr = MainUI.GS[psid = value.psid];
+
         PuSet.each(arr, function (value1, i) {
             let label = Interpreter.get("radio").cloneNode();
             label.className = "radio fc " + value1;
             let radio = label.querySelector("input");
+            let span = label.querySelector("span");
             radio.name = value.value;
             radio.type = "radio";
-            radio.checked = value1 == MainUI.GS[value.value]
+            radio.checked = value1 == MainUI.GS[value.value];
+            span.innerHTML = radio.checked ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle"></i>';
             radio.value = value1;
             target.appendChild(label);
         });
+        
+        const radios = target.querySelectorAll("input[type=radio]");
+        target.addEventListener("change", function(event) {
+            PuSet.each(radios, function(radio) {
+                (radio?.nextElementSibling).innerHTML = radio.checked ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle"></i>';
+            });
+        });
+
     })
 
     Interpreter.set("image-select", function () {
@@ -477,7 +488,7 @@ new Promise(function (resolve, reject) {
     }, function (target, value) {
         target.querySelector(".value").checked = MainUI.GS[value.psid];
         storage.getItem(value.value).then(function (request) {
-            const file = request.result;
+            const file = request;
             if (file) {
                 target.querySelector("#bgPreBoxInnerCustom").style.backgroundImage = `url(${URLObject.createObjectURL(file)})`;
             } else {
@@ -607,7 +618,8 @@ new Promise(function (resolve, reject) {
         Interpreter.get("object-list").fn("show-alert", "map_all_links");
     });
 
-    document.getElementById("menu").addEventListener("click", function () {
+
+    PuSet.removeClass(document.getElementById("menu"), "hide").addEventListener("click", function () {
         if (MainUI.isFirst && "object" === typeof SettingUI) {
             MainUI.isFirst = false;
             createView();
@@ -638,12 +650,14 @@ new Promise(function (resolve, reject) {
                 });
             } else {
                 result = {
-                    "title": (key = mAlert_title.value),
+                    "title": mAlert_title.value,
                     "href": mAlert_url.value,
                     "icon": mAlert_icon.value,
                     "local_icon": mIcon.src,
                     "transparent": mAlert_transparent.checked
                 };
+
+                key = new URLObject(result.href).host;
 
                 if (Array.isArray(data)) {
                     data.push(result)
@@ -687,6 +701,7 @@ new Promise(function (resolve, reject) {
     PuSet("#scroll").on("dragstart", function ({ srcEvent: ev }) {
         ev.dataTransfer.dropEffect = "move";
         ev.dataTransfer.setData("text/plain", ev.target.dataset.key);
+        // PuSet.removeClass(_trash, 'hide');
         _trash.classList.remove("hide");
     }).on("dragover", "a.link-button", function ({ srcEvent: ev }) {
         ev.preventDefault();

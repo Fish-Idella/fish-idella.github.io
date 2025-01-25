@@ -111,7 +111,7 @@
     function parseDuration(duration, show) {
         return [
             formatTime(Math.floor(duration / 3600)),
-            formatTime(Math.floor(duration / 60 % 60)),
+            formatTime(Math.floor((duration / 60) % 60)),
             formatTime(Math.floor(duration % 60))
         ].slice(show ? 0 : 1).join(":");
     }

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        #test {
+            position: absolute;
+            width: 400px;
+            height: 300px;
+            top: 100px;
+            left: 200px;
+            border: solid 1px  brown;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <textarea id="test" placeholder="123"></textarea>
+
+    <script>
+
+
+console['print'] = function() {
+    window['queueMicrotask'] && queueMicrotask(console['log']['bind'](console, ...arguments));
+};
+
+        console.print("asd");
+
+const obj = {
+    arr: ['unknown', 'top', 'right', 'bottom', 'left'],
+    run: function (i = 0) {
+        elem.classList.add(obj.arr[i]);
+    }
+}
+
+document.getElementById("test").addEventListener("mouseenter", function (event) {
+    // const x = event.offsetX / event.target.clientWidth, y = event.offsetY / event.target.clientHeight;
+    // obj.run(x < 0.5 ? y < 0.5 ? x < y ? 4 : 1 : x < 1 - y ? 4 : 3 : y > 0.5 ? x > y ? 2 : 3 : 1 - x > y ? 1 : 2);
+
+    const o = [
+        {
+            code: 1,
+            key: 'top',
+            value: event.offsetY
+        },
+        {
+            code: 2,
+            key: 'right',
+            value: event.target.clientWidth - event.offsetX
+        },
+        {
+            code: 3,
+            key: 'bottom',
+            value: event.target.clientHeight-event.offsetY
+        },
+        {
+            code: 4,
+            key: 'left',
+            value: event.offsetX
+        }
+    ].sort((a, b) => a.value - b.value);
+
+    this.value = JSON.stringify(o).replaceAll(",", ",\n")
+});
+
+
+    </script>
+</body>
+
+</html>

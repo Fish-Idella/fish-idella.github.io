@@ -64,7 +64,7 @@ body, .view {
     flex-grow: 1;
 }
 
-*[v-hide], *.hide {
+*.hide {
     display: none !important;
 }
 

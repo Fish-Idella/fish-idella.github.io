@@ -142,11 +142,11 @@ td {
     /* position: relative; */
 }
 
-.code>span.selected {
+code>span.selected {
     background-color: #FC9A23;
 }
 
-.code>span.selected.odd {
+code>span.selected.odd {
     background-color: #BD9C2B;
 }
 

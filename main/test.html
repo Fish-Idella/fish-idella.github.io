@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body style="background-color: black;">
+    <style>
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+
+    <script src="animation/colosseum.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        canvas.width = document.documentElement.clientWidth;
+        canvas.height = document.documentElement.clientHeight;;
+
+        aaa(canvas.getContext("2d", { alpha: true }), null, {
+            dw: canvas.width,
+            dh: canvas.height
+        });
+    </script>
+</body>
+
+</html>

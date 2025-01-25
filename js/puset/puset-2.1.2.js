@@ -97,10 +97,11 @@
      * @param {{constructor:Function}} obj 包含构造器 constructor 的对象原型
      * @param {object} props 公共方法
      * 
+     * @returns {obj.constructor}
      */
     function createClass(obj, props) {
         const fn = obj.constructor;
-        if (obj && "function" === typeof fn) {
+        if ("function" === typeof fn) {
             fn.prototype = obj;
             Object.assign(fn, props);
         }
@@ -203,13 +204,22 @@
             },
 
             eq: function (i) {
-                const len = this.length,
-                    j = +i + (i < 0 ? len : 0);
+                const len = this.length, j = +i + (i < 0 ? len : 0);
                 return this.pushStack(j >= 0 && j < len ? [this[j]] : []);
             },
 
             end: function () {
                 return this.prevObject || this.constructor();
+            },
+
+            addClass: function (className) {
+                const arr = ("" + className).trim().split(" ");
+                return this.each(elem => PuSet.addClass(elem, arr));
+            },
+
+            removeClass: function (className) {
+                const arr = ("" + className).trim().split(" ");
+                return this.each(elem => PuSet.removeClass(elem, arr));
             },
 
             // For internal use only.
@@ -228,6 +238,16 @@
             isReady: true,
 
             createClass: createClass,
+
+            addClass: function (elem, className) {
+                PuSet.each((PuSet.isArray(className) ? className : ("" + className).trim().split(" ")), name => elem.classList.add(name));
+                return elem;
+            },
+
+            removeClass: function (elem, className) {
+                PuSet.each((PuSet.isArray(className) ? className : ("" + className).trim().split(" ")), name => elem.classList.remove(name));
+                return elem;
+            },
 
             error: function (msg) {
                 throw new Error(msg);
@@ -272,8 +292,8 @@
                 return documentElement ? documentElement.nodeName !== "HTML" : false;
             },
 
-            isArray: Array.isArray || function (obj) {
-                return "array" == toType(obj);
+            isArray: Array.isArray || function (arg) {
+                return "array" == toType(arg);
             },
 
             isFunction: isFunction,
@@ -344,6 +364,7 @@
              * @param {object} src 
              */
             append: function (dest, src) {
+                // for (let key in src)
                 PuSet.each(Object.keys(src), function (key) {
                     if (dest[key] === undefined) {
                         dest[key] = src[key];
@@ -464,12 +485,9 @@
                     } finally {
                         type = toType(value);
                         ret.push(rstandardizedAttributeName.test(key) ? key : JSON.stringify(key), ": ",
-                            ("string" == typeof value
-                                ? JSON.stringify(value)
-                                : "array" == type
-                                    ? "[object Array]"
-                                    : TYPE_FUNCTION == type
-                                        ? ObjectFunctionString.replace("Object", key)
+                            ("string" == typeof value ? JSON.stringify(value)
+                                : "array" == type ? "[object Array]"
+                                    : TYPE_FUNCTION == type ? ObjectFunctionString.replace("Object", key)
                                         : "" + value)
                             , ",\n\n\t");
                     }
@@ -497,6 +515,15 @@
                     'bubbles': true,
                     'cancelable': true
                 }));
+            },
+
+            /**
+             * 
+             * @param {String} base64 
+             */
+            base64ToBlob: function base64ToBlob(base64) {
+                const array = base64.match(/^data:([\w\/]+?);base64,(.+)$/);
+                return null == array ? null : new Blob([new Uint8Array(Array.from(atob(array[2])).map(s => s.charCodeAt(0)))], { 'type': array[1] });
             }
 
         });

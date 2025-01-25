@@ -31,13 +31,10 @@
     <script type="text/javascript">
         new PuSet.StorageHelper().then(function (storage) {
             const init = function init() {
-                const script = document.createElement("script");
-                script.src = `js/save.js?${Date.now()}`;
-                script.onload = function () {
-                    storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(window.def_set)))
+                fetch(`js/save.json?${Date.now()}`).then(a => a.json()).then(function (json) {
+                    return storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(json)))
                     .then(() => window.location.replace("/main"));
-                }
-                document.head.appendChild(script);
+                });
             };
 
             storage.getItem("puset-local-configure").then(function (result) {

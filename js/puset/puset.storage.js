@@ -15,8 +15,8 @@
     window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
     // (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
 
-    const DATABASE_NAME = "puset_key_value_db";
-    const TABLE_NAME = "local_storage";
+    const DATABASE_NAME = "puset_database";
+    const TABLE_NAME = "store";
 
     const StorageHelper = function (type, name, version) {
         if (name && (this.name = name));

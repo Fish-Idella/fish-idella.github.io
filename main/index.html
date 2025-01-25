@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>&#20027;&#39029;</title>
     <link rel="stylesheet" type="text/css" href="/mediae/fonts/font-awesome/v6.1.1/css/all.css">
     <link rel="stylesheet" type="text/css" href="/css/index.css">
@@ -25,8 +27,8 @@
                 <span class="tips"></span>
             </a>
         </div>
-        <div id="menu">
-            <button title="Settings" class="round-button">
+        <div id="menu" class="hide">
+            <button title="Settings" class="round-button" type="button">
                 <i class="fa-solid fa-list-ul"></i>
             </button>
         </div>
@@ -62,7 +64,7 @@
                                     class=""></path>
                             </svg>
                         </a>
-                        <span class="soutu-hover-tip" class="hide">按图片搜索</span>
+                        <span class="soutu-hover-tip hide">按图片搜索</span>
                     </span>
                     <span v-hide="true" class="bg s_btn_wr">
                         <button type="submit" title="Bing 搜索" class="bg s_btn" id="engine_baidu" value="">

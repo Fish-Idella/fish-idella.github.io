@@ -1,4 +1,5 @@
-#drawer, #alert {
+#drawer,
+#alert {
     color: var(--color-text);
     place-content: center;
     place-items: center;
@@ -22,24 +23,26 @@
 }
 
 @keyframes toastbackground {
-	0% {
-		display: block;
-		opacity: 1;
-	}
-	80% {
-		display: block;
-		opacity: 1;
-	}
-	100% {
-		display: none;
-		opacity: 0;
-	}
+    0% {
+        display: block;
+        opacity: 1;
+    }
+
+    80% {
+        display: block;
+        opacity: 1;
+    }
+
+    100% {
+        display: none;
+        opacity: 0;
+    }
 }
 
 .alert-box {
     padding: 0 1rem;
-	width: 600px;
-	height: 20rem;
+    width: 600px;
+    height: 20rem;
 }
 
 .alert-box .title {
@@ -118,19 +121,19 @@
 }
 
 #toast {
-	position: fixed;
-	bottom: 10rem;
-	left: 25%;
-	display: none;
-	overflow: hidden;
-	padding: .5rem;
-	width: 50%;
-	max-height: 10rem;
-	border-radius: .5rem;
-	background-color:var(--background-box);
-	box-shadow: var(--value-box-shadow);
-	line-height: 1.5rem;
-	/* animation: toastbackground 6s ease-out 0s; */
+    position: fixed;
+    bottom: 10rem;
+    left: 25%;
+    display: none;
+    overflow: hidden;
+    padding: .5rem;
+    width: 50%;
+    max-height: 10rem;
+    border-radius: .5rem;
+    background-color: var(--background-box);
+    box-shadow: var(--value-box-shadow);
+    line-height: 1.5rem;
+    /* animation: toastbackground 6s ease-out 0s; */
 }
 
 #menu-list {
@@ -153,7 +156,7 @@
 }
 
 #menu-list>li:hover {
-    background-color:var(--background-menu-list-hover);
+    background-color: var(--background-menu-list-hover);
 }
 
 #menu-list>li>.selected {
@@ -238,7 +241,7 @@ a#close:hover {
     padding: 0 1rem;
     height: auto;
     min-height: 100%;
-	flex-direction: column;
+    flex-direction: column;
 }
 
 .block>* {
@@ -280,7 +283,7 @@ a#close:hover {
     padding: 0 1rem;
     min-height: 35px;
     line-height: 35px;
-	flex-direction: column;
+    flex-direction: column;
 }
 
 .block.content>label {
@@ -339,6 +342,7 @@ a#close:hover {
     background: var(--background-button);
     font-weight: bold;
 }
+
 #drawer *.input input[type=text]:focus+.select {
     display: block;
 }
@@ -414,10 +418,11 @@ a#close:hover {
     left: 0;
 }
 
-#drawer .subtitle-bar>.input-box{
+#drawer .subtitle-bar>.input-box {
     overflow: visible;
 }
-#drawer .subtitle-bar>.input-box>*{
+
+#drawer .subtitle-bar>.input-box>* {
     border-radius: 5px;
     outline: none;
     border: none;
@@ -439,7 +444,7 @@ a#close:hover {
     background-color: tan;
 }
 
-#drawer .subtitle-bar>.input-box>ul.select>li{
+#drawer .subtitle-bar>.input-box>ul.select>li {
     list-style: none;
 }
 
@@ -492,7 +497,8 @@ label>input[type=file]+span {
     margin-right: 1rem;
 }
 
-.bgPreBoxInner, .bgPreBoxMask {
+.bgPreBoxInner,
+.bgPreBoxMask {
     width: 100%;
     height: 100%;
     background-color: transparent;
@@ -501,7 +507,8 @@ label>input[type=file]+span {
     transition: .25s;
 }
 
-.bgPreBoxInner.selected, .bgPreBoxInner.unset {
+.bgPreBoxInner.selected,
+.bgPreBoxInner.unset {
     pointer-events: none;
 }
 
@@ -512,7 +519,7 @@ label>input[type=file]+span {
 
 .pTitleS {
     font-size: 13px;
-    color: rgba(0,0,0,.6);
+    color: rgba(0, 0, 0, .6);
 }
 
 .perview a span.title {
@@ -526,19 +533,20 @@ label>input[type=file]+span {
 
 #menu-list::-webkit-scrollbar,
 #context::-webkit-scrollbar {
-	width: .2rem !important;
+    width: .2rem !important;
 }
 
-#menu-list, #context {
-	/* Firefox */
-	scrollbar-width: thin !important;
+#menu-list,
+#context {
+    /* Firefox */
+    scrollbar-width: thin !important;
     scrollbar-color: var(--background-scrollbar-thumb) transparent;
 }
 
 #menu-list::-webkit-scrollbar-thumb,
 #context::-webkit-scrollbar-thumb {
-	border-radius: .5rem;
-	background-color: var(--background-scrollbar-thumb);
+    border-radius: .5rem;
+    background-color: var(--background-scrollbar-thumb);
 }
 
 .array-list ul.list,
@@ -566,6 +574,7 @@ li .showIn {
     margin: 0 .5rem;
     width: 2rem;
 }
+
 .array-list li>.showIn>img {
     position: absolute;
     background-color: var(--background-search);
@@ -608,7 +617,7 @@ ul.list li button {
 }
 
 ul.list li button:hover {
-    background-color:var(--background-button-hover);
+    background-color: var(--background-button-hover);
     color: var(--color-text);
 }
 
@@ -624,36 +633,39 @@ form.radio-list {
 
 label.radio {
     position: relative;
+    color: #3C92DC;
     text-align: center;
+}
+
+label.radio.default {
+    color: #3C92DC;
+}
+
+label.radio.dark {
+    color: #2a2a2a;
 }
 
 label.radio input[type=radio] {
     opacity: 0;
 }
 
-label.radio span {
+label.radio>div {
     position: absolute;
-    top: 5px;
+    top: 0;
     left: 50%;
-    box-sizing: border-box;
-    margin-left: -10px;
-    width: 20px;
-    height: 20px;
-    border: 1px solid #3C92DC;
-    border-radius: 20px;
+    margin-left: -15px;
+    margin-top: 0;
+    width: 30px;
+    height: 100%;
+    overflow: hidden;
 }
 
-label.radio input[type=radio]+span::after {
+label.radio>div>span {
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 12px;
-    height: 12px;
-    border-radius: 20px;
-    background-color: #eee;
-    content: "";
-}
-
-label.radio input[type=radio]:checked+span::after {
-    background-color: #3C92DC;
+    display: block;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }

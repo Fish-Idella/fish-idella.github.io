@@ -46,6 +46,19 @@
                         "text": "手动定位城市",
                         "long_text": "填入县/区级地名\uff0c比如\uff1a“<b>中国-北京市-海淀区</b>”\uff0c直接填入“<b>海淀</b>”\uff0c市区直接填入“<b>北京</b>”。",
                         "psid": "string_local_city"
+                    },
+                    {
+                        "type": "button",
+                        "show": [
+                            "boolean_show_weather"
+                        ],
+                        "hide": [
+                            "boolean_auto_ip"
+                        ],
+                        "text": "获取定位",
+                        "long_text": "获取当前城市。",
+                        "value": "获取定位",
+                        "psid": "get_local_city"
                     }
                 ]
             },
@@ -130,7 +143,7 @@
                         "type": "image-select",
                         "text": "本地文件",
                         "accept": "image/*,video/*",
-                        "value": "local_wallpaper_file",
+                        "value": "puset-local-wallpaper",
                         "hide": [
                             "boolean_random_wallpaper"
                         ],

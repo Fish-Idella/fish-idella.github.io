@@ -18,8 +18,8 @@ class FangDou {
      * 指定时间内的重复操作只执行最后一次
      * @param {number} d 
      */
-    constructor(d) {
-        this.delay = +d || 500;
+    constructor(d = 500) {
+        this.delay = +d;
     }
 
     /**
@@ -33,6 +33,7 @@ class FangDou {
         } else {
             typeof before === "function" && before();
         }
+
         this.#running = true;
         this.#timer = setTimeout(this.#run, this.delay, this);
 
@@ -46,7 +47,6 @@ class FangDou {
 
 const _modifiers = document.getElementById("modifiers");
 const _text = document.getElementById("text");
-const tc = document.getElementById("text-code");
 
 const flagsArray = new Set("g");
 
@@ -56,22 +56,26 @@ const MainObj = {
 
     flags: "g",
 
+    // 转义
     zy: function (str, className, odd) {
         return str ? `<span class="${typeof className === "string" ? className : "text"} ${odd ? "odd": ""
             }">${str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replace(/\u00a0/g, " ")
             }</span>` : "";
     },
 
+
     pp: function () {
-        const text = _text.value;
+        const text = _text.value || _text.textContent;
+        // console.log(text)
         if (text && MainObj.pattern) try {
             const result = [];
             let index = 0;
             let odd = 0;
             const mRegExpCode = new RegExp(MainObj.pattern, MainObj.flags);
+            // console.log(mRegExpCode)
 
             const splitStr = function (arr) {
-                // console.log(arr)
+                // // console.log(arr)
 
                 odd++;
                 result.push(MainObj.zy(text.substring(index, arr.index)));
@@ -79,7 +83,7 @@ const MainObj = {
 
             };
 
-            // console.log(mRegExpCode)
+            // // console.log(mRegExpCode)
             if (flagsArray.has("g")) {
                 const iterator = text.matchAll(mRegExpCode)
                 for (let arr of iterator) {
@@ -89,11 +93,12 @@ const MainObj = {
                 splitStr(text.match(mRegExpCode));
             }
             result.push(MainObj.zy(text.substring(index)), "<br><br><br>");
-            // console.log(result)
+            // // console.log(result)
 
-            tc.innerHTML = result.join("");
+            // console.log(result.join(""))
+            _text.innerHTML = result.join("");
         } catch (ex) {
-
+            console.log(ex)
         }
     }
 
@@ -102,7 +107,8 @@ const MainObj = {
 const afd = new FangDou(500);
 
 document.getElementById("code").addEventListener("input", function () {
-    MainObj.pattern = this.value.trim()
+    MainObj.pattern = this.value.trim();
+    // console.log(MainObj)
     afd.start(null, MainObj.pp);
 });
 
@@ -116,16 +122,3 @@ document.getElementById("flags").addEventListener("change", function (ev) {
     _modifiers.innerHTML = MainObj.flags = Array.from(flagsArray).join("");
     afd.start(null, MainObj.pp);
 });
-
-const fd = new FangDou(100);
-
-function splitStr(text) {
-    if (text) {
-        return text.split("\n").map(function(value) {
-            return '<code>' + value + '</code>';
-        }).join("\n") + "\n";
-    }
-
-    return "\n"
-}
-
