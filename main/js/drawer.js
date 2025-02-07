@@ -429,8 +429,7 @@ new Promise(function (resolve, reject) {
     })
 
     Interpreter.set("radio", function () {
-        const radio = '<label><div><input type="radio"><span><i class="fa-solid fa-circle"></i></span></div></label>';
-        return Interpreter.parseHtml(radio);
+        return Interpreter.parseHtml('<label><div><input type="radio"><span><i class="fa-solid fa-circle"></i></span></div></label>');
     })
 
     Interpreter.set("radio-list", function () {
@@ -453,10 +452,10 @@ new Promise(function (resolve, reject) {
             radio.value = value1;
             target.appendChild(label);
         });
-        
+
         const radios = target.querySelectorAll("input[type=radio]");
-        target.addEventListener("change", function(event) {
-            PuSet.each(radios, function(radio) {
+        target.addEventListener("change", function (event) {
+            PuSet.each(radios, function (radio) {
                 (radio?.nextElementSibling).innerHTML = radio.checked ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle"></i>';
             });
         });
@@ -497,7 +496,43 @@ new Promise(function (resolve, reject) {
         });
     });
 
+    console.log(Interpreter)
+    Interpreter.set("image-list", function () {
+        return Interpreter.get("switch").view;
+    }, function (target, value) {
+        target.querySelector(".value").checked = MainUI.GS[value.psid];
 
+        const arr = MainUI.GS[value.value];
+        if (!Array.isArray(arr)) {
+            return;
+        }
+        const div = document.createElement("div");
+        div.className = "grid-horizontal image-list";
+        div.addEventListener("click", function (event) {
+            event.preventDefault();
+            const span = event.target;
+            const obj = arr[span.dataset.index];
+
+            MainUI.GS.string_background_type = obj.t;
+            MainUI.GS.string_background_src = obj.s;
+            MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
+            setLocalConfig("puset-local-configure", MainUI.GS);
+
+            div.querySelectorAll("span.selected").forEach(elem => elem.className = "");
+            span.className = "selected";
+        });
+        // const index = arr.indexOf(MainUI.GS.string_background_src);
+        for (let i = 0; i < arr.length; i++) {
+            const span = document.createElement("span");
+            const obj = arr[span.dataset.index = i];
+            span.className = (obj.s === MainUI.GS.string_background_src ? "selected" : "");
+            // span.innerHTML = obj.t.split('/')[0];
+            span.style.backgroundImage = `url(${obj.p || obj.s})`;
+            div.appendChild(span);
+        }
+        // arr.indexOf(MainUI.GS.string_background_src)
+        target.appendChild(div);
+    })
 
 
 
@@ -554,8 +589,10 @@ new Promise(function (resolve, reject) {
         const target = ev.srcEvent ? ev.srcEvent.target : ev.target;
 
         if (target.type == "button") {
-            const fn = PuSetting[getPsId(target)];
-            if (fn) { fn() }
+            const fn = PuSetting.item[getPsId(target)]?.fn;
+            if (fn) { fn() } else {
+                console.log(getPsId(target));
+            }
         }
     }).on("scroll", function () {
         const top = this.scrollTop;

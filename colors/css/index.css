@@ -1,0 +1,140 @@
+.background-box {
+    background-color: #def;
+}
+
+.page {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0px;
+}
+
+#colors-box {
+    width: 650px;
+    height: 500px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: white;
+    font-size: 14pt;
+}
+
+
+#hue-circle {
+    position: absolute;
+    width: 243px;
+    height: 243px;
+    top: 50px;
+    left: 50px;
+    background-color: white;
+    background-image: url(hue.png);
+    background-repeat: no-repeat;
+    background-position: -110px -110px;
+    border-radius: 130px;
+}
+
+#sl-box {
+    position: absolute;
+    width: 143px;
+    height: 143px;
+    top: 50px;
+    left: 50px;
+    border-radius: 72px;
+    background-color: white;
+    background-image: linear-gradient(135deg, #555, #ddd);
+}
+
+#sl {
+    position: absolute;
+    width: 101px;
+    height: 101px;
+    top: 21px;
+    left: 21px;
+    overflow: hidden;
+}
+
+#sl div {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+}
+
+#display-area {
+    position: absolute;
+    top: 50px;
+    left: 350px;
+    width: 180px;
+    height: auto;
+    list-style: none;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+#display-area li {
+    list-style: none;
+    display: flex;
+    margin-bottom: 10px;
+}
+
+
+#display-area .title-name {
+    display: flex;
+    min-width: 90px;
+    flex-direction: column;
+}
+
+#display-area .display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+}
+
+.name-cn {
+    font-size: 1em;
+}
+
+.name-en {
+    font-size: .6em;
+    color: rgb(180, 180, 180);
+}
+
+.display input,
+.display span {
+    display: inline;
+    outline: none;
+    height: 80%;
+    width: 5.5em;
+    text-align: right;
+    box-sizing: border-box;
+    border-radius: 0;
+    font-size: 15pt;
+    border-bottom: 2px solid #333;
+    border-width: 0 0 2px 0;
+}
+
+
+.display span {
+    width: 1em;
+    text-align: left;
+    padding: 2px 0;
+}
+
+#preview {
+    border: 2px solid #333;
+    border-width: 2px 0 2px 2px;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    background-color: #f00;
+    color: #0ff;
+}
+
+#preview+span {
+    border: 2px solid #333;
+    border-width: 2px 2px 2px 0;
+    background-color: #f00;
+    color: #0ff;
+}

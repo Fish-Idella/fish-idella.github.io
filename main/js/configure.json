@@ -150,11 +150,24 @@
                         "long_text": "从本地文件选择壁纸"
                     },
                     {
+                        "psid": "boolean_image_wallpaper",
+                        "type": "image-list",
+                        "text": "推荐图片",
+                        "accept": "image/*,video/*",
+                        "value": "map_wallpaper",
+                        "hide": [
+                            "boolean_random_wallpaper",
+                            "boolean_file_wallpaper"
+                        ],
+                        "long_text": "推荐的网络壁纸"
+                    },
+                    {
                         "psid": "string_background_src",
                         "type": "input",
                         "text": "CSS 样式",
                         "hide": [
                             "boolean_random_wallpaper",
+                            "boolean_image_wallpaper",
                             "boolean_file_wallpaper"
                         ],
                         "long_text": "自定义Style.Background的值"

@@ -145,8 +145,9 @@
     <div id="toast"></div>
 
     <script type="text/javascript">
-        if ((window.ActiveXObject || "ActiveXObject" in window) || (window.navigator.userAgent.indexOf("Trident") >= 0)) {
-            document.body.innerHTML = "网页未做IE浏览器兼容"
+        // document.body.innerHTML = '<i class="fa-regular fa-circle-check"></i>'
+        if (!/(Chrome|Firefox|Apple)/i.test(window.navigator.userAgent)) {
+            document.body.innerHTML = "网页不兼容此浏览器";
         }
     </script>
 

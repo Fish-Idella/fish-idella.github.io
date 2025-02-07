@@ -1,0 +1,56 @@
+body.view {
+    background-image: url(../img/img_idev.png);
+}
+
+header.title {
+    line-height: 4rem;
+    text-align: center;
+    font-size: 2rem;
+    color: #fff;
+}
+
+div.game-view {
+    display: flex;
+    flex-direction: column;
+}
+
+div.game-box {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.2);
+    width: min(500px, 100vmin);
+    height: 100%;
+}
+
+#sudoku {
+    table-layout: fixed;
+    border: 2px solid #000;
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    text-align: center;
+    border-spacing: 0;
+    border-collapse: collapse;
+    user-select: none;
+}
+
+#sudoku td {
+    border: 1px solid #000;
+    /* text-align: center; */
+    overflow: hidden;
+}
+
+#sudoku tr:nth-child(3n) td {
+    border-bottom-width: 2px;
+}
+#sudoku tr td:nth-child(3n) {
+    border-right-width: 2px;
+}
+
+@media (min-aspect-ratio: 1) {
+
+    div.game-box {
+        /* background-color: rgba(255, 255, 255, 0.2); */
+        /* width: 80vh; */
+        /* height: 100%; */
+    }
+}

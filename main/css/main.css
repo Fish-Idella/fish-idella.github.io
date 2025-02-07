@@ -109,7 +109,6 @@ body>.view {
 	grid-template-columns: 20rem 1fr 5rem;
 	grid-template-rows: 3rem 1fr 2fr 3rem;
 	color: var(--color-link);
-	/* background: #0000001f; */
 }
 
 #weather {
@@ -501,7 +500,7 @@ span.bg {
 
 /** 竖屏时 */
 /* @media screen and (orientation: landscape) { */
-@media (max-aspect-ratio: 3/4) {
+@media (max-aspect-ratio: 1/1) {
 
 	#main {
 		grid-template-columns: 1fr 0 5rem;
