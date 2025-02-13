@@ -499,8 +499,7 @@ span.bg {
 
 
 /** 竖屏时 */
-/* @media screen and (orientation: landscape) { */
-@media (max-aspect-ratio: 1/1) {
+@media screen and (orientation: portrait), screen and (max-aspect-ratio: 4 / 3) {
 
 	#main {
 		grid-template-columns: 1fr 0 5rem;

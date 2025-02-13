@@ -1,5 +1,5 @@
 html, body, textarea, input, button, select, td, th {
-    font-size: max(1.8vmin, 15px);
+    font-size: min(8vmin, 15px);
     font-weight: 300;
     font-family: "HarmonyOS Sans", "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, Sans-Serif;
 }
@@ -34,25 +34,25 @@ body, .view {
 }
 
 .grid-horizontal {
-    display: grid;
+    display: grid !important;
     padding: 0;
     grid-auto-flow: row;
 }
 
 .grid-vertical {
-    display: grid;
+    display: grid !important;
     padding: 0;
     grid-auto-flow: column;
 }
 
 .flex-horizontal {
-    display: flex;
+    display: flex !important;
     padding: 0;
     flex-direction: row;
 }
 
 .flex-vertical {
-    display: flex;
+    display: flex !important;
     padding: 0;
     flex-direction: column;
 }
@@ -64,7 +64,7 @@ body, .view {
     flex-grow: 1;
 }
 
-*.hide {
+html *.hide {
     display: none !important;
 }
 

@@ -1,11 +1,12 @@
 (function () {
     "use strict";
 
-    let hideControlsTimer = 0;
     let animationFrameId = 0;
     let isLongVideo = false;
     let hideVolumeBoxTimer = 0;
     let pointerDownElement = null;
+
+    const HIDE = "hide";
 
     const playerContainer = document.getElementById("player-video-layer");
     const videoElement = playerContainer.querySelector("video.video");
@@ -18,16 +19,19 @@
     const volumeButton = playerContainer.querySelector(".bt.bt-volume>img");
 
     const volumeBox = playerContainer.querySelector(".bt.bt-volume>.volume-box");
-    const volumeBar = volumeBox.querySelector(".volume-bar");
     const volumeValue = volumeBox.querySelector(".volume-value");
+    const volumeBar = volumeBox.querySelector(".volume-bar");
+    const volumeThumbDot = volumeBar.querySelector(".thumb-dot");
+
+    const tooltipContainer = controlsContainer.querySelector(".layer-tooltip");
+    const tooltipContent = tooltipContainer.querySelector("span.content");
 
     const progressBarContainer = bottomControls.querySelector(".progress-bar");
-    const bufferedBar = progressBarContainer.querySelector(".buffered");
-    const playedBar = progressBarContainer.querySelector(".played");
+    const progressBar = progressBarContainer.querySelector(".progress");
 
     const controlButtons = {
         "svg/play.svg": function (target) {
-            videoElement.play();
+            if (videoElement.duration && videoElement.play());
         },
         "svg/pause.svg": function (target) {
             videoElement.pause();
@@ -67,28 +71,60 @@
         });
     });
 
-    volumeBar.addEventListener("change", () => setVolume(volumeBar.value));
+    const setVolumeHandler = function setVolumeHandler(ev) {
+        ev.preventDefault();
 
+        if (setVolumeHandler.running) {
+            setVolume(100 - Math.floor(100 * ev.offsetY / volumeBar.offsetHeight));
+        }
+
+        switch (ev.type) {
+            case "pointerdown": {
+                setVolumeHandler.running = true;
+                break;
+            }
+            // case "pointermove": 
+            case "pointerup":
+            case "pointerleave":
+            case "pointercancel": {
+                setVolumeHandler.running = false;
+            }
+        }
+
+    };
+
+    volumeBar.addEventListener("pointerdown", setVolumeHandler);
+    volumeBar.addEventListener("pointermove", setVolumeHandler);
+    volumeBar.addEventListener("pointerup", setVolumeHandler);
+    // volumeBar.addEventListener("pointerleave", setVolumeHandler);
+    volumeBar.addEventListener("pointercancel", setVolumeHandler);
+
+
+    // 事件在盒子上可以让进度条的鼠标事件高度范围更大
     progressBarContainer.addEventListener("pointerdown", function (ev) {
         ev.preventDefault();
         // left click
-        if (ev.button == 0) {
+        if (ev.button == 0 && videoElement.duration) {
             pointerDownElement = progressBarContainer;
-            playedBar.style.width = `${100 * ev.offsetX / this.offsetWidth}%`;
+            progressBar.style.setProperty('--played', `${100 * ev.offsetX / pointerDownElement.offsetWidth}%`);
         }
     });
     playerContainer.addEventListener("pointermove", function (ev) {
         if (pointerDownElement === progressBarContainer) {
-            playedBar.style.width = `${100 * ev.offsetX / pointerDownElement.offsetWidth}%`;
+            progressBar.style.setProperty('--played', `${100 * ev.offsetX / pointerDownElement.offsetWidth}%`);
         }
     });
     playerContainer.addEventListener("pointerup", function (ev) {
         if (pointerDownElement === progressBarContainer && videoElement.duration) {
             videoElement.currentTime = videoElement.duration * ev.offsetX / pointerDownElement.offsetWidth;
-            pointerDownElement = null;
         }
+        pointerDownElement = null;
     });
-    playerContainer.addEventListener("pointerleave", () => pointerDownElement = null);
+    playerContainer.addEventListener("pointerleave", ev => {
+        pointerDownElement = null;
+        setVolumeHandler(ev);
+    });
+    playerContainer.addEventListener("pointercancel", () => pointerDownElement = null);
 
     /**
      * Formats a given time value to a two-digit string.
@@ -133,7 +169,7 @@
         const current = videoElement.currentTime;
         currentTimeDisplay.innerHTML = parseDuration(current, isLongVideo);
         if (pointerDownElement !== progressBarContainer) {
-            playedBar.style.width = `${100 * current / videoElement.duration}%`;
+            progressBar.style.setProperty('--played', `${100 * current / videoElement.duration}%`);
         }
     }
 
@@ -144,11 +180,11 @@
      * @param {PointerEvent} ev - The pointermove event.
      */
     function pointerMove(ev) {
-        clearTimeout(hideControlsTimer);
+        clearTimeout(pointerMove.hideControlsTimer);
         playerContainer.style.cursor = "default";
-        bottomControls.classList.remove("hide");
+        bottomControls.classList.remove("min");
         if (Object.is(ev.target, controlsContainer)) {
-            hideControlsTimer = setTimeout(pointerLeave, 5000);
+            pointerMove.hideControlsTimer = setTimeout(pointerLeave, 5000);
         }
     }
 
@@ -157,22 +193,31 @@
      * Hides the controls and sets the cursor to none.
      */
     function pointerLeave() {
-        volumeBox.classList.add("hide");
-        bottomControls.classList.add("hide");
+        setVolumeHandler.running = false;
+        volumeBox.classList.add(HIDE);
+        bottomControls.classList.add("min");
         playerContainer.style.cursor = "none";
     }
 
     /**
      * Sets the volume of the video element.
      * 
-     * @param {number} i - The volume level to set (0 to 10).
+     * @param {number} i - The volume level to set (0 to 100).
      */
     function setVolume(i) {
         if (videoElement.muted) {
             videoElement.muted = false;
             volumeButton.src = "svg/volume.svg";
         }
-        videoElement.volume = Math.min(Math.max(0, i / 10), 1);
+        videoElement.volume = Math.min(Math.max(0, i / 100), 1);
+    }
+
+    function videoToggle() {
+        if (videoElement.duration && videoElement.paused) {
+            videoElement.play();
+        } else {
+            videoElement.pause();
+        }
     }
 
     /**
@@ -186,31 +231,31 @@
         if (activeElement == document.body || activeElement == playerContainer) {
 
             // play/pause
-            if (ev.keyCode === 32 || ev.code === "Space" || ev.key === "Space") {
-                if (videoElement.paused) {
-                    videoElement.play();
-                } else {
-                    videoElement.pause();
-                }
+            if (ev.code === "Space" || ev.keyCode === 32 || ev.key === "Space" ||
+                ev.code === "MediaPlayPause" || ev.keyCode === 0xE022 || ev.code === "MediaPlayPause") {
+                return videoToggle();
             }
             // time
-            else if (ev.keyCode === 37 || ev.code === "ArrowLeft" || ev.key === "ArrowLeft") {
+            else if (ev.code === "ArrowLeft" || ev.keyCode === 37 || ev.key === "ArrowLeft") {
                 videoElement.currentTime -= 5;
-            } else if (ev.keyCode === 39 || ev.code === "ArrowRight" || ev.key === "ArrowRight") {
+            } else if (ev.code === "ArrowRight" || ev.keyCode === 39 || ev.key === "ArrowRight") {
                 videoElement.currentTime += 10;
             }
             // volume
-            else if (ev.keyCode === 38 || ev.code === "ArrowUp" || ev.key === "ArrowUp") {
-                setVolume(Number(volumeBar.value) + 1);
-            } else if (ev.keyCode === 40 || ev.code === "ArrowDown" || ev.key === "ArrowDown") {
-                setVolume(Number(volumeBar.value) - 1);
+            else if (ev.code === "ArrowUp" || ev.keyCode === 38 || ev.key === "ArrowUp") {
+                return setVolume(Number(volumeBar.dataset.value) + 5);
+            } else if (ev.code === "ArrowDown" || ev.keyCode === 40 || ev.key === "ArrowDown") {
+                return setVolume(Number(volumeBar.dataset.value) - 5);
             }
 
         }
     }
 
-    function hideVolumeBox() {
-        hideVolumeBoxTimer = setTimeout(() => volumeBox.classList.add("hide"), 1000);
+    function hideVolumeBox(ev) {
+        hideVolumeBoxTimer = setTimeout(() => {
+            volumeBox.classList.add(HIDE);
+            setVolumeHandler.running = false;
+        }, 1000);
     }
 
     // autoplay
@@ -237,33 +282,48 @@
             const arr = new Array();
             for (let i = 0, next, end; i < max; i++) {
                 end = 100 * buffered.end(i) / duration;
-                arr.push(`#ffffff44 ${100 * buffered.start(i) / duration}% ${end}%`);
+                arr.push(`var(--buffered-color) ${100 * buffered.start(i) / duration}% ${end}%`);
 
                 next = 1 + i;
                 arr.push(`#00000000 ${end}% ${(next < max) ? (100 * buffered.start(next) / duration) : 100}%`);
             }
 
+            // 清除多余的样式
             for (let i; (i = arr.indexOf("#00000000 100% 100%")) >= 0; arr.splice(i, 1));
 
-            bufferedBar.style.background = `linear-gradient(90deg,${arr.join()})`;
+            progressBar.style.setProperty("--buffered", `linear-gradient(90deg,${arr.join()})`);
         }
     });
-    videoElement.addEventListener("volumechange", function () {
-        const volume = Math.round(videoElement.volume * 10);
-        volumeBar.value = volume;
+    videoElement.addEventListener("volumechange", function volumechange() {
+        const volume = Math.round(videoElement.volume * 100);
         volumeValue.textContent = volume;
+        tooltipContent.textContent = volume;
+        volumeBar.dataset.value = volume;
+        volumeThumbDot.style.setProperty("top", `${100 - volume}px`);
+        if (volumeBox.classList.contains(HIDE)) {
+            clearTimeout(volumechange.hideTimer);
+            tooltipContainer.classList.remove(HIDE);
+            volumechange.hideTimer = setTimeout(() => tooltipContainer.classList.add(HIDE), 1000);
+        }
     });
 
     controlsContainer.addEventListener("pointermove", pointerMove);
     controlsContainer.addEventListener("pointerleave", pointerLeave);
+    controlsContainer.addEventListener("pointercancel", pointerLeave);
+
+    controlsContainer.addEventListener("dblclick", videoToggle);
 
     // volume box display toggle
-    volumeBox.addEventListener("pointerleave", hideVolumeBox);
+    volumeBox.addEventListener("pointerleave", setVolumeHandler);
+    volumeBox.addEventListener("pointercancel", hideVolumeBox);
+
     volumeButton.addEventListener("pointerleave", hideVolumeBox);
+    volumeButton.addEventListener("pointercancel", hideVolumeBox);
+
     volumeBox.addEventListener("pointerenter", () => clearTimeout(hideVolumeBoxTimer));
     volumeButton.addEventListener("pointerenter", () => {
         clearTimeout(hideVolumeBoxTimer);
-        volumeBox.classList.remove("hide")
+        volumeBox.classList.remove(HIDE)
     });
 
     document.addEventListener("keydown", onKeyboardDownEventListener);
@@ -271,9 +331,9 @@
 }());
 
 (function () {
-    const dashboard = document.querySelector("div.dashboard.flex.v");
+    const dashboard = document.querySelector("div.dashboard");
     const url = dashboard.querySelector(".url-box>input[type=url]");
-    const videoElement = document.querySelector("#player-video-layer>video.video");
+    const videoElement = document.querySelector("#player-video-layer video.video");
 
     dashboard.querySelector("#play").addEventListener("click", function () {
         videoElement.currentTime = 0;
@@ -287,6 +347,6 @@
             videoElement.src = url.value = URL.createObjectURL(file);
         }
     });
-    
+
     dashboard.querySelector("#stop").addEventListener("click", () => videoElement.pause() || (videoElement.src = "#"));
 }());

@@ -687,6 +687,8 @@ label.radio>div>span {
     aspect-ratio: 1920/1080;
     font-family: "Font Awesome 6 Pro";
     font-weight: 400;
+    /* container-type: inline-size; */
+    font-size: min(3rem, 30px);
     background-size: cover;
     border-radius: 5px;
     overflow: hidden;
@@ -711,6 +713,6 @@ label.radio>div>span {
     content: "\f058";
     color: #fff;
     text-align: center;
-    font-size: 3rem;
+    /* font-size: 3rem; */
     /* z-index: 1; */
 }

@@ -62,61 +62,61 @@ aaa = (function () {
 
             ctx.clearRect(0, 0, w, h);
 
-            for (let point, i = 0; i < length; i++) {
-                point = arr[i];
+            for (let point1, i = 0; i < length; i++) {
+                point1 = arr[i];
 
-                point.draw(ctx, l);
+                point1.draw(ctx, l);
 
-                if (point.x < 0) {
-                    point.dx = 1;
-                } else if (point.x > w) {
-                    point.dx = 0;
+                if (point1.x < 0) {
+                    point1.dx = 1;
+                } else if (point1.x > w) {
+                    point1.dx = 0;
                 }
-                if (point.y < 0) {
-                    point.dy = 1;
-                } else if (point.y > h) {
-                    point.dy = 0;
+                if (point1.y < 0) {
+                    point1.dy = 1;
+                } else if (point1.y > h) {
+                    point1.dy = 0;
                 }
 
-                for (let point2, j = 0; j < length; j++) {
-                    if (i !== j) {
-                        point2 = arr[j];
-                        const x = point.x - point2.x;
-                        const y = point.y - point2.y;
-                        const juli = Math.sqrt((x ** 2) + (y ** 2));
+                for (let point2, j = 1 + i; j < length; j++) {
+                    // if (i !== j) {
+                    point2 = arr[j];
+                    const x = point1.x - point2.x;
+                    const y = point1.y - point2.y;
+                    const juli = Math.sqrt((x * x) + (y * y));
 
-                        if (juli < 200) {
-                            if (x > 0) {
-                                point.nx = Math.min(point.nx + 0.01, 2);
-                            } else {
-                                point.nx = Math.max(point.nx  -0.01, 0);
+                    if (juli < 200) {
+                        if (x > 0) {
+                            point1.nx = Math.min(point1.nx + 0.01, 2);
+                        } else {
+                            point1.nx = Math.max(point1.nx - 0.01, 0);
+                        }
+                        if (y > 0) {
+                            point1.ny = Math.min(point1.ny + 0.01, 2);
+                        } else {
+                            point1.ny = Math.max(point1.ny - 0.01, 0);
+                        }
+
+                        ctx.beginPath();
+                        ctx.lineWidth = Math.max((2 - (juli / 100)), 0.1);
+                        ctx.strokeStyle = "#FFF";
+                        ctx.moveTo(point1.x, point1.y);
+                        ctx.lineTo(point2.x, point2.y);
+                        ctx.stroke();
+
+                        // 靠近会排斥，避免扎堆
+                        if (juli <= 10) {
+                            if (point1.dx != point2.dx) {
+                                point1.dx ^= 1;
+                                point2.dx ^= 1;
                             }
-                            if (y > 0) {
-                                point.ny = Math.min(point.ny + 0.01, 2);
-                            } else {
-                                point.ny = Math.max(point.ny  -0.01, 0);
-                            }
-
-                            ctx.beginPath();
-                            ctx.lineWidth = Math.max((2 - (juli / 100)), 0.1);
-                            ctx.strokeStyle = "#FFF";
-                            ctx.moveTo(point.x, point.y);
-                            ctx.lineTo(point2.x, point2.y);
-                            ctx.stroke();
-
-                            // 靠近会排斥，避免扎堆
-                            if (juli <= 10) {
-                                if (point.dx != point2.dx) {
-                                    point.dx ^= 1;
-                                    point2.dx ^= 1;
-                                }
-                                if (point.dy != point2.dy) {
-                                    point.dy ^= 1;
-                                    point2.dy ^= 1;
-                                }
+                            if (point1.dy != point2.dy) {
+                                point1.dy ^= 1;
+                                point2.dy ^= 1;
                             }
                         }
                     }
+                    // }
                 }
             }
 

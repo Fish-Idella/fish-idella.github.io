@@ -35,15 +35,11 @@ function setLocalConfig(item, cofig) {
 }
 
 function corsGet(url, type = 'text/html') {
-    return fetch(`/get`, {
+    return fetch('/api/get', {
         method: 'post',
         headers: {
             // POST 必须的表头
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         },
         body: `path=${encodeURIComponent(url)}&type=${type};charset=UTF-8`
     });

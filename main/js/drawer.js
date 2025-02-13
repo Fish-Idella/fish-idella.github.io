@@ -496,7 +496,7 @@ new Promise(function (resolve, reject) {
         });
     });
 
-    console.log(Interpreter)
+    // console.log(Interpreter)
     Interpreter.set("image-list", function () {
         return Interpreter.get("switch").view;
     }, function (target, value) {

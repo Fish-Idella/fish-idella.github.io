@@ -13,15 +13,20 @@
     <div class="view rsvp">
         <div class="out-box">
             <div id="player" class="content">
-                <div id="player-video-layer" class="video-layer">
-                    <video class="video view" poster="/mediae/images/0x300a0a0.png" src="#" muted></video>
-                    <div class="controls view">
-                        <div class="bottom hide">
+                <div id="player-video-layer" class="video-layer grid-vertical center">
+                    <video class="video fill" poster="/mediae/images/0x300a0a0.png" src="#" muted>你的浏览器不支持 HTML5
+                        视频。</video>
+                    <canvas class="fill danmu">你的浏览器不支持弹幕功能，请关闭。</canvas>
+                    <div class="fill controls">
+                        <div class="view flex-vertical layer-tooltip hide">
+                            <div class="flex-horizontal tooltip">
+                                <img src="svg/volume.svg" alt="音量" />
+                                <span class="fill content">100</span>
+                            </div>
+                        </div>
+                        <div class="bottom min">
                             <div class="progress-bar">
-                                <div class="progress">
-                                    <div class="view buffered"></div>
-                                    <div class="view played"></div>
-                                </div>
+                                <div class="progress"></div>
                             </div>
                             <div class="buttons">
                                 <div class="left fc">
@@ -37,10 +42,14 @@
                                 </div>
                                 <div class="right">
                                     <div class="bt bt-volume" title="音量">
-                                        <div class="volume-box flex v hide">
-                                            <div class="volume-value" >0</div>
-                                            <div class="flex fc">
-                                                <input type="range" name="volume" class="volume-bar" title="音量滑块" min="0" max="10" step="1" value="0">
+                                        <div class="volume-box flex-vertical hide">
+                                            <div class="volume-value">0</div>
+                                            <div class="flex-vertical fc">
+                                                <div class="volume-bar" data-value="0" data-max="100">
+                                                    <div class="view thumb">
+                                                        <div class="thumb-dot" title="音量滑块"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <img data-a="svg/volume.svg" data-b="svg/volume.svg" src="svg/muted.svg"
@@ -56,12 +65,13 @@
                     </div>
                 </div>
             </div>
-            <div class="dashboard flex v">
+            <div class="dashboard flex-vertical">
                 <div class="box">
-                    <div class="flex h">
-                        <div class="url-box fc flex h">
-                            <!-- http://localhost/video/2902006578/SpankBang.com_jynamorel+seviliyager+unicorngirls_1080p.mp4 -->
-                            <input type="url" name="video" value="http://" class="cda fc" placeholder="请输入视频地址">
+                    <div class="flex-horizontal">
+                        <div class="url-box fc flex-horizontal">
+                            <input type="url" name="video"
+                                value="http://localhost/av/Videos/Carib-052218-672-FHD/052218-672-carib-1080p.mp4"
+                                class="cda fc" placeholder="请输入视频地址">
                             <label for="play" type="button" class="bt-play">
                                 <input type="button" name="video" id="play" value="播放">
                                 <span>播放</span>
@@ -80,13 +90,13 @@
                 <div class="box fc mt info"></div>
             </div>
         </div>
-        <div class="in-box flex v">
+        <div class="in-box flex-vertical">
             <div class="box">
-                <div class="flex v address">
-                    <div class="flex h"><span>本机地址：</span><input type="text" name="" id=""
-                            class="fc"><button>复制</button></div>
-                    <div class="flex h"><span>远程地址：</span><input type="text" name="" id=""
-                            class="fc"><button>加入</button></div>
+                <div class="flex-vertical address">
+                    <label class="flex-horizontal"><span>本机地址：</span><input type="text" name="" id="" class="fc"><button
+                            type="button">复制</button></label>
+                    <label class="flex-horizontal"><span>远程地址：</span><input type="text" name="" id="" class="fc"><button
+                            type="button">加入</button></label>
                 </div>
             </div>
             <div class="box fc mt">

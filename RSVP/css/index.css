@@ -1,5 +1,5 @@
 body.theme-default {
-    --theme-background-color: #efefef;
+    --theme-background-color: #ebebeb;
     --theme-text-color: #123;
 }
 
@@ -15,7 +15,8 @@ body {
     font-style: normal;
 }
 
-@media (min-aspect-ratio:10/9) {
+/* 横屏设备 */
+@media screen and ((orientation: landscape) and (width >=1200px)) {
     div.rsvp {
         display: flex;
         flex-direction: row
@@ -31,7 +32,8 @@ body {
     }
 }
 
-@media (max-aspect-ratio:10/9) {
+/* 竖屏设备 */
+@media screen and ((orientation: portrait) or (width <=1200px)) {
     div.rsvp {
         display: flex;
         flex-direction: column
@@ -52,27 +54,10 @@ body {
     }
 }
 
-.view {
-    top: 0;
-    left: 0;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    border: none;
-    outline: none;
-    overflow: hidden
-}
-
-.fc {
-    position: relative;
-    flex-grow: 1
-}
-
 .out-box {
     display: flex;
     flex-direction: column;
+    -webkit-user-select: none;
     user-select: none
 }
 
@@ -81,6 +66,45 @@ body {
     width: 100%;
     box-sizing: border-box;
     padding: 10px
+}
+
+.center {
+    grid-template: 1fr / 1fr;
+    place-content: center;
+    place-items: center;
+}
+
+.center .fill {
+    grid-area: 1 / 2;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+video.video {
+    background-color: #ffffff;
+}
+
+.controls>.layer-tooltip {
+    place-content: center;
+    place-items: center;
+}
+
+.controls .tooltip {
+    width: 90px;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 5px;
+    background: #000000ad;
+    color: white;
+    font-weight: bold;
+    font-size: large;
+    text-align: center;
+    padding: 0 5px;
+
+    &>img {
+        width: 35px;
+    }
 }
 
 .controls>.bottom {
@@ -95,8 +119,7 @@ body {
     background-image: linear-gradient(transparent, rgba(0, 0, 0, .76) 40%, rgba(0, 0, 0, .76))
 }
 
-.cda,
-input[type=range] {
+.cda {
     -webkit-appearance: none;
     appearance: none;
     margin: 0;
@@ -104,25 +127,6 @@ input[type=range] {
     border: none;
     border-radius: 0;
     background-color: transparent
-}
-
-input[type=range]::-webkit-slider-runnable-track {
-    height: 4px;
-    background: #ffffff
-}
-
-input[type=range]::-webkit-slider-container {
-    height: 20px;
-    overflow: hidden
-}
-
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 10px;
-    height: 10px;
-    background-color: #006aff;
-    margin-top: -3px
 }
 
 .progress-bar {
@@ -135,21 +139,58 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .progress-bar>.progress {
+    --played: 0;
+    --buffered: none;
+    --buffered-color: #ffffff8a;
+    --radius: 2px;
     position: relative;
+    -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     height: 4px;
-    border-radius: 2px;
-    background-color: hsla(0, 0%, 100%, .27)
+    margin: 0;
+    border: none;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: rgb(255 255 255 / 30%);
 }
 
-.progress-bar>.progress>.played {
-    width: 0;
-    border-radius: 2px;
-    background-color: #fff
+.progress-bar>.progress::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: var(--radius);
+    background: var(--buffered);
+}
+
+.progress-bar>.progress::after {
+    content: '';
+    position: absolute;
+    width: var(--played);
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: var(--radius);
+    background-color: rgb(10, 135, 218);
 }
 
 .progress-bar:hover>.progress {
     height: 6px
+}
+
+.controls>.bottom.min {
+    height: 1px;
+
+    .progress-bar {
+        margin: 0;
+
+        .progress {
+            --radius: 0;
+        }
+    }
 }
 
 .buttons {
@@ -165,7 +206,7 @@ input[type=range]::-webkit-slider-thumb {
     width: auto;
     height: 2.6rem;
     line-height: 2.6rem;
-    color: #fff;
+    color: #ffffff;
     word-wrap: normal;
     white-space: nowrap;
     margin: 0 2px
@@ -198,17 +239,35 @@ input[type=range]::-webkit-slider-thumb {
     border-radius: 6px;
     text-align: center;
     line-height: 2rem;
-    place-items: center
 }
 
 .volume-bar {
     position: absolute;
-    writing-mode: vertical-lr;
-    direction: rtl;
-    left: -2px;
-    top: 0;
-    width: 4px;
-    height: 115px;
+    left: 5%;
+    top: 3px;
+    width: 90%;
+    height: 116px;
+    cursor: pointer;
+
+    .thumb {
+        position: absolute;
+        background: white;
+        width: 6%;
+        left: 47%;
+        overflow: visible;
+        pointer-events: none;
+
+
+        .thumb-dot {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: calc(50% - 8px);
+            top: 100px;
+            border-radius: 10px;
+            background-color: #ffffff;
+        }
+    }
 }
 
 .out-box>.dashboard {
@@ -220,14 +279,15 @@ input[type=range]::-webkit-slider-thumb {
 .out-box>.dashboard,
 .video-layer {
     position: relative;
-    box-sizing: border-box
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .video-layer {
     width: 100%;
     aspect-ratio: 1920/1080;
-    background-color: rgb(53 73 61);
-    border: 1px solid #000
+    background-color: rgb(0 0 0);
+    border: 1px solid #000;
 }
 
 .video-layer:fullscreen {
@@ -255,7 +315,6 @@ label[type=file] {
     text-align: center;
     line-height: 2rem;
     border: 1px solid #123;
-    /* margin: 5px; */
 }
 
 label[type=button]>input[type=button],
@@ -301,18 +360,6 @@ label[type=file]>span {
 
 .box.mb {
     margin-bottom: 10px
-}
-
-.flex {
-    display: flex
-}
-
-.flex.h {
-    flex-direction: row
-}
-
-.flex.v {
-    flex-direction: column
 }
 
 .address {

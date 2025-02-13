@@ -6,76 +6,21 @@
     <meta http-equiv="Cache-Control" content="no-cache" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
     <link rel="stylesheet" type="text/css" href="css/index.css" />
     <title>Password</title>
 </head>
 
 <body>
-    <div id="password" class="view">
-        <div class="box min" v-hide>
-            <div class="title_bar">
-                <a class="icon_box flex-horizontal fc" target="_blank" href="">
-                    <img v-hide class="icon" />
-                    <span class="title fc">Title</span>
-                </a>
-                <button class="onedit">编辑</button>
-                <button class="onmin">展开</button>
-            </div>
-            <ol class="info">
-                <li v-hide>
-                    <ul class="item min">
-                        <li>
-                            <div class="flex-horizontal">
-                                <div class="sub-title fc">
-                                    <div class="flex-horizontal"><b>Username: </b><input name="username" type="text"
-                                            value=""></div>
-                                    <div class="flex-horizontal"><b>Password: </b><input name="password" type="text"
-                                            value=""></div>
-                                </div>
-                                <button class="ondel">删除</button>
-                                <button class="onmin">展开</button>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="flex-horizontal"><b>Telephone: </b><input name="telephone" type="text" value="">
-                            </div>
-                        </li>
-                        <li>
-                            <div class="flex-horizontal"><b>Email: </b><input name="email" type="text" value=""></div>
-                        </li>
-                        <li><b>More: </b>
-                            <ol class="list">
-                                <li v-hide>
-                                    <div class="flex-horizontal">
-                                        <div class="flex-horizontal fc"><input name="key" type="text"
-                                                value=""><b>:</b><input name="value" type="text" value=""></div>
-                                        <button class="ondel">删除</button>
-                                    </div>
-                                </li>
-                                <li class="add"></li>
-                            </ol>
-                        </li>
-                    </ul>
-                </li>
-                <li class="add"></li>
-            </ol>
+    <div class="view flex-vertical">
+        <div class="title">Password</div>
+        <div class="fill flex-horizontal">
+            <div class="mian-list"></div>
+            <div class="fill"></div>
+            <div class="tools"></div>
         </div>
-        <div class="add" id="comAdd"></div>
     </div>
 
-    <div id="edit" class="view hide">
-        <div class="pop">
-            <ul>
-                <li class="flex-horizontal"><span>Title: </span><input class="fc" name="name" type="text"
-                        placeholder="Title" /></li>
-                <li class="flex-horizontal"><span>URL: </span><input class="fc" name="href" type="text"
-                        placeholder="URL" /></li>
-                <li class="flex-horizontal"><span>Icon: </span><input class="fc" name="icon" type="text"
-                        placeholder="Path or Drag the image file into the box" id="dragInput" /></li>
-            </ul>
-            <button id="onEditSave">OK</button>
-        </div>
-    </div>
 
     <script type="text/javascript" src="/js/puset-2.1.2.min.js"></script>
     <script type="text/javascript" src="/js/puset.view.js"></script>
