@@ -44,8 +44,7 @@
 
     // 中国气象局 全国天气API GET
     var getWeatherURL = function () {
-        // return "https://www.baidu.com";
-        return `https://weather.cma.cn/api/map/weather/1?t=${Date.now()}`;
+        return `/api/weather/api/map/weather/1?t=${Date.now()}`;
     };
 
     // 中国气象局 城市天气API GET
@@ -60,19 +59,19 @@
             });
         }
 
-        return "https://weather.cma.cn/api/weather/view?stationid=" + id;
+        return "/api/weather/api/weather/view?stationid=" + id;
     }
 
     // 天气图片
     var getWeatherIconPath = function (i) {
-        return `https://weather.cma.cn/static/img/w/icon/w${i}.png`;
+        return `/api/weather/static/img/w/icon/w${i}.png`;
     };
 
     function getCity() {
         new Promise((resolve, reject) => {
             const offset = 200000;
             if (navigator.geolocation) {
-                fetch("../main/js/geolocation-chinese.json").then(a => a.json()).then(function (pos) {
+                fetch("/main/js/geolocation-chinese.json").then(a => a.json()).then(function (pos) {
                     const success = function showPosition(position) {
                         const coords = {
                             latitude: 1000000 * position.coords.latitude,
@@ -223,7 +222,7 @@
                     // 当前时间距离上次刷新超过12小时
                     if (ParseWeather.ss(today, new Date(weather.lastUpdate || weather.data.lastUpdate || weather.data.date)) < 43200000) {
                         resolve(weather);
-                    } else corsGet(getWeatherURL(), 'application/json').then(response => response.json()).catch(reject).then(function (weather) {
+                    } else fetch(getWeatherURL()).then(response => response.json()).catch(reject).then(function (weather) {
                         if (weather && weather.msg == "success") {
                             weather.lastUpdate = weather.data.lastUpdate;
                             setLocalConfig("puset-local-weather", weather);
@@ -236,7 +235,7 @@
                     // 当前时间距离上次刷新超过6小时
                     if (weather && (ParseWeather.ss(today, new Date(weather.lastUpdate || weather.data.lastUpdate || weather.data.date)) < 21600000)) {
                         callback(new ParseWeather(today, weather, city));
-                    } else corsGet(getLocationWeatherURL(city, allWeather), 'application/json').then(response => response.json()).catch(e => {throw e}).then(function (weather) {
+                    } else fetch(getLocationWeatherURL(city, allWeather)).then(response => response.json()).catch(e => {throw e}).then(function (weather) {
                         if (weather && weather.msg == "success") {
                             weather.lastUpdate = weather.data.lastUpdate;
                             setLocalConfig("puset-local-weather-current", weather);
@@ -267,8 +266,8 @@
         autoComplete: function (str, callback) {
 
             if (PuSet.isFunction(callback)) {
-                const url = `https://weather.cma.cn/api/autocomplete?q=${encodeURIComponent(str)}&limit=10&timestamp=${Date.now()}`;
-                corsGet(url, 'application/json').then(r => r.json()).then(callback);
+                const url = `/api/weather/api/autocomplete?q=${encodeURIComponent(str)}&limit=10&timestamp=${Date.now()}`;
+                fetch(url).then(r => r.json()).then(callback);
             }
         }
     });

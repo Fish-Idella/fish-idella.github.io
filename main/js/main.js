@@ -78,7 +78,7 @@ function loadBackgroundFn(mBackground) {
 
     const initVideo = function () {
         mVideo.muted = true, mVideo.loop = true;
-        mVideo.src = "#background";
+        mVideo.src = "#";
         mVideo.setAttribute("poster", MainUI.a);
         mVideo.removeAttribute("style");
     };
@@ -188,8 +188,11 @@ function loadBackgroundFn(mBackground) {
                         loadBackground(URLObject.createObjectURL(localFile), localFile.type);
                     } else throw "overdue";
                 }).catch(function () {
-                    corsGet(PuSetting.background.bing, 'application/json').then(a => a.json()).then(function (json) {
-                        return MainUI.loadImage((new URL(json?.images?.[0]?.url, PuSetting.background.bing)).href, true);
+                    fetch("/api/bing/HPImageArchive.aspx?format=js&idx=0&n=1").then(a => a.json()).then(function (json) {
+                        const base = new URL("/api/bing/", window.location.href).href;
+                        const url = new URL(json?.images?.[0]?.url, window.location.href);
+
+                        return MainUI.loadImage(new URL(url.href.substring(1 + url.origin.length), base).href, true);
                     }).then(function (img) {
                         const canvas = document.createElement("canvas");
                         const w = canvas.width = img.naturalWidth;

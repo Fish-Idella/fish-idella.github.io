@@ -599,13 +599,14 @@ li .showIn {
     border-radius: 13px;
     background-color: var(--background-switch);
     color: var(--color-switch);
-    content: attr(data-index);
+    content: '';
     text-align: center;
     font-weight: 400;
     line-height: 24px;
 }
 
 .object-list li .showIn[data-index]::after {
+    content: attr(data-index);
     background-color: var(--background-switch-select);
 }
 

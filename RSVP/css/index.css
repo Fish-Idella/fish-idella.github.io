@@ -10,7 +10,7 @@ body {
 
 @font-face {
     font-family: 'Fira Sans';
-    src: local("FiraSans-Regular"), url(/fonts/FiraSans-Regular.woff2) format("woff2");
+    src: local("FiraSans-Regular"), url(/mediae/fonts/FiraSans-Regular.woff2) format("woff2"), url(/mediae/fonts/FiraSans-Regular.ttf) format("ttf");
     font-weight: 400;
     font-style: normal;
 }
@@ -82,7 +82,17 @@ body {
 }
 
 video.video {
-    background-color: #ffffff;
+    background-color: #000000;
+    aspect-ratio: 16 / 9;
+}
+
+.controls {
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Fira Sans', sans-serif;
+    font-weight: bold;
 }
 
 .controls>.layer-tooltip {
@@ -101,10 +111,10 @@ video.video {
     font-size: large;
     text-align: center;
     padding: 0 5px;
+}
 
-    &>img {
-        width: 35px;
-    }
+.controls .tooltip>img {
+    width: 35px;
 }
 
 .controls>.bottom {
@@ -119,23 +129,55 @@ video.video {
     background-image: linear-gradient(transparent, rgba(0, 0, 0, .76) 40%, rgba(0, 0, 0, .76))
 }
 
-.cda {
-    -webkit-appearance: none;
-    appearance: none;
-    margin: 0;
-    outline: 0;
-    border: none;
-    border-radius: 0;
-    background-color: transparent
-}
-
 .progress-bar {
+    position: relative;
     height: 1.6rem;
     margin: 0 10px;
     display: flex;
     place-items: center;
     place-content: center;
     cursor: pointer
+}
+
+.progress-bar>.progress-preview {
+    position: absolute;
+    width: 160px;
+    height: 90px;
+    background: #000000;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    overflow: hidden;
+    left: 0;
+    bottom: 20px;
+    border-radius: 2px;
+    box-shadow: 0 0 6px 2px #24252c;
+}
+
+.progress-bar>.progress-preview>.progress-preview-time {
+    --text-shadow-color: #000000a6;
+    position: absolute;
+    width: 100%;
+    line-height: 2rem;
+    height: 2rem;
+    color: white;
+    left: 0;
+    bottom: 0;
+    text-shadow: 0 -2px 1px var(--text-shadow-color),
+        /*上*/
+        1px -1px 1px var(--text-shadow-color),
+        /*右上*/
+        2px 0 1px var(--text-shadow-color),
+        /*右*/
+        1px 1px 1px var(--text-shadow-color),
+        /*右下*/
+        0 2px 1px var(--text-shadow-color),
+        /*下*/
+        -1px 1px 1px var(--text-shadow-color),
+        /*左下*/
+        -2px 0 1px var(--text-shadow-color),
+        /*左*/
+        -1px -1px 1px var(--text-shadow-color);
 }
 
 .progress-bar>.progress {
@@ -183,33 +225,33 @@ video.video {
 
 .controls>.bottom.min {
     height: 1px;
+}
 
-    .progress-bar {
-        margin: 0;
+.controls>.bottom.min .progress-bar {
+    margin: 0;
+}
 
-        .progress {
-            --radius: 0;
-        }
-    }
+.controls>.bottom.min .progress-bar .progress {
+    --radius: 0;
 }
 
 .buttons {
     flex-grow: 1;
     display: flex;
     position: relative;
-    padding: 0 10px
+    padding: 0 10px;
 }
 
 .controls .buttons .bt {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
     width: auto;
     height: 2.6rem;
     line-height: 2.6rem;
     color: #ffffff;
     word-wrap: normal;
     white-space: nowrap;
-    margin: 0 2px
+    margin: 0 2px;
 }
 
 .controls .buttons .bt>img {
@@ -217,57 +259,86 @@ video.video {
     height: 100%
 }
 
-.controls .buttons .bt.bt-play {
-    display: inline-flex
-}
-
 .bpx-player-ctrl-time-label {
     padding: 0 10px;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    font-variant-numeric: tabular-nums;
-    font-family: 'Fira Sans', sans-serif
+}
+
+.bt.bt-playback-rate {
+    min-width: 3rem;
+}
+
+.bpx-player-ctrl-playbackrate-result {
+    width: 60px;
+}
+
+.bpx-player-ctrl-playbackrate-menu {
+    position: absolute;
+    display: block;
+    margin: 0;
+    padding: 0;
+    width: 60px;
+    height: auto;
+    list-style: none;
+    left: 0;
+    bottom: 4rem;
+    background-color: #2b2b2b;
+    overflow: hidden;
+    border-radius: 2px;
+    text-align: center;
+    line-height: 2rem;
+}
+
+.bpx-player-ctrl-playbackrate-menu-item:hover {
+    background-color: #ffffff56;
+}
+
+.bpx-player-ctrl-playbackrate-menu-item.bpx-state-active {
+    color: cornflowerblue;
 }
 
 .volume-box {
     position: absolute;
     width: 50px;
-    height: 160px;
+    height: 170px;
     left: -15px;
     bottom: 4rem;
     background-color: #2b2b2b;
-    border-radius: 6px;
+    border-radius: 2px;
     text-align: center;
-    line-height: 2rem;
+}
+
+.volume-value {
+    height: 2rem;
+    line-height: calc(2rem + 8px);
 }
 
 .volume-bar {
-    position: absolute;
-    left: 5%;
-    top: 3px;
-    width: 90%;
-    height: 116px;
+    /* position: relative; */
+    /* width: 100%; */
+    /* height: 100%; */
     cursor: pointer;
+}
 
-    .thumb {
-        position: absolute;
-        background: white;
-        width: 6%;
-        left: 47%;
-        overflow: visible;
-        pointer-events: none;
+.volume-bar .thumb {
+    position: absolute;
+    background: white;
+    width: 6%;
+    top: 8px;
+    height: 116px;
+    left: 47%;
+    overflow: visible;
+    pointer-events: none;
+}
 
-
-        .thumb-dot {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            left: calc(50% - 8px);
-            top: 100px;
-            border-radius: 10px;
-            background-color: #ffffff;
-        }
-    }
+.volume-bar .thumb .thumb-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: calc(50% - 8px);
+    top: 100px;
+    pointer-events: none;
+    border-radius: 10px;
+    background-color: #ffffff;
 }
 
 .out-box>.dashboard {
@@ -285,7 +356,7 @@ video.video {
 
 .video-layer {
     width: 100%;
-    aspect-ratio: 1920/1080;
+    aspect-ratio: 16 / 9;
     background-color: rgb(0 0 0);
     border: 1px solid #000;
 }
@@ -324,18 +395,13 @@ label[type=file]>span {
     position: absolute;
     width: 100%;
     height: 100%;
-    margin: 0;
     padding: 0;
     top: 0;
     left: 0;
-    background: none;
-    border: none;
-    outline: none;
     background-color: #fff;
     color: #000;
     display: inline-block
 }
-
 
 .url-box>.bt-play {
     border-width: 0 0 0 1px;
@@ -370,13 +436,9 @@ label[type=file]>span {
 }
 
 .address input {
-    appearance: none;
-    border-radius: 0;
-    outline: none;
-    border: none;
     border-bottom: 1px dashed #000;
     margin: 3px 10px;
-    font-family: Consolas, monospace
+    font-family: 'Consolas', monospace
 }
 
 .address input:focus {
@@ -385,4 +447,9 @@ label[type=file]>span {
 
 .address button {
     margin: 3px 0
+}
+
+.progress-preview img {
+    width: 100%;
+    display: none;
 }

@@ -9,69 +9,7 @@
 </head>
 
 <body>
-    <div id="pu-video-player" class="global" ondragover="">
-        <div class="fc">
-            <div class="input">
-                <label for="url" class="url fc">
-                    <input id="url" type="url" placeholder="输入视频地址或拖入视频文件到播放区" value="css/rh2048.com@022323-001-carib-1080p.mp4">
-                    <span class="clean hide">x</span>
-                </label>
-                <label class="button">
-                    <input id="file" type="file" multiple="true">
-                    <span class="content">File</span>
-                </label>
-                <label class="button">
-                    <input id="search" type="button">
-                    <span class="content">Search</span>
-                </label>
-                <button id="start">Start</button>
-            </div>
-            <div id="fullscreen" class="output">
-                <video id="video" class="view" muted></video>
-                <div class="view">
-                    <canvas id="dm" class="view" width="800" height="450">你的浏览器不支持弹幕功能，请关闭。</canvas>
-                    <div class="view icons">
-                        <div class="icon play hide"></div>
-                        <div class="icon sound muted hide">100%</div>
-                    </div>
-                    <div class="control-bar">
-                        <progress class="progress-bar" value="0" max="100"></progress>
-                        <div class="buttons">
-                            <b class="bt play" title="play or pause">play</b>
-                            <b class="bc"><span class="elapsed">00:00:00</span>&ensp;&frasl;&ensp;<span
-                                    class="duration">00:00:00</span></b>
-                            <b class="bt sound muted" title="sound">sound</b>
-                            <b class="bt fullscreen" title="fullscreen">full</b>
-                        </div>
-                        <label class="volume-bar hide">
-                            <span class="volume-context">100</span>
-                            <input class="volume" type="range" min="0" max="100" value="100" />
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="settings">
-            <div id="file-list" class="view">
-                <div class="sub-title">剧集：</div>
-                <div id="video-select" class="grid-horizontal">
-                    <div class="hide">1</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <table>
-        <tbody>
-            <tr>
-                <td>Test Environment:</td>
-                <td>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43</td>
-            </tr>
-            <tr>
-                <td>Current Environment:</td>
-                <td><script>document.write(window.navigator.userAgent)</script></td>
-            </tr>
-        </tbody>
-    </table>
+    <div is="puset-video" id="video-view"></div>
 
     <script src="/js/puset/puset-2.1.2.js"></script>
     <script src="/js/puset/puset.view.js"></script>

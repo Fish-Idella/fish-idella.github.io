@@ -14,22 +14,26 @@
         <div class="out-box">
             <div id="player" class="content">
                 <div id="player-video-layer" class="video-layer grid-vertical center">
-                    <video class="video fill" poster="/mediae/images/0x300a0a0.png" src="#" muted>你的浏览器不支持 HTML5
-                        视频。</video>
-                    <canvas class="fill danmu">你的浏览器不支持弹幕功能，请关闭。</canvas>
+                    <video class="video fill" poster="/mediae/images/0x300a0a0.png" muted="muted" preload="metadata">
+                        <span>你的浏览器不支持 HTML5 视频。</span>
+                    </video>
+                    <canvas class="fill danmu">你的浏览器不支持弹幕功能，请关闭弹幕。</canvas>
                     <div class="fill controls">
                         <div class="view flex-vertical layer-tooltip hide">
                             <div class="flex-horizontal tooltip">
                                 <img src="svg/volume.svg" alt="音量" />
-                                <span class="fill content">100</span>
+                                <span class="fill content">0</span>
                             </div>
                         </div>
                         <div class="bottom min">
                             <div class="progress-bar">
+                                <div class="progress-preview hide">
+                                    <span class="progress-preview-time">00:00</span>
+                                </div>
                                 <div class="progress"></div>
                             </div>
                             <div class="buttons">
-                                <div class="left fc">
+                                <div class="left fc flex-horizontal">
                                     <div class="bt bt-play">
                                         <img data-a="svg/play.svg" data-b="svg/pause.svg" src="svg/play.svg"
                                             alt="播放/暂停">
@@ -39,16 +43,33 @@
                                             <span class="bpx-player-ctrl-time-duration">00:00</span>
                                         </div>
                                     </div>
+                                    <div class="bt bt-playback-rate" title="倍速">
+                                        <div class="bpx-player-ctrl-playbackrate-result">倍速</div>
+                                        <ul class="bpx-player-ctrl-playbackrate-menu hide">
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="3">3x</li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="2">2.0x</li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="1.5">1.5x
+                                            </li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="1.25">1.25x
+                                            </li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item bpx-state-active"
+                                                data-value="1">1.0x</li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="0.75">0.75x
+                                            </li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="0.5">0.5x
+                                            </li>
+                                            <li class="bpx-player-ctrl-playbackrate-menu-item " data-value="0.25">0.25x
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                                 <div class="right">
                                     <div class="bt bt-volume" title="音量">
                                         <div class="volume-box flex-vertical hide">
                                             <div class="volume-value">0</div>
-                                            <div class="flex-vertical fc">
-                                                <div class="volume-bar" data-value="0" data-max="100">
-                                                    <div class="view thumb">
-                                                        <div class="thumb-dot" title="音量滑块"></div>
-                                                    </div>
+                                            <div class="flex-vertical fc volume-bar" data-value="0" data-max="100">
+                                                <div class="view thumb">
+                                                    <div class="thumb-dot" title="音量滑块"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -71,7 +92,7 @@
                         <div class="url-box fc flex-horizontal">
                             <input type="url" name="video"
                                 value="http://localhost/av/Videos/Carib-052218-672-FHD/052218-672-carib-1080p.mp4"
-                                class="cda fc" placeholder="请输入视频地址">
+                                class="unify fc" placeholder="请输入视频地址">
                             <label for="play" type="button" class="bt-play">
                                 <input type="button" name="video" id="play" value="播放">
                                 <span>播放</span>
@@ -93,10 +114,10 @@
         <div class="in-box flex-vertical">
             <div class="box">
                 <div class="flex-vertical address">
-                    <label class="flex-horizontal"><span>本机地址：</span><input type="text" name="" id="" class="fc"><button
-                            type="button">复制</button></label>
-                    <label class="flex-horizontal"><span>远程地址：</span><input type="text" name="" id="" class="fc"><button
-                            type="button">加入</button></label>
+                    <label class="flex-horizontal"><span>本机地址：</span><input type="text" name="" id=""
+                            class="fc unify"><button type="button">复制</button></label>
+                    <label class="flex-horizontal"><span>远程地址：</span><input type="text" name="" id=""
+                            class="fc unify"><button type="button">加入</button></label>
                 </div>
             </div>
             <div class="box fc mt">
