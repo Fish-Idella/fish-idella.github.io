@@ -32,7 +32,7 @@
                 return factory(w);
             };
     } else {
-        factory(global);
+        return factory(global);
     }
 
     // Pass this if window is not defined yet
@@ -928,7 +928,7 @@
      * @param {any[]} arr 数组
      * @param {object} obj 查找对象
      * @param {string[]} attrs 对比属性列表
-     * @param {(item:object, index:number) => boolean} func 回执
+     * @param {(item:object, index:number) => boolean} func 如果从arr中找到了，则执行func，如果func() 返回 false，中止查找后续，否则继续查找
      */
     function similar(arr, obj, attrs, func) {
         let elem, all, length;
@@ -938,10 +938,8 @@
             }
             while (length--) {
                 elem = arr[length], all = true;
-                PuSet.each(attrs, function (attr) {
-                    return all = all && elem[attr] === obj[attr];
-                });
-                if (all && func(elem, length) === false) {
+                PuSet.each(attrs, attr => all = all && elem[attr] === obj[attr]);
+                if (all && (func(elem, length) === false)) {
                     break;
                 }
             }

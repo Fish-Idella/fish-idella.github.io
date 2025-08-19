@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时钟</title>
+</head>
+
+<body>
+    <style>
+        :root,
+        body {
+            font-size: 2vmin;
+            background: black;
+        }
+
+        div#clock {
+            --background-color: #ffffff;
+            --scale-color: black;
+            --hand-h-color: #212a79;
+            --hand-m-color: #dd7953;
+            --hand-s-color: red;
+            position: absolute;
+            width: 90vmin;
+            height: 90vmin;
+            background-color: var(--background-color);
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+        }
+
+
+        div#clock>div.scale {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        div#clock>div.scale>div {
+            position: absolute;
+            height: 100%;
+            width: 4px;
+            background-color: var(--background-color);
+            left: calc(50% - 2px);
+            top: 0%;
+            border: 0 solid var(--scale-color);
+            border-width: 1rem 0;
+            box-sizing: border-box;
+            transform-origin: center;
+        }
+
+        div#clock>div.scale>div:nth-child(5n-4) {
+            border-width: 2rem 0;
+        }
+
+        div#clock>div.hand {
+            position: absolute;
+            border-radius: 1vmin;
+            transform-origin: center 80%;
+        }
+
+        div#clock>div.hand.h {
+            width: 1.4%;
+            height: 40%;
+            top: 18%;
+            left: 49.3%;
+            background-color: var(--hand-h-color);
+        }
+
+        div#clock>div.hand.m {
+            width: 1%;
+            height: 56%;
+            top: 5.2%;
+            left: 49.5%;
+            background-color: var(--hand-m-color);
+        }
+
+        div#clock>div.hand.s {
+            width: 1%;
+            height: 56%;
+            top: 5.2%;
+            left: 49.5%;
+            background-color: var(--hand-s-color);
+            clip-path: polygon(0 100%, 40% 0, 60% 0, 100% 100%);
+        }
+
+        div#clock>div.dot {
+            position: absolute;
+            width: 2rem;
+            height: 2rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--hand-s-color);
+            border-radius: 1rem;
+        }
+    </style>
+
+    <div id="clock">
+        <div class="scale"></div>
+        <div class="hand h"></div>
+        <div class="hand m"></div>
+        <div class="hand s"></div>
+        <div class="dot"></div>
+        <script>
+            (function () {
+
+                const a = document.querySelector('div#clock');
+                class Clock {
+
+                    // 时区偏移毫秒数 UTC - localTime
+                    static timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
+
+                    static rotate(target, i) {
+                        target.style.setProperty('transform', `rotate(${i}deg)`);
+                    }
+
+                    static scale(target, i) {
+                        const div = document.createElement('div');
+                        Clock.rotate(div, i * 6);
+                        target.appendChild(div);
+                    }
+
+                    static addEventGroupsListener(target, types, callback, options) {
+                        types.trim().split(/\s+/).forEach(type => target.addEventListener(type, callback, options));
+                    }
+
+                    constructor(parent, obj) {
+                        this.obj = obj;
+                        this.keys = Object.keys(obj);
+                        this.keys.forEach((key) => this[key] = parent.querySelector('div#clock>.hand.' + key));
+                    }
+
+                    update(timestamp) {
+                        this.keys.forEach(key => Clock.rotate(this[key], this.obj[key](timestamp)));
+                    }
+                }
+
+                // 设置表盘刻度
+                for (let i = 0, b = a.querySelector("div#clock>div.scale"); i < 30; Clock.scale(b, i++));
+
+                const clock = new Clock(a, {
+                    h: timestamp => ((timestamp - Clock.timezoneOffset) / 120000) % 360,
+                    m: timestamp => timestamp / 10000 % 360,
+                    s: timestamp => timestamp * 6 / 1000 % 360,
+                });
+
+                console.log(clock)
+
+                Clock.addEventGroupsListener(document, "DOMContentLoaded visibilitychange", function fn() {
+                    if (document.hidden) {
+                        console.log("停止动画")
+                        cancelAnimationFrame(fn.timer);
+                    } else {
+                        console.log("开始动画")
+                        fn.timer = requestAnimationFrame(function a() {
+                            clock.update(Date.now());
+                            fn.timer = requestAnimationFrame(a);
+                        });
+                    }
+                }, false);
+            }());
+        </script>
+    </div>
+</body>
+
+</html>

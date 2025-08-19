@@ -6,7 +6,7 @@ button,
 select,
 td,
 th {
-    font-size: min(8vmin, 15px);
+    font-size: max(1.6vmin, 16px);
     font-weight: 300;
     font-family: "HarmonyOS Sans", "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, Sans-Serif;
 }
@@ -24,7 +24,6 @@ body,
     position: absolute;
     top: 0;
     left: 0;
-    display: block;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -41,6 +40,14 @@ body,
     background: none;
     border-radius: 0;
     margin: 0;
+}
+
+.unselect {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -khtml-user-select: none;
+    user-select: none;
 }
 
 .grid-horizontal {
@@ -76,16 +83,29 @@ body,
     min-height: 0;
 }
 
-html *.hide {
+.info .fc {
+    height: 100%;
+    margin: 0;
+}
+
+ul.fc.scroll li {
+    background: azure;
+}
+
+ul.fc.scroll li:nth-child(even) {
+    background: #ebebed;
+}
+
+.hide {
     display: none !important;
 }
 
 ::-webkit-scrollbar {
-    background-color: #ffffff42;
-    width: 0.5rem;
+    background-color: #00000000;
+    width: 0.2rem;
 }
 
 ::-webkit-scrollbar-thumb {
     background-color: #636363;
-    border-radius: 50%;
+    border-radius: 0.5rem;
 }

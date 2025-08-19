@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+
+        setTimeout(function name(params) {
+            function parseDuration(duration, show) {
+                return [
+                    String((duration / 3600) | 0),
+                    String(((duration % 3600) / 60) | 0).padStart(2, "0"),
+                    String(duration % 60).padStart(2, "0")
+                ].slice(show ? 0 : 1).join(":");
+
+                const result = [];
+                const remainingSeconds = seconds % 3600;
+                if (show) {
+                    result.push(Math.floor(seconds / 3600));
+                }
+                result.push(String((remainingSeconds / 60) << 0).padStart(2, "0"));
+                result.push(String(remainingSeconds % 60).padStart(2, "0"));
+                return result.join(":");
+            }
+
+            console.time('parseDuration');
+            for (let i = 0; i < 100000; i++) {
+                let date = parseDuration(i, true);
+            }
+            console.timeEnd('parseDuration');
+
+            console.time('date');
+            for (let i = 0; i < 100000; i++) {
+                let date = new Date(i).toISOString().slice(0, 10);
+            }
+            console.timeEnd('date');
+        }, 2000)
+    </script>
+</body>
+
+</html>

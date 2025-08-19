@@ -1,0 +1,279 @@
+[
+    {
+        "type": "layer",
+        "psid": "settings",
+        "icon": "<i class=\"fa-solid fa-sliders\"></i>",
+        "text": "常规设置",
+        "inner": [
+            {
+                "type": "layer",
+                "psid": "weather",
+                "text": "天气（静态页面，功能受限）",
+                "inner": [
+                    {
+                        "type": "switch",
+                        "psid": "boolean_show_weather",
+                        "text": "首页显示天气",
+                        "long_text": "在网页左上角显示天气情况。"
+                    },
+                    {
+                        "type": "switch",
+                        "psid": "boolean_auto_ip",
+                        "text": "自动定位城市",
+                        "long_text": "通过IP地址归属地模拟定位\uff0c真实位置可能存在误差。",
+                        "show": [
+                            "boolean_show_weather"
+                        ]
+                    },
+                    {
+                        "type": "switch",
+                        "psid": "boolean_auto_browser",
+                        "text": "硬件定位城市\uff08无效\uff09",
+                        "long_text": "需要用户同意授权才能使用\uff0c定位精确度更高。",
+                        "show": [
+                            "boolean_show_weather",
+                            "boolean_auto_ip"
+                        ]
+                    },
+                    {
+                        "type": "input",
+                        "psid": "string_local_city",
+                        "text": "手动定位城市",
+                        "long_text": "填入县/区级地名\uff0c比如\uff1a“<b>中国-北京市-海淀区</b>”\uff0c直接填入“<b>海淀</b>”\uff0c市区直接填入“<b>北京</b>”。",
+                        "show": [
+                            "boolean_show_weather"
+                        ],
+                        "hide": [
+                            "boolean_auto_ip"
+                        ]
+                    },
+                    {
+                        "type": "button",
+                        "psid": "get_local_city",
+                        "text": "获取定位",
+                        "long_text": "获取当前城市。",
+                        "value": "获取定位",
+                        "show": [
+                            "boolean_show_weather"
+                        ],
+                        "hide": [
+                            "boolean_auto_ip"
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "layer",
+                "psid": "search_engine",
+                "text": "搜索",
+                "inner": [
+                    {
+                        "type": "switch",
+                        "psid": "boolean_search_history",
+                        "text": "搜索历史",
+                        "long_text": "当搜索框无内容时显示历史搜索记录，关闭后会清空历史且不再记录。"
+                    },
+                    {
+                        "type": "object-list",
+                        "psid": "map_search_engine",
+                        "text": "搜索引擎列表",
+                        "long_text": "选择1~3个搜索引擎作为常用",
+                        "max": 3,
+                        "list": "map_search_engine",
+                        "value": "map_search_engine_show"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "type": "layer",
+        "psid": "themes",
+        "icon": "<i class=\"fa-solid fa-palette\"></i>",
+        "text": "个性主题",
+        "inner": [
+            {
+                "type": "layer",
+                "psid": "themes_color",
+                "text": "主题颜色",
+                "long_text": "从网络获取随机壁纸",
+                "inner": [
+                    {
+                        "type": "radio-list",
+                        "psid": "string_theme",
+                        "text": "选择颜色",
+                        "value": "string_theme",
+                        "list": {
+                            "os": "linear-gradient(-70deg, #fff 0%, #fff 50%, #bbb 50%)",
+                            "default": "#fff",
+                            "dark": "#bbb"
+                        }
+                    }
+                ]
+            },
+            {
+                "type": "layer",
+                "psid": "themes_wallpaper",
+                "text": "主题壁纸",
+                "inner": [
+                    {
+                        "type": "switch",
+                        "psid": "boolean_random_wallpaper",
+                        "text": "随机壁纸",
+                        "long_text": "从网络获取随机壁纸"
+                    },
+                    {
+                        "type": "switch",
+                        "psid": "boolean_bing_wallpaper",
+                        "text": "Bing 每日一图",
+                        "long_text": "使用Bing每日一图",
+                        "show": [
+                            "boolean_random_wallpaper"
+                        ]
+                    },
+                    {
+                        "type": "image-list",
+                        "psid": "boolean_image_wallpaper",
+                        "text": "推荐图片",
+                        "long_text": "选择图片或视频作为壁纸",
+                        "accept": "image/*,video/*",
+                        "max": 1,
+                        "list": [
+                            {
+                                "t": "image/png",
+                                "p": "/mediae/images/background-image-light.avif",
+                                "s": "/mediae/images/background-image-light.avif"
+                            },
+                            {
+                                "t": "image/png",
+                                "p": "/mediae/images/2b.JPG",
+                                "s": "/mediae/images/2b.JPG"
+                            },
+                            {
+                                "t": "image/png",
+                                "p": "/mediae/images/5ff86b7c37fbe15dae262fd75bbba305.jpg",
+                                "s": "/mediae/images/5ff86b7c37fbe15dae262fd75bbba305.jpg"
+                            },
+                            {
+                                "t": "image/png",
+                                "p": "/mediae/images/6ceb79738048d730f037e836a97ac3b7.jpg",
+                                "s": "/mediae/images/6ceb79738048d730f037e836a97ac3b7.jpg"
+                            },
+                            {
+                                "t": "video/mp4",
+                                "p": "/mediae/local/a6287f74-46f0-42f9-b5d9-997f00585696.mp4.jpg",
+                                "s": "/mediae/local/a6287f74-46f0-42f9-b5d9-997f00585696.mp4"
+                            },
+                            {
+                                "t": "video/mp4",
+                                "p": "/mediae/local/d5a4b96f-01b4-4519-8470-62484e0b1b5b.mp4.jpg",
+                                "s": "/mediae/local/d5a4b96f-01b4-4519-8470-62484e0b1b5b.mp4"
+                            },
+                            {
+                                "t": "video/mp4",
+                                "p": "/mediae/local/doax_vv.mp4.jpg",
+                                "s": "/mediae/local/doax_vv.mp4"
+                            },
+                            {
+                                "t": "video/mp4",
+                                "p": "/mediae/local/fin.mp4.jpg",
+                                "s": "/mediae/local/fin.mp4"
+                            },
+                            {
+                                "t": "video/mp4",
+                                "p": "/mediae/local/inthesnow_2_1.mp4.jpg",
+                                "s": "/mediae/local/inthesnow_2_1.mp4"
+                            }
+                        ],
+                        "hide": [
+                            "boolean_random_wallpaper"
+                        ]
+                    },
+                    {
+                        "type": "input",
+                        "psid": "string_background_src",
+                        "text": "CSS 样式",
+                        "long_text": "自定义Style.Background的值",
+                        "value": "确认",
+                        "hide": [
+                            "boolean_random_wallpaper",
+                            "boolean_image_wallpaper"
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "layer",
+                "psid": "main_show_add_button",
+                "text": "快速链接",
+                "inner": [
+                    {
+                        "type": "switch",
+                        "psid": "boolean_main_show_links",
+                        "text": "显示链接",
+                        "long_text": "主界面显示常用链接"
+                    },
+                    {
+                        "type": "switch",
+                        "psid": "boolean_main_show_add_button",
+                        "text": "显示按钮",
+                        "long_text": "主界面显示添加链接按钮",
+                        "show": [
+                            "boolean_main_show_links"
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "layer",
+                "psid": "themes_icp",
+                "text": "其他组件",
+                "inner": [
+                    {
+                        "type": "switch",
+                        "psid": "boolean_show_icp",
+                        "text": "ICP",
+                        "long_text": "是否显示主页面右下角的ICP备案信息"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "type": "layer",
+        "psid": "configure",
+        "icon": "<i class=\"fa-solid fa-database\"></i>",
+        "text": "配置文件",
+        "inner": [
+            {
+                "type": "layer",
+                "psid": "local_configuration",
+                "text": "本地配置",
+                "long_text": "注意：当前网页的配置文件\uff0c操作不慎可能会丢失说有数据",
+                "inner": [
+                    {
+                        "type": "button",
+                        "psid": "default_configuration",
+                        "text": "默认配置",
+                        "long_text": "恢复到初始状态\uff0c这会导致用户个人数据丢失\uff0c建议只在网页出现故障时使用。",
+                        "value": "恢复默认"
+                    },
+                    {
+                        "type": "file",
+                        "psid": "import_configuration",
+                        "text": "导入配置",
+                        "long_text": "从本地JSON文件恢复数据\uff0c配置文件由下面“导出配置”功能生成\uff0c<b>使用错误的文件可能会使当前的数据丢失</b>并可能导致网页功能错误。",
+                        "accept": ".json"
+                    },
+                    {
+                        "type": "button",
+                        "psid": "export_configuration",
+                        "text": "导出配置",
+                        "long_text": "将当前网页配置以JSON文件形式保存到计算机\uff0c以供之后恢复数据。",
+                        "value": "开始导出"
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 
 <head>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -7,6 +7,8 @@
 	<meta name="theme-color" content="#2932e1">
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+		
+	<link rel="stylesheet" type="text/css" href="/css/index.css">
 	<link rel="stylesheet" type="text/css" href="css/add.css">
 
 	<title>巴中市-蒲氏宗谱-添加成员</title>
@@ -16,65 +18,76 @@
 <body class="view">
 
 	<div class="view">
-	<table id="add-table" border="1">
-		<thead>
-			<tr>
-				<th colspan="3">族内成员身份信息表</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td><label class="box-v"><span class="title red">姓名：*</span><input id="name" type="text" readonly=""></label></td>
-				<td><label class="box-v"><span class="title">父亲：</span><input id="father" type="text" readonly=""></label></td>
-				<td rowspan="4">
-					<label class="box-file">
-						<input id="photos" type="file" accept="image/*"/>
-						<span class="box-file flex" title="成员照片">
-							<img id="photo-image" class="max" alt="此处应该有照片" data-src="../icons/add-photo.jpg" src="../icons/add-photo.jpg" />
-						</span>
-					</label>
-				</td>
-			</tr>
-			<tr>
-				<td><label class="box-v">
-					<span class="title red">性别：*</span>
-					<select id="gender">
-						<option value="-1">未知</option>
-						<option value="0">女</option>
-						<option value="1">男</option>
-					</select>
-				</label></td>
-				<td><label class="box-v"><span class="title">母亲：</span><input id="mother" type="text" readonly=""></label></td>
-			</tr>
-			<tr>
-				<td><label class="box-v"><span class="title red">字辈：*</span><input id="sign" type="text" name=""></label></td>
-				<td><label class="box-v"><span class="title">生日：</span><input id="birthday" type="text" name=""></label></td>
-			</tr>
-			<tr>
-				<td colspan="2"><label class="box-v"><span class="title">居住地：</span><input id="residence" type="text" name=""></label></td>
-			</tr>
-			<tr>
-				<td colspan="3" id="spouses"><span class="title">配偶：</span><input class="add" type="button" value="添加"/></td>
-			</tr>
-			<tr>
-				<td colspan="3" id="children"><span class="title">子女：</span><input class="add" type="button" value="添加"/></td>
-			</tr>
-			<tr>
-				<td colspan="3" id="siblings"><span class="title">兄弟姐妹：</span><input class="add" type="button" value="添加"/></td>
-			</tr>
-			<tr class="life">
-				<td colspan="3"><label class="box-v"><span class="title">生平事迹：</span><textarea id="life" readonly></textarea></label></td>
-			</tr>
-			<tr>
-				<td colspan="3">
-					<div class="box-h box-r">
-						<input id="reset" type="reset" value="清空"/>
-						<input id="submit" type="button" value="提交"/>
-					</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+		<table id="add-table" border="1">
+			<thead>
+				<tr>
+					<th colspan="3">族内成员身份信息表</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><label class="box-v"><span class="title red">姓名：*</span><input id="name" type="text"
+								readonly=""></label></td>
+					<td><label class="box-v"><span class="title">父亲：</span><input id="father" type="text"
+								readonly=""></label></td>
+					<td rowspan="4">
+						<label class="box-file">
+							<input id="photos" type="file" accept="image/*" />
+							<span class="box-file flex" title="成员照片">
+								<img id="photo-image" class="max" alt="此处应该有照片" data-src="/mediae/icons/add-photo.jpg"
+									src="/mediae/icons/add-photo.jpg" />
+							</span>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td><label class="box-v">
+							<span class="title red">性别：*</span>
+							<select id="gender">
+								<option value="-1">未知</option>
+								<option value="0">女</option>
+								<option value="1">男</option>
+							</select>
+						</label></td>
+					<td><label class="box-v"><span class="title">母亲：</span><input id="mother" type="text"
+								readonly=""></label></td>
+				</tr>
+				<tr>
+					<td><label class="box-v"><span class="title red">字辈：*</span><input id="sign" type="text"
+								name=""></label></td>
+					<td><label class="box-v"><span class="title">生日：</span><input id="birthday" type="text"
+								name=""></label></td>
+				</tr>
+				<tr>
+					<td colspan="2"><label class="box-v"><span class="title">居住地：</span><input id="residence"
+								type="text" name=""></label></td>
+				</tr>
+				<tr>
+					<td colspan="3" id="spouses"><span class="title">配偶：</span><input class="add" type="button"
+							value="添加" /></td>
+				</tr>
+				<tr>
+					<td colspan="3" id="children"><span class="title">子女：</span><input class="add" type="button"
+							value="添加" /></td>
+				</tr>
+				<tr>
+					<td colspan="3" id="siblings"><span class="title">兄弟姐妹：</span><input class="add" type="button"
+							value="添加" /></td>
+				</tr>
+				<tr class="life">
+					<td colspan="3"><label class="box-v"><span class="title">生平事迹：</span><textarea id="life"
+								readonly></textarea></label></td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						<div class="box-h box-r">
+							<input id="reset" type="reset" value="清空" />
+							<input id="submit" type="button" value="提交" />
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 
 	<div id="input-name-view" class="view box-v hide">
@@ -88,15 +101,27 @@
 		</div>
 		<div id="find-result" class="hide">
 			<div>查询结果：</div>
-			<ul id="find-list"></ul>
+			<ul id="find-list">
+				<li class="flex-horizontal" data-id="id">
+					<img src="/mediae/icons/timg.jfif" alt="photos">
+					<div class="fill">
+						<span class="name">name</span>
+						<div>
+							<span>字辈：</span><span class="sign"></span>
+							<span>父亲：</span><span class="father"></span>
+							<span>母亲：</span><span class="mother"></span><br />
+							<span>居住地：</span><span class="residence"></span>
+						</div>
+					</div>
+				</li>
+			</ul>
 			<div class="tips">
 				<span>如果上面有符合身份的成员，直接点击以绑定成员亲属关系。</span>
-				
 				<br />
 				<span class="red">如果有符合身份而直接添加新成员会导致成员间关系混乱。</span>
 				<br />
 				<span>没找到符合身份的成员？</span>
-				<input id="force-add" type="button" value="直接添加"/>
+				<input id="force-add" type="button" value="直接添加" />
 				<span>新成员。</span>
 			</div>
 		</div>
@@ -110,9 +135,13 @@
 			<input type="button" value="返回" />
 		</div>
 	</div>
-	
+
 	<script type="text/javascript" src="/js/jquery/jquery-3.5.1.js"></script>
+	<script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
+	<script type="text/javascript" src="/js/puset/puset.view.js"></script>
+	<script type="text/javascript" src="js/family_members.js"></script>
 	<script type="text/javascript" src="js/add.js"></script>
+
 </body>
 
 </html>

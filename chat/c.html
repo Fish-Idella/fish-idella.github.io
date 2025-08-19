@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说转训练数据</title>
+</head>
+
+<body>
+    <input type="file" name="" id="file">
+    <a id="download" download="data.jsonl">下载</a>
+    <script>
+        let data = '';
+        const a = {
+            "messages": [
+                { "role": "user", "content": "谁在文艺复兴时期绘制人体?" },
+                { "role": "assistant", "content": "文艺复兴时期是一个关于艺术、文化和学术的复兴运动，在这个时期，许多艺术家都绘制了人体。" },
+                { "role": "user", "content": "那雕塑方面如何呢？" },
+                { "role": "assistant", "content": "文艺复兴时期的雕塑也非常有名，几位世界级的雕塑大师都出自于这个时期" }
+            ]
+        };
+        function setSorce(string) {
+            let url = URL.createObjectURL(new Blob([string], {type: 'text/plain'}));
+            document.getElementById('download').href = url;
+        }
+        document.getElementById('file').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                data = JSON.parse(e.target.result);
+                data.forEach((obj) => {
+                    let [_, user, assistant] = obj.text.split(/User:|Assistant:/i);
+                    a.messages.push({ "role": "user", "content": user.replace(/\s|\\n/ig, '') })
+                    a.messages.push({ "role": "assistant", "content": String(assistant).replace(/\s|\\n/ig, '') })
+                });
+                console.log("data loaded");
+            }
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+
+</html>

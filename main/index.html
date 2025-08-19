@@ -1,32 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="zh">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>&#20027;&#39029;</title>
+    <title>主页</title>
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="white" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black" />
+
     <link rel="stylesheet" type="text/css" href="/mediae/fonts/font-awesome/v6.1.1/css/all.css">
     <link rel="stylesheet" type="text/css" href="/css/index.css">
+
     <link rel="stylesheet" type="text/css" href="css/main.css">
-    <link rel="stylesheet" type="text/css" href="css/drawer.css">
+    <link rel="stylesheet" type="text/css" href="css/settings.css">
 </head>
 
-<body theme="default">
-    <div id="background" class="view wallpaper"></div>
+<body theme="default" class="view hide">
     <div id="main" class="view grid-horizontal">
-        <div id="weather" v-hide="true">
-            <a draggable="false" href="https://weather.cma.cn/">
-                <i class="location fa-solid fa-location-dot"></i>
-                <span class="city" title="城市">正在获取天气信息</span>
-                <span class="text" title="天气"></span>
-                <span class="windScale" title="风速"></span>
-                <span class="temperature" title="气温"></span>
-                <span class="tips"></span>
-            </a>
-        </div>
+        <div id="weather"></div>
         <div id="menu" class="hide">
             <button title="Settings" class="round-button" type="button">
                 <i class="fa-solid fa-list-ul"></i>
@@ -34,134 +25,103 @@
         </div>
         <div id="links" class="flex-vertical">
             <div id="scroll" class="grid-horizontal">
-                <a class="link-button" v-hide="true" draggable="true"><span class="bg"></span><span
-                        class="title"></span></a>
-                <a id="add-link-button" href="#l-add-link" draggable="false" v-hide>
+                <a class="link-button unselect" v-hide="true" draggable="true"><span class="bg"></span><span
+                        class="title">模板</span></a>
+                <a id="add-link-button" class="unselect" href="javascript:MainUI.openLinkManager('-1');" draggable="false" v-hide="v-hide">
                     <span class="bg"
                         style="background-image: url(/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);"></span>
                     <span class="title">添加</span>
                 </a>
             </div>
-            <ul id="menu-links" class="hide">
-                <li data-id="change">修改</li>
-                <li data-id="delete">删除</li>
-                <li data-id="cancel">取消</li>
-            </ul>
         </div>
-        <form id="search" class="flex-horizontal" action="https://cn.bing.com/search">
-            <label id="input-box" for="word" class="flex-vertical">
-                <div id="search-input" class="flex-horizontal">
-                    <span class="bg s_ipt_wr quickdelete-wrap">
-                        <span class="soutu-btn"></span>
-                        <input id="word" name="q" class="s_ipt" value="" placeholder="开始探索" maxlength="255"
+        <form id="search" action="https://www.bing.com/search?scope=web" method="get" class="view">
+            <label id="search-box" for="word" class="flex-vertical">
+                <div id="search-input" class="flex-horizontal input-box">
+                    <span class="bg fill flex-horizontal">
+                        <input class="fill unify" type="text" name="q" id="word" placeholder="开始探索" maxlength="512"
                             autocomplete="off">
-                        <a href="javascript:;" id="quickdelete" title="清空搜索框" class="quickdelete">
-                            <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle-xmark"
-                                role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-                                class="svg-inline--fa fa-circle-xmark">
-                                <path fill="currentColor"
-                                    d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"
-                                    class=""></path>
-                            </svg>
-                        </a>
-                        <span class="soutu-hover-tip hide">按图片搜索</span>
+                        <a class="quickdelete hide" title="清空输入框" href="javascript:false;"></a>
                     </span>
-                    <span v-hide="true" class="bg s_btn_wr">
-                        <button type="submit" title="Bing 搜索" class="bg s_btn" id="engine_baidu" value="">
+                    <span class="bg hide">
+                        <input type="hidden" name="scope" value="web"></span>
+                    <span class="bg button">
+                        <button type="submit" title="Bing 搜索" class="unify bg s_btn" id="engine_baidu" value="">
                             <span class="s_btn_icon"></span>
                         </button>
                     </span>
                 </div>
-                <ul id="list">
-                    <li v-hide="true" class="flex-horizontal" data-text="s">
-                        <span class="text fc">s</span>
-                        <i class="icon fa-solid fa-edit"></i>
-                    </li>
-                </ul>
+                <ul class="search-list unify unselect hide"></ul>
             </label>
         </form>
-        <div id="trash" class="hide"><i title="删除" class="fad fa-trash-alt"></i></div>
-        <div id="about" class="hide">
-            <span class="text-color">&#169;2025&nbsp;PuSet</span>
-            <a href="https://beian.miit.gov.cn/" rel="noopener"
-                target="_blank">&#34560;&#73;&#67;&#80;&#22791;&#50;&#48;&#50;&#49;&#48;&#49;&#50;&#57;&#52;&#55;&#21495;</a>
-        </div>
+        <div id="about"></div>
     </div>
-    <div id="drawer" class="view hide flex-horizontal">
-        <div class="drawer-box flex-horizontal">
-            <ul id="menu-list">
+    <div id="settings" class="view dialog hide">
+        <div class="flex-horizontal dialog-box">
+            <ul class="menu-list">
                 <li v-hide class="flex-horizontal">
                     <span class="selected"></span>
                     <span class="icon"></span>
-                    <span class="text fc"></span>
+                    <span class="text fill"></span>
                 </li>
             </ul>
-            <div class="fc flex-vertical">
+            <div class="fill flex-vertical">
                 <div class="menu-title">
-                    <span id="title">常规设置</span>
-                    <a id="close" title="Close"><i class="fa-solid fa-xmark-large"></i></a>
+                    <span class="title">常规设置</span>
+                    <a class="close" title="Close"><i class="fa-solid fa-xmark-large"></i></a>
                 </div>
-                <div class="fc">
-                    <div id="context" class="view"></div>
+                <div class="fill">
+                    <div class="view content"></div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="alert" class="view hide flex-horizontal">
-        <div class="alert-box  flex-vertical">
-            <div class="title">链接管理</div>
-            <div class="flex-horizontal">
-                <label class="icon-box">
-                    <input title="" class="input-icon-file" accept="image/*" type="file">
-                    <span class="icon flex-vertical">
-                        <img title="icon" src="/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg" />
-                    </span>
-                </label>
-                <div class="input fc flex-vertical">
-                    <label>
-                        <input class="input-title" type="text" placeholder="">
-                        <b>链接名称</b>
-                    </label>
-                    <label>
-                        <input class="input-url" type="url" placeholder="">
-                        <b>链接网址</b>
-                    </label>
-                    <label>
-                        <input class="input-icon" type="url" placeholder="">
-                        <b>图标网址</b>
-                    </label>
+    <div id="link-manager" class="view dialog hide">
+        <div class="flex-vertical dialog-box">
+            <div class="flex-horizontal top">
+                <div class="fill title">链接管理器</div>
+                <div class="button-box">
+                    <button class="save">保存</button>
+                    <button class="close">关闭</button>
                 </div>
             </div>
-            <div class="button-bar">
-                <label for="alert-transparent" type="button">
-                    <input id="alert-transparent" type="checkbox">
-                    <span>不填充背景</span>
-                </label>
-                <input id="alert-add" type="button" value="添加/修改">
-                <input id="alert-cancel" type="button" value="取消">
+            <div class="fill dialog-content flex-horizontal">
+                <div class="preview flex-horizontal">
+                    <a class="link-button unselect" draggable="true"><span class="bg"></span><span
+                            class="title">预览</span></a>
+                </div>
+                <div class="fill input-box">
+                    <div class="subtitle">标题：</div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-title" value="预览"
+                            autocomplete="off"></div>
+                    <div class="subtitle">网址：</div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-url"
+                            autocomplete="off"></div>
+                    <div class="subtitle flex-horizontal space"><span>图标网址：（临时加载一次后缓存到浏览器存储）</span><label
+                            class="checkbox"><input type="checkbox" id="link-manager-image-always"><span
+                                class="text">每次都从网络加载</span></label></div>
+                    <div class="input flex-vertical"><input class="unify" type="url" id="link-manager-image-url"
+                            autocomplete="off"></div>
+                    <div class="subtitle">图标缓存：（点击左侧预览图标可更换为本地图片）</div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-image-local"
+                            readonly="readonly" autocomplete="off"></div>
+                    <div class="subtitle flex-horizontal"><span>背景颜色：颜色选择器：</span><input class="unify" type="color"
+                            id="link-manager-background-selector" value="#ffffff"><span>（实际以预览效果为准）</span></div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-background"
+                            value="#ffffff" autocomplete="off"></div>
+                </div>
             </div>
         </div>
     </div>
-    <div id="toast"></div>
 
-    <script type="text/javascript">
-        // document.body.innerHTML = '<i class="fa-regular fa-circle-check"></i>'
-        if (!/(Chrome|Firefox|Apple)/i.test(window.navigator.userAgent)) {
-            document.body.innerHTML = "网页不兼容此浏览器";
-        }
-    </script>
+    <script src="/js/lz-string.min.js"></script>
+    <script src="/js/puset/puset-2.1.2.js"></script>
+    <script src="/js/puset/puset.storage.js"></script>
+    <script src="/js/puset/interpreter.js"></script>
 
-    <script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
-    <script type="text/javascript" src="/js/puset/puset.storage.js"></script>
-    <script type="text/javascript" src="/js/puset/puset.view.min.js"></script>
-    <script type="text/javascript" src="/js/lz-string.min.js"></script>
-
-    <script type="text/javascript" src="js/setting.js"></script>
-    <script type="text/javascript" src="js/weather.js"></script>
-    <script type="text/javascript" src="js/main.js"></script>
-    <script type="text/javascript" src="js/interpreter.js"></script>
-    <script type="text/javascript" src="js/drawer.js"></script>
-
+    <script src="js/image-selector.js"></script>
+    <script src="js/global-settings.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
 </body>
 
 </html>

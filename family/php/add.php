@@ -140,7 +140,7 @@ function add()
 	// 根据性别确定是 爸爸 还是 妈妈
 	$parent = ($gender == 0) ? 'mother' : 'father';
 
-	$sql = "INSERT INTO `family` (`name`, `sign`, `gender`, `birthday`, `father`, `mother`, `spouses`, `siblings`, `children`, `residence`, `photos`, `life`) VALUES ('{$_POST['name']}', '{$_POST['sign']}', {$gender}, '{$_POST['birthday']}', '{$_POST['father']}', '{$_POST['mother']}', '{$_POST['spouses']}', '{$_POST['siblings']}', '{$_POST['children']}', '{$_POST['residence']}', '{$_POST['photos']}', '{$_POST['life']}')";
+	$sql = "INSERT INTO `family` (`name`, `sign`, `gender`, `birthday`, `father`, `mother`, `spouses`, `siblings`, `children`, `residence`, `disabled`) VALUES ('{$_POST['name']}', '{$_POST['sign']}', {$gender}, '{$_POST['birthday']}', '{$_POST['father']}', '{$_POST['mother']}', '{$_POST['spouses']}', '{$_POST['siblings']}', '{$_POST['children']}', '{$_POST['residence']}', '0')";
 
 	if (mysqli_query($conn, $sql)) {
 

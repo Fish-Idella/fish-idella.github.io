@@ -1,0 +1,639 @@
+<div id="puset-interpreter-template">文件头</div>
+
+
+<template id="background">
+    <div part="background" class="view wallpaper background">
+        <video class="view wallpaper" muted="muted" loop="loop" autoplay="autoplay"></video>
+        <canvas class="view wallpaper d2 hide"></canvas>
+        <canvas class="view wallpaper d3 hide"></canvas>
+    </div>
+    <script>
+        "use strict";
+        // 设置隐藏属性和改变可见属性的事件的名称
+        let hidden, visibilitychange;
+        if (typeof document.hidden !== "undefined") {
+            hidden = "hidden";
+            visibilitychange = "visibilitychange";
+        } else if (typeof document.msHidden !== "undefined") {
+            hidden = "msHidden";
+            visibilitychange = "msvisibilitychange";
+        } else if (typeof document.webkitHidden !== "undefined") {
+            hidden = "webkitHidden";
+            visibilitychange = "webkitvisibilitychange";
+        }
+        function getResponseHeader(path, resolve, reject) {
+            const xhr = new XMLHttpRequest;
+            xhr.onerror = reject;
+            xhr.onreadystatechange = function () {
+                if (this.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+                    xhr.abort();
+                    resolve("" + (xhr.getResponseHeader("Content-Type") || "color"));
+                }
+            };
+            xhr.open("GET", path);
+            xhr.responseType = "blob";
+            xhr.send()
+        }
+        /**
+         * 需要用户自定义的函数
+         * @param {Element} target 
+         * @param {*} settings 保存的设置
+         * @param {*} options 设置相关的属性
+         */
+        return function background(target, settings, options) {
+            "use strict";
+            const mBackground = target.querySelector('div.background');
+            const mVideo = mBackground.querySelector('video.wallpaper'),
+                mCanvas2D = mBackground.querySelector("canvas.d2"),
+                mCanvas3D = mBackground.querySelector("canvas.d3"),
+                // mMask = document.createElement("div"),
+                n = {
+                    hide: false,
+                    dx: 0,
+                    dy: 0,
+                    dw: mCanvas2D.width = mCanvas3D.width = mBackground.clientWidth,
+                    dh: mCanvas2D.height = mCanvas3D.height = mBackground.clientHeight
+                };
+            const initVideo = function () {
+                mVideo.muted = true, mVideo.loop = true;
+                mVideo.src = "";
+                mVideo.setAttribute("poster", MainUI.a);
+                mVideo.removeAttribute("style");
+            };
+            const pause = () => mVideo.pause();
+            const play = () => mVideo.play();
+            const ctx = mCanvas2D.getContext("2d", { alpha: true });
+            const webgl = mCanvas3D.getContext("webgl", { alpha: true });
+            let isVideo = false;
+            document.addEventListener(visibilitychange, function () {
+                n.hide = document[hidden];
+                if (isVideo) {
+                    n.hide ? pause() : play();
+                }
+            });
+            window.addEventListener("resize", function () {
+                const w = mBackground.clientWidth, h = mBackground.clientHeight;
+                n.dy = n.dx = 0;
+                mCanvas2D.width = n.dw = w;
+                mCanvas2D.height = n.dh = h;
+                mCanvas3D.width = w, mCanvas3D.height = h;
+            });
+            function loadImageBackground(path) {
+                MainUI.loadImage(path).then(function () {
+                    initVideo();
+                    mBackground.setAttribute("style", `background-image:url(${path});`);
+                    mBackground?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000, iterations: 1 });
+                });
+            }
+            // 初始化背景状态
+            // ctx.clearRect(0, 0, n.dw, n.dh);
+            options.loadBackground = function loadBackground(path, type) {
+                // 获取背景类型
+                new Promise((resolve, reject) => {
+                    if (type) {
+                        resolve(type);
+                    } else {
+                        getResponseHeader(path, resolve, reject);
+                    }
+                }).then(function (type) {
+                    pause();
+                    isVideo = false;
+                    if (type.startsWith("animation")) {
+                        fetch(path).then(b => b.text()).then(function (script) {
+                            const fn = eval(script);
+                            if ("function" == typeof fn && fn(ctx, webgl, n));
+                        }).catch(function () {
+                            console.error("error: " + path);
+                        });
+                    } else if (type.startsWith("video")) {
+                        initVideo();
+                        mVideo.type = type, mVideo.src = path;
+                        play();
+                        isVideo = true;
+                    } else if (type.startsWith("image")) {
+                        return loadImageBackground(path);
+                    } else if (type.startsWith("file")) {
+                        storage.getItem("puset-local-wallpaper").then(function (file) {
+                            if (file) {
+                                loadBackground(URL.createObjectURL(file), file.type);
+                            }
+                        });
+                    } else if (type.startsWith("bing")) {
+                        let localFile = null;
+                        storage.getItem("puset-local-wallpaper-bing").then(function (file) {
+                            if ((localFile = file) && MainUI.isToday(localFile.lastModifiedDate)) {
+                                loadBackground(URL.createObjectURL(localFile), localFile.type);
+                            } else throw "overdue";
+                        }).catch(function () {
+                            fetch("/api/bing/HPImageArchive.aspx?format=js&idx=0&n=1").then(a => a.json()).then(function (json) {
+                                const base = new URL("/api/bing/", window.location.href).href;
+                                const url = new URL(json?.images?.[0]?.url, window.location.href);
+                                return MainUI.loadImage(new URL(url.href.substring(1 + url.origin.length), base).href, true);
+                            }).then(function (img) {
+                                const canvas = document.createElement("canvas");
+                                const w = canvas.width = img.naturalWidth;
+                                const h = canvas.height = img.naturalHeight;
+                                canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                                canvas.toBlob(function (blob) {
+                                    localFile = new File([blob], "wallpaper", { type: blob.type });
+                                    storage.setItem("puset-local-wallpaper-bing", localFile);
+                                    loadBackground(URL.createObjectURL(localFile), localFile.type);
+                                });
+                            }).catch(function () {
+                                console.warn("无法获取最新 bing 壁纸");
+                                if (localFile) {
+                                    loadBackground(URL.createObjectURL(localFile), localFile.type);
+                                }
+                            });
+                        });
+                    } else if (type.startsWith("random")) {
+                        loadImageBackground(PuSetting.background.random[path]);
+                    } else {
+                        initVideo();
+                        mBackground.setAttribute("style", "background:" + path);
+                    }
+                });
+            }
+            options.target = mBackground;
+            options.loadBackground(settings.string_background_src, settings.string_background_type);
+        }
+    </script>
+</template>
+
+
+<template id="layer">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+    </style>
+    <div part="layer" class="template template-layer layer">
+        <div class="text-primary">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="content"></div>
+    </div>
+    <script>
+        return function renderMainTitle(target, settings, options) {
+            target.host?.classList.add("template-layer");
+        }
+    </script>
+</template>
+
+
+<template id="switch">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+
+        .custom-button {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: auto 0;
+        }
+
+        .custom-button>.peer,
+        .custom-button>.peer::before,
+        .custom-button>.peer::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .custom-button>.peer::before {
+            background-color: var(--background-switch);
+            transition: background-color 200ms ease-in-out;
+        }
+
+        .custom-button>.peer::after {
+            width: 20px;
+            height: 20px;
+            top: 2px;
+            left: 2px;
+            border-radius: 50%;
+            transition: left 200ms ease-in-out;
+            background-color: aliceblue;
+        }
+
+        .custom-button>input[type=checkbox]:checked+.peer::before {
+            background-color: var(--background-switch-select);
+        }
+
+        .custom-button>input[type=checkbox]:checked+.peer::after {
+            left: 22px;
+        }
+    </style>
+    <label class="template template-widget switch">
+        <div class="text-primary">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="custom-button">
+            <input type="checkbox">
+            <div class="peer"></div>
+        </div>
+    </label>
+    <script>
+        return function renderSwitch(target, settings, options) {
+            const psid = options.psid;
+            const input = target.querySelector("input");
+            input.checked = settings[psid];
+            input.addEventListener("change", function () {
+                MainUI.onchange(psid, this.type, this.checked);
+                if (MainUI.map.has(psid)) {
+                    Array.from(MainUI.map.get(psid)).forEach(value => {
+                        MainUI.autoShow(...value)
+                    })
+                }
+            }, false);
+        }
+    </script>
+</template>
+
+
+<template id="input">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+
+        .template-widget.input {
+            flex-direction: column;
+        }
+    </style>
+    <div class="template template-widget input">
+        <!-- import template button -->
+        <div class="custom-input">
+            <input type="txet">
+        </div>
+    </div>
+    <script>
+        return function renderSubTitle(target, settings, options) {
+            Interpreter.get("button").init(false, function (root, view) {
+                Interpreter.populateContent(root, settings, options);
+                const template_widget = target.querySelector(".template-widget");
+                const input = template_widget.querySelector("input");
+
+                template_widget.insertBefore(root.host, template_widget.firstElementChild);
+
+                const button = root.querySelector("input");
+                button.value = options.value;
+                button.addEventListener("click", function () {
+                    MainUI.onchange(psid, input.type, input.value);
+                }, false);
+            });
+        }
+    </script>
+</template>
+
+
+<template id="button">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+    </style>
+    <label class="template template-widget button">
+        <div class="text-primary">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="custom-button">
+            <input type="button" value="OK">
+        </div>
+    </label>
+    <script>
+        return function renderButton(target, settings, options) {
+            const psid = options.psid;
+            const button = target.querySelector("input");
+            button.value = options.value;
+            button.addEventListener("click", function () {
+                MainUI.onchange(psid, this.type, this.value);
+            }, false);
+        }
+    </script>
+</template>
+
+
+<template id="file">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+
+        .template-widget.file {
+            flex-direction: column;
+        }
+    </style>
+    <div class="template template-widget file">
+        <div class="text-primary">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="content">
+            <label class="custom-button file">
+                <input type="file" value="OK">
+                <div class="view">
+                    <img src="/mediae/icons/update.png" alt="select">
+                    <p class="mb-1 text-sm text-neutral-600">
+                        <span class="font-semibold">点击选择文件</span>
+                        <span>或</span>
+                        <span class="font-semibold">拖入文件</span>
+                    </p>
+                </div>
+            </label>
+        </div>
+    </div>
+    <script>
+        function readAsDataURL(psid, list) {
+            if (list && list.length > 0) {
+                const fr = new FileReader();
+                fr.onload = () => MainUI.onchange(psid, "file", fr.result);
+                fr.readAsDataURL(list.item(0));
+            }
+        }
+        return function renderLocalFile(target, settings, options) {
+            const fileBox = target.querySelector(".custom-button.file");
+            addUniversalEventListener(fileBox, {
+                "change": function (event) {
+                    readAsDataURL(options.psid, event.target.files);
+                },
+                "dragenter dragover dragleave": function (event) {
+                    event.preventDefault();
+                },
+                "drop": function (event) {
+                    event.preventDefault();
+                    readAsDataURL(options.psid, event.dataTransfer.files);
+                }
+            });
+        }
+    </script>
+</template>
+
+
+<template id="object-list">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+
+        .template-widget {
+            flex-direction: column;
+        }
+
+        .template-widget>ul.content {
+            padding: 0;
+        }
+    </style>
+    <div class="template template-widget object-list">
+        <!-- import template button -->
+        <ul class="content flex-vertical">
+            <li class="flex-horizontal">
+                <span class="index"></span>
+                <span class="text"></span>
+            </li>
+        </ul>
+    </div>
+    <script>
+        return function renderObjectList(target, settings, options) {
+            "use strict";
+            Interpreter.get("button").init(false, function (root, view) {
+                Interpreter.populateContent(root, settings, options);
+                view.exec(root, settings, options);
+                const template_widget = target.querySelector(".template-widget");
+                template_widget.insertBefore(root.host, template_widget.firstElementChild);
+            });
+            Interpreter({
+                target: target.querySelector("ul.content"),
+                selector: "li",
+                list: settings[options.value],
+                data: settings[options.psid],
+                layout(target, value, key) {
+                    const index = 1 + this.list.indexOf(key);
+                    target.dataset.psid = key;
+                    target.dataset.index = target.style.order = index === 0 ? 999 : index;
+                    target.querySelector(".text").textContent = value.title;
+                }
+            });
+        }
+    </script>
+</template>
+
+
+<template id="image-list">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+
+        div.image-list {
+            flex-direction: column;
+        }
+
+        label.template-widget {
+            margin: 0;
+        }
+
+        ul.content {
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        ul.content>* {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            border-radius: 0.5rem;
+            background-color: #000;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+        }
+
+        video {
+            pointer-events: none;
+            touch-action: none;
+        }
+    </style>
+    <div class="template template-widget image-list">
+        <!-- import template switch -->
+        <ul class="content grid-horizontal unify">
+            <div>
+                <video class="view" muted preload="metadata"
+                    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+                <label class="custom-button file">
+                    <input type="file" value="OK">
+                    <div class="view">
+                        <img src="/mediae/icons/update.png" alt="select">
+                        <p class="mb-1 text-sm text-neutral-600">
+                            <span class="font-semibold">点击选择文件</span>
+                            <span>或</span>
+                            <span class="font-semibold">拖入文件</span>
+                        </p>
+                    </div>
+                </label>
+            </div>
+            <li>
+                <video class="view" muted preload="metadata"
+                    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+            </li>
+        </ul>
+    </div>
+    <script>
+        function readAsDataURL(psid, list) {
+            if (list && list.length > 0) {
+                const file = list.item(0);
+                storage.setItem("puset-local-wallpaper", file).then(function () {
+                    MainUI.onchange(psid, "file", URL.createObjectURL(file));
+                });
+            }
+        }
+        return function renderImageList(target, settings, options) {
+            "use strict";
+            const psid = options.psid;
+            const content = target.querySelector("ul.content");
+            let checkbox;
+            Interpreter.show(content, settings[psid]);
+            Interpreter.get("switch").init(false, function(root, view) {
+                Interpreter.populateContent(root, settings, options);
+                view.exec(root, settings, options);
+                checkbox = root.querySelector("input");
+                checkbox.addEventListener("change", () => Interpreter.show(content, checkbox.checked));
+                const a = target.querySelector(".template-widget.image-list");
+                a.insertBefore(root.host, a.firstElementChild);
+            });
+            Interpreter({
+                target: content,
+                selector: "li",
+                data: options.list,
+                pointerenter() {
+                    this.querySelector("video").play();
+                },
+                pointerleave() {
+                    this.querySelector("video").pause();
+                },
+                layout(li, value, key) {
+                    li.title = value.t;
+                    li.style.setProperty("background-image", `url(${value.p || value.s})`);
+                    li.addEventListener("click", function backgroundImageListItemClick() {
+                        checkbox.checked = true;
+                        settings.string_background_src = value.s;
+                        MainUI.onchange(psid, value.t, value.s);
+                    }, false);
+                    if (value.t.startsWith("video")) {
+                        li.querySelector("video").src = value.s;
+                        li.addEventListener("pointerenter", this.pointerenter);
+                        li.addEventListener("pointerleave", this.pointerleave);
+                    } else {
+                        li.querySelector("video").removeAttribute("src");
+                        li.removeEventListener("pointerenter", this.pointerenter);
+                        li.removeEventListener("pointerleave", this.pointerleave);
+                    }
+                }
+            });
+            const fileBox = target.querySelector(".custom-button.file");
+            addUniversalEventListener(fileBox, {
+                "change": function (event) {
+                    checkbox.checked = true;
+                    readAsDataURL(psid, event.target.files);
+                },
+                "dragenter dragover dragleave": function (event) {
+                    event.preventDefault();
+                },
+                "drop": function (event) {
+                    event.preventDefault();
+                    checkbox.checked = true;
+                    readAsDataURL(psid, event.dataTransfer.files);
+                }
+            });
+        }
+    </script>
+</template>
+
+
+<template id="radio-list">
+    <style>
+        @import url(/css/index.css);
+        @import url(css/main.css);
+        @import url(css/settings.css);
+
+        .template-widget {
+            flex-direction: column;
+        }
+
+        .grid-horizontal {
+            position: relative;
+            grid-template-columns: 4rem;
+            grid-auto-flow: column;
+            padding: 0.4rem 0;
+            justify-content: space-between;
+        }
+
+        .custom-radio {
+            position: relative;
+            border: 1px solid #898989;
+            padding: 0.3rem;
+            border-radius: 8px;
+            min-width: 4rem;
+            overflow: hidden;
+        }
+
+        input[type=radio]+div {
+            place-content: center;
+            place-items: center;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        input[type=radio]:checked+div {
+            color: var(--background-switch-select);
+        }
+    </style>
+    <div part="radio-list" class="template template-widget">
+        <div class="text-primary">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="grid-horizontal">
+            <label class="custom-radio">
+                <input type="radio">
+                <div class="view text">default</div>
+            </label>
+        </div>
+    </div>
+    <script>
+        return function renderRadioList(target, settings, options) {
+            "use strict";
+            const psid = options.psid;
+            Interpreter({
+                target: target.querySelector(".template-widget>.grid-horizontal"),
+                selector: "label.custom-radio",
+                data: options.list,
+                layout: function (label, value, key) {
+                    const input = label.querySelector("input");
+                    input.name = psid;
+                    input.value = key;
+                    input.checked = (key === settings[options.value]);
+
+                    const text = label.querySelector(".text");
+                    text.textContent = label.dataset.psid = key;
+                    text.style.background = value;
+                }
+            }).target.addEventListener("change", function (event) {
+                const input = event.target;
+                if (input.name === psid) {
+                    MainUI.onchange(psid, input.type, input.value);
+                }
+            });
+        }
+    </script>
+</template>

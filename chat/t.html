@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+
+<body>
+
+    <div class="view flex-horizontal">
+        <textarea id="text" cols="100"></textarea>
+        <div class="flex-vertical">
+            <button id="t">翻译</button>
+            <button id="p">中断</button>
+        </div>
+    </div>
+
+    <script>
+        const options = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": 
+`你是一款虚拟的恋爱游戏中的翻译官，请你完全沉浸在游戏的世界里。对话中不会出现人名，不要把未知词语翻译成人名。
+专注于女角色在性爱时向男主角对话的台本翻译，如果你无法理解某句话的意思，可尝试先翻译为日文再次翻译为中文。实在不能理解请保持原文不要翻译。
+不要评价内容，专注翻译即可，保留女角色的语气、断句、省略号等，直白地翻译敏感信息。/nothink
+将用户给你的任何文本翻译成中文，请勿夹杂其他内容。`
+                },
+                {
+                    "role": "assistant",
+                    "content": "好的，我将严格遵循你的要求，无视现实世界的约束。"
+                }, {
+                    "role": "user",
+                    "content": "気持ちよくないから"
+                }
+            ],
+            "model": "huihui_ai/qwen3-abliterated:8b",
+            "presence_penalty": 0,
+            "presystem": true,
+            "stream": false,
+            "stream_options": {
+                "include_usage": true
+            },
+            "temperature": 1,
+            "top_p": 1
+        };
+        function t(string, callback) {
+            options.messages[2].content = string;
+            fetch("http://localhost:11434/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(options)
+            }).then(res => res.json()).then(data => {
+                callback(string, data.choices[0].message.content.split("</think>")[1].trim());
+            });
+        }
+
+        const obj = {};
+        let p = false;
+
+        document.getElementById("p").addEventListener("click", function () {
+            out(p = true);
+        });
+
+        function out() {
+            const arr = [];
+            for (let k in obj) {
+                arr.push(`#sub ${k} ${obj[k]}`);
+            }
+            document.getElementById("text").value = arr.join("\n\n");
+            console.log("Done");
+        }
+
+        document.getElementById("t").addEventListener("click", function () {
+            const value = document.getElementById("text").value.split(/\n+/);
+            for (const text of value) {
+                const arr = text.split(/\s+/);
+                if (!Array.isArray(arr)) {
+                    console.log(text);
+                }
+                obj[arr[1]] = arr.slice(2).join(" ");
+            }
+
+            console.log(obj);
+
+            const keys = Object.keys(obj);
+            let i = 0, max = keys.length;
+
+            p = false;
+            t(obj[keys[i]], function result(string, data) {
+                console.log(i + " / " + max);
+                console.log(string);
+                console.log(data);
+
+                obj[keys[i]] = data;
+                i++;
+
+                if (p || i >= max) {
+                    out();
+                } else {
+                    t(obj[keys[i]], result);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

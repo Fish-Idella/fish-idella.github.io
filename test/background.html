@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .wallpaper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .hide {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="background" class="wallpaper"></div>
+    <script>
+
+        const LoadBackground = function LoadBackground(/** @type {HTMLDivElement}*/backgroundElement) {
+            if (!backgroundElement) {
+                throw new Error("backgroundElement is required");
+            }
+            backgroundElement.classList.add("wallpaper");
+            backgroundElement.innerHTML = "<video autoplay=\"autoplay\" loop=\"loop\" muted=\"muted\" class=\"wallpaper dynamic\">不支持视频</video><canvas \
+            class=\"c2d wallpaper hide\">不支持画布</canvas><canvas class=\"c3d wallpaper hide\">不支持画布</canvas>";
+
+            const backgroundVideo = backgroundElement.querySelector("video");
+            const backgroundCanvas2d = backgroundElement.querySelector("canvas.c2d");
+            const backgroundCanvas3d = backgroundElement.querySelector("canvas.c3d");
+
+            const DPR = window.devicePixelRatio ?? 1;
+            // 设置隐藏属性和改变可见属性的事件的名称
+            let hidden, visibilitychange, playing = false;
+            if (typeof document.hidden !== "undefined") {
+                hidden = "hidden";
+                visibilitychange = "visibilitychange";
+            } else if (typeof document.msHidden !== "undefined") {
+                hidden = "msHidden";
+                visibilitychange = "msvisibilitychange";
+            } else if (typeof document.webkitHidden !== "undefined") {
+                hidden = "webkitHidden";
+                visibilitychange = "webkitvisibilitychange";
+            }
+
+            const onVisibilityChange = function (ev) {
+                (playing && document[hidden]) ? backgroundVideo.pause() : backgroundVideo.play();
+            };
+
+            // 动态修改元素大小
+            window.addEventListener("resize", (function setCanvasSize() {
+                backgroundCanvas3d.width = backgroundCanvas2d.width = backgroundElement.clientWidth * DPR;
+                backgroundCanvas3d.height = backgroundCanvas2d.height = backgroundElement.clientHeight * DPR;
+                return setCanvasSize;
+            }()));
+
+            // backgroundVideo.muted = true, backgroundVideo.loop = true;
+            backgroundVideo.setAttribute("poster", "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+
+            const adaptive = Object.assign(function adaptive(type, path, detail) {
+                return ((adaptive[type] || adaptive["color"])(path, detail));
+            }, {
+                "image": function (path) {
+                    adaptive.video(false); // 关闭视频
+                    window.backgroundElement = backgroundElement;
+                    backgroundElement.style.setProperty("background-image", `url(${path})`);
+                },
+                "video": function (path) {
+                    if (path) {
+                        playing = true;
+                        backgroundVideo.src = path;
+                    } else {
+                        playing = false;
+                        backgroundVideo.removeAttribute("src");
+                        backgroundVideo.setAttribute("poster", "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+                    }
+                },
+                "color": function (style) {
+                    adaptive.video(false); // 关闭视频
+                    backgroundElement.style.background = style;
+                },
+                "file": function (path) {
+                    storage.getItem("puset-local-wallpaper").then(function (file) {
+                        if (file) {
+                            loadBackground(URL.createObjectURL(file), file.type);
+                        }
+                    });
+                },
+                "bing": function (path) {
+                    let localFile = null;
+                    storage.getItem("puset-local-wallpaper-bing").then(function (file) {
+                        if ((localFile = file) && MainUI.isToday(localFile.lastModifiedDate)) {
+                            loadBackground(URLObject.createObjectURL(localFile), localFile.type);
+                        } else throw "overdue";
+                    }).catch(function () {
+                        fetch("/api/bing/HPImageArchive.aspx?format=js&idx=0&n=1").then(a => a.json()).then(function (json) {
+                            const base = new URL("/api/bing/", window.location.href).href;
+                            const url = new URL(json?.images?.[0]?.url, window.location.href);
+
+                            return MainUI.loadImage(new URL(url.href.substring(1 + url.origin.length), base).href, true);
+                        }).then(function (img) {
+                            const canvas = document.createElement("canvas");
+                            const w = canvas.width = img.naturalWidth;
+                            const h = canvas.height = img.naturalHeight;
+                            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                            canvas.toBlob(function (blob) {
+                                localFile = new File([blob], "wallpaper", { type: blob.type });
+                                storage.setItem("puset-local-wallpaper-bing", localFile);
+                                loadBackground(URLObject.createObjectURL(localFile), localFile.type);
+                            });
+                        }).catch(function () {
+                            console.warn("无法获取最新 bing 壁纸");
+                            if (localFile) {
+                                loadBackground(URLObject.createObjectURL(localFile), localFile.type);
+                            }
+                        });
+                    });
+                },
+                "random": function (path) {
+                },
+                "canvas": function (path, detail) {
+                },
+            });
+
+            return function loadBackground(path, type) {
+
+                new Promise((resolve, reject) => {
+                    if (type) {
+                        resolve(type);
+                    } else {
+                        const xhr = new XMLHttpRequest;
+                        xhr.onerror = reject;
+                        xhr.onreadystatechange = function () {
+                            if (this.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+                                xhr.abort();
+                                resolve("" + (xhr.getResponseHeader("Content-Type") || "color"));
+                            }
+                        };
+                        xhr.open("GET", path);
+                        xhr.responseType = "blob";
+                        xhr.send()
+                    }
+                }).then(function (/** @type {string}*/type) {
+                    const [main, detail] = type.toLowerCase().split('/');
+                    adaptive(main, path, detail);
+                }).catch(function (error) {
+                    console.error(error);
+                });
+            }
+        };
+
+        const loadBackground = LoadBackground(document.getElementById("background"));
+
+        loadBackground("https://www.w3schools.com/w3css/img_lights.jpg", "image");
+    </script>
+</body>
+
+</html>

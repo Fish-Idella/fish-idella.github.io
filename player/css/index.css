@@ -1,0 +1,467 @@
+body.theme-default {
+    --theme-background-color: #ebebeb;
+    --theme-text-color: #123;
+}
+
+body {
+    color: var(--theme-text-color);
+    background-color: var(--theme-background-color);
+}
+
+@font-face {
+    font-family: 'Fira Sans';
+    src: local("FiraSans-Regular"), url(/mediae/fonts/FiraSans-Regular.woff2) format("woff2"), url(/mediae/fonts/FiraSans-Regular.ttf) format("ttf");
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* 横屏设备 */
+@media screen and ((orientation: landscape) and (width >=1200px)) {
+    div.rsvp {
+        display: flex;
+        flex-direction: row
+    }
+
+    .out-box {
+        width: 70%
+    }
+
+    .in-box {
+        width: 30%;
+        padding: 10px 10px 10px 0
+    }
+}
+
+/* 竖屏设备 */
+@media screen and ((orientation: portrait) or (width <=1200px)) {
+    div.rsvp {
+        display: flex;
+        flex-direction: column
+    }
+
+    .out-box {
+        width: 100%
+    }
+
+    .out-box>.dashboard>.info {
+        display: none !important
+    }
+
+    .in-box {
+        width: 100%;
+        padding: 0 10px 10px;
+        flex-grow: 1
+    }
+}
+
+.out-box {
+    display: flex;
+    flex-direction: column;
+    -webkit-user-select: none;
+    user-select: none
+}
+
+table.info {
+    overflow: hidden;
+}
+
+.out-box>#player.content {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px
+}
+
+.center {
+    grid-template: 1fr / 1fr;
+    place-content: center;
+    place-items: center;
+}
+
+.center .fill {
+    grid-area: 1 / 2;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+video.video {
+    background-color: #000000;
+    aspect-ratio: 16 / 9;
+}
+
+.controls {
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Fira Sans', sans-serif;
+    font-weight: bold;
+}
+
+.controls>.layer-tooltip {
+    place-content: center;
+    place-items: center;
+}
+
+.controls .tooltip {
+    width: 90px;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 5px;
+    background: #000000ad;
+    color: white;
+    font-weight: bold;
+    font-size: large;
+    text-align: center;
+    padding: 0 5px;
+}
+
+.controls .tooltip>img {
+    width: 35px;
+}
+
+.controls>.bottom {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    bottom: 0;
+    padding: 0;
+    width: 100%;
+    height: 4rem;
+    background-image: linear-gradient(transparent, rgba(0, 0, 0, .76) 40%, rgba(0, 0, 0, .76))
+}
+
+.progress-bar {
+    position: relative;
+    height: 1.6rem;
+    margin: 0 10px;
+    display: flex;
+    place-items: center;
+    place-content: center;
+    cursor: pointer
+}
+
+.progress-bar>.progress-preview {
+    position: absolute;
+    width: 160px;
+    height: 90px;
+    background: #000000;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    overflow: hidden;
+    left: 0;
+    bottom: 20px;
+    border-radius: 2px;
+    box-shadow: 0 0 6px 2px #24252c;
+}
+
+.progress-bar>.progress-preview>.progress-preview-time {
+    --text-shadow-color: #000000a6;
+    position: absolute;
+    width: 100%;
+    line-height: 2rem;
+    height: 2rem;
+    color: white;
+    left: 0;
+    bottom: 0;
+    text-shadow: 0 -2px 1px var(--text-shadow-color),
+        /*上*/
+        1px -1px 1px var(--text-shadow-color),
+        /*右上*/
+        2px 0 1px var(--text-shadow-color),
+        /*右*/
+        1px 1px 1px var(--text-shadow-color),
+        /*右下*/
+        0 2px 1px var(--text-shadow-color),
+        /*下*/
+        -1px 1px 1px var(--text-shadow-color),
+        /*左下*/
+        -2px 0 1px var(--text-shadow-color),
+        /*左*/
+        -1px -1px 1px var(--text-shadow-color);
+}
+
+.progress-bar>.progress {
+    --played: 0;
+    --buffered: none;
+    --buffered-color: #ffffff8a;
+    --radius: 2px;
+    position: relative;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    margin: 0;
+    border: none;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: rgb(255 255 255 / 30%);
+}
+
+.progress-bar>.progress::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: var(--radius);
+    background: var(--buffered);
+}
+
+.progress-bar>.progress::after {
+    content: '';
+    position: absolute;
+    width: var(--played);
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: var(--radius);
+    background-color: rgb(10, 135, 218);
+}
+
+.progress-bar:hover>.progress {
+    height: 6px
+}
+
+.controls>.bottom.min {
+    height: 1px;
+}
+
+.controls>.bottom.min .progress-bar {
+    margin: 0;
+}
+
+.controls>.bottom.min .progress-bar .progress {
+    --radius: 0;
+}
+
+.buttons {
+    flex-grow: 1;
+    display: flex;
+    position: relative;
+    padding: 0 10px;
+}
+
+.controls .buttons .bt {
+    position: relative;
+    display: inline-flex;
+    width: auto;
+    height: 2.6rem;
+    line-height: 2.6rem;
+    color: #ffffff;
+    word-wrap: normal;
+    white-space: nowrap;
+    margin: 0 2px;
+}
+
+.controls .buttons .bt>img {
+    width: 1.4rem;
+    height: 100%
+}
+
+.bpx-player-ctrl-time-label {
+    padding: 0 10px;
+}
+
+.bt.bt-playback-rate {
+    min-width: 3rem;
+}
+
+.bpx-player-ctrl-playbackrate-result {
+    width: 60px;
+}
+
+.bpx-player-ctrl-playbackrate-menu {
+    position: absolute;
+    display: block;
+    margin: 0;
+    padding: 0;
+    width: 60px;
+    height: auto;
+    list-style: none;
+    left: 0;
+    bottom: 4rem;
+    background-color: #2b2b2b;
+    overflow: hidden;
+    border-radius: 2px;
+    text-align: center;
+    line-height: 2rem;
+}
+
+.bpx-player-ctrl-playbackrate-menu-item:hover {
+    background-color: #ffffff56;
+}
+
+.bpx-player-ctrl-playbackrate-menu-item.bpx-state-active {
+    color: cornflowerblue;
+}
+
+.volume-box {
+    position: absolute;
+    width: 50px;
+    height: 170px;
+    left: -15px;
+    bottom: 4rem;
+    background-color: #2b2b2b;
+    border-radius: 2px;
+    text-align: center;
+}
+
+.volume-value {
+    height: 2rem;
+    line-height: calc(2rem + 8px);
+}
+
+.volume-bar {
+    /* position: relative; */
+    /* width: 100%; */
+    /* height: 100%; */
+    cursor: pointer;
+}
+
+.volume-bar .thumb {
+    position: absolute;
+    background: white;
+    width: 6%;
+    top: 8px;
+    height: 116px;
+    left: 47%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.volume-bar .thumb .thumb-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: calc(50% - 8px);
+    top: 100px;
+    pointer-events: none;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+
+.out-box>.dashboard {
+    flex-grow: 1;
+    padding: 0 10px 10px;
+    overflow: hidden auto
+}
+
+.out-box>.dashboard,
+.video-layer {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.video-layer {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: rgb(0 0 0);
+    border: 1px solid #000;
+}
+
+.video-layer:fullscreen {
+    background-color: #000
+}
+
+.in-box {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.dashboard label[type=file] {
+    margin: 0 5px;
+}
+
+.url-box,
+label[type=button],
+label[type=file] {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    width: 5rem;
+    height: 2rem;
+    text-align: center;
+    line-height: 2rem;
+    border: 1px solid #123;
+}
+
+label[type=button]>input[type=button],
+label[type=button]>span,
+label[type=file]>input[type=file],
+label[type=file]>span {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    top: 0;
+    left: 0;
+    background-color: #fff;
+    color: #000;
+    display: inline-block
+}
+
+.url-box>.bt-play {
+    border-width: 0 0 0 1px;
+    margin: 0;
+}
+
+.hide {
+    display: none !important
+}
+
+.box {
+    position: relative;
+    height: auto;
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 10px
+}
+
+.box.mt {
+    margin-top: 10px
+}
+
+.box.mb {
+    margin-bottom: 10px
+}
+
+.address {
+    line-height: 2rem;
+    word-wrap: normal;
+    white-space: nowrap;
+    overflow: hidden
+}
+
+.address input {
+    border-bottom: 1px dashed #000;
+    margin: 3px 10px;
+    font-family: 'Consolas', monospace
+}
+
+.address input:focus {
+    border-bottom: 1px solid #000
+}
+
+.address button {
+    margin: 3px 0
+}
+
+.progress-preview img {
+    width: 100%;
+    display: none;
+}
+
+
+
+.scroll {
+    overflow: auto scroll;
+    height: 100%;
+    padding: 0
+}

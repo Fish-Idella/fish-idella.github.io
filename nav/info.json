@@ -1,0 +1,27 @@
+{
+    "/chat": {
+        "title": "AI Chat",
+        "icon": "/icon/chat.webm",
+        "hot": 200
+    },
+    "/math": {
+        "title": "数学",
+        "icon": "/icon/math.webm",
+        "hot":58
+    },
+    "/QrCode": {
+        "title": "二维码生成工具",
+        "icon": "/icon/qr.webm",
+        "hot":30
+    },
+    "https://www.baidu.com/": {
+        "title": "百度一下",
+        "icon": "https://www.baidu.com/logo.svg",
+        "hot":90
+    },
+    "/player/index.html": {
+        "title": "播放器",
+        "icon": "",
+        "hot": 0
+    }
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas 图片缩放 Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            cursor: move;
+        }
+        .controls {
+            margin-bottom: 10px;
+        }
+        .info {
+            margin-top: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Canvas 图片缩放 Demo</h1>
+    <div class="controls">
+        <button id="resetBtn">重置缩放</button>
+        <span id="scaleInfo">缩放比例: 1.00x</span>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div class="info">
+        使用鼠标滚轮缩放图片，缩放以鼠标位置为中心<br>
+        按住鼠标拖动可以平移图片
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const scaleInfo = document.getElementById('scaleInfo');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // 设置Canvas大小
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // 图片对象
+        const img = new Image();
+        img.src = 'https://picsum.photos/1200/800'; // 使用随机图片，你可以替换为自己的图片URL
+        img.onload = function() {
+            drawImage();
+        };
+        
+        // 缩放和平移参数
+        let scale = 1;
+        let minScale = 0.1;
+        let maxScale = 10;
+        let offsetX = 0;
+        let offsetY = 0;
+        
+        // 鼠标状态
+        let isDragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        // 绘制图片
+        function drawImage() {
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 保存当前状态
+            ctx.save();
+            
+            // 应用变换
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(scale, scale);
+            ctx.translate(offsetX, offsetY);
+            
+            // 绘制图片（居中）
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            
+            // 恢复状态
+            ctx.restore();
+            
+            // 更新缩放信息
+            scaleInfo.textContent = `缩放比例: ${scale.toFixed(2)}x`;
+        }
+        
+        // 鼠标滚轮事件处理
+        canvas.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            
+            // 获取鼠标在Canvas上的位置
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 计算鼠标在图片坐标系中的位置
+            const imgX = (mouseX - canvas.width / 2) / scale - offsetX;
+            const imgY = (mouseY - canvas.height / 2) / scale - offsetY;
+            
+            // 计算缩放因子
+            const delta = -e.deltaY;
+            let factor = 1.1;
+            if (delta < 0) {
+                factor = 1 / factor;
+            }
+            
+            // 应用缩放限制
+            const newScale = Math.min(Math.max(scale * factor, minScale), maxScale);
+            
+            // 计算新的偏移量，使缩放以鼠标位置为中心
+            offsetX = (mouseX - canvas.width / 2) / newScale - imgX;
+            offsetY = (mouseY - canvas.height / 2) / newScale - imgY;
+            
+            scale = newScale;
+            
+            drawImage();
+        });
+        
+        // 鼠标拖动事件处理
+        canvas.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        
+        window.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                
+                offsetX += dx / scale;
+                offsetY += dy / scale;
+                
+                lastX = e.clientX;
+                lastY = e.clientY;
+                
+                drawImage();
+            }
+        });
+        
+        window.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+        
+        // 重置按钮事件
+        resetBtn.addEventListener('click', function() {
+            scale = 1;
+            offsetX = 0;
+            offsetY = 0;
+            drawImage();
+        });
+    </script>
+</body>
+</html>

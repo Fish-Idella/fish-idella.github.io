@@ -1,13 +1,36 @@
-.title {
-    background-color: #395a4b;
+.main {
+    background-color: #4c5d6c;
     color: white;
+    font-family: Montserrat, 'Source Sans Pro', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans;
+
+}
+
+.title {
+    background-color: #4c5d6c;
     height: 3rem;
     line-height: 3rem;
     text-align: center;
-    font-family: Montserrat, 'Source Sans Pro', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans;
 }
 
 .mian-list {
     width: 20rem;
-    background-color: #4b685b;
+    background-color: #4c5d6c;
+    list-style: none;
+}
+
+.mian-list>li {
+    background-repeat: no-repeat;
+    height: 3rem;
+    line-height: 3rem;
+    font-size: 32px;
+    text-align: start;
+    background-size: 50%;
+    background-position: left center;
+    /* padding: 0.5rem 0; */
+}
+
+.content {
+    background-color: white;
+    border-radius: 1rem 0 0 0;
+    padding: 1rem;
 }

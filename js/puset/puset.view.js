@@ -3,9 +3,12 @@
     const HIDE_ATTRIBUTE = "v-hide";
     const LENGTH_PROPERTY = "length";
 
-    const styleElement = document.createElement("style");
-    styleElement.innerHTML = `*[${HIDE_ATTRIBUTE}] {display: none !important;}`;
-    document.head.appendChild(styleElement);
+    if (document.querySelector('style.v-hide') === null) {
+        const styleElement = document.createElement("style");
+        styleElement.className = HIDE_ATTRIBUTE;
+        styleElement.innerHTML = `[${HIDE_ATTRIBUTE}] {display: none !important;}`;
+        document.head.appendChild(styleElement);
+    }
 
     /**
      * 
@@ -16,10 +19,12 @@
      * @param {number} index 
      */
     const applyLayout = function (options, targetElement, value, key, index = -1) {
-        View.show(targetElement, true);
-        if (options.hasLayout) {
-            options.layout(targetElement, value, key, index);
-        }
+        requestAnimationFrame(function () {
+            View.show(targetElement, true);
+            if (options.hasLayout) {
+                options.layout(targetElement, value, key, index);
+            }
+        });
     };
 
     /**
@@ -178,7 +183,7 @@
          * 从模板获取新实例
          * @param {number} index 位置
          * @param {string} type 类型
-         * @returns {Element}
+         * @returns {Element | ShadowRoot}
          */
         getTemplateInstance: function (index, type) {
             return this.isFunction ? this.template(index, type) : this.template.cloneNode(true);
@@ -191,16 +196,17 @@
          * @returns {Element}
          */
         getChild: function (index, type) {
-            let child = this.children[index];
+            let instance = child = this.children[index];
             if (index >= this.children.length || index < 0) {
-                child = this.children[index] = this.getTemplateInstance(index, type);
+                instance = this.children[index] = this.getTemplateInstance(index, type);
+                child = instance instanceof ShadowRoot ? instance.host : instance;
                 if (this.isInsert) {
                     this.target.insertBefore(child, this.insert);
                 } else {
                     this.target.appendChild(child);
                 }
             }
-            return child;
+            return instance;
         },
 
         /**

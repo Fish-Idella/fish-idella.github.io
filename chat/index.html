@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RWKV</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="view chat-layer">
+        <div class="chat-box flex-vertical">
+            <div class="top flex-horizontal">
+                <div>
+                    <button type="button">菜单</button>
+                </div>
+                <div><span>Un</span><button type="button">编辑</button></div>
+            </div>
+            <div class="fill chat-box-content flex-vertical">
+                <div class="fill">
+                    <div class="view scroll">
+                        <div class="chat-list">
+                            <div class="flex-vertical">
+                                <div class="text"></div>
+                                <div class="buttons">
+                                    <button type="button" class="resend">重说</button>
+                                    <button type="button" class="change">修改</button>
+                                    <button type="button" class="reset">回溯</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-horizontal chat-input-box">
+                    <div><button type="button">重置</button></div>
+                    <textarea id="text" class="fill"></textarea>
+                    <div><button type="button" class="send">发送</button></div>
+                </div>
+            </div>
+        </div>
+        <div class="menu-box">
+            <div class="menu-box-content flex-vertical">
+                <h1 class="unify">对话列表</h1>
+                <ul class="unify fill"></ul>
+                <h1 class="unify">菜单</h1>
+                <ul class="unify menu-list"></ul>
+            </div>
+            <dialog>
+                <div>
+                    <div class="fill">
+                        <input type="url" name="host" id="host" value="http://localhost:11434/">
+                    </div>
+
+                </div>
+            </dialog>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
+    <!-- <script type="text/javascript" src="/js/puset/puset.storage.js"></script> -->
+    <script type="text/javascript" src="/js/puset/puset.view.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+</body>
+
+</html>

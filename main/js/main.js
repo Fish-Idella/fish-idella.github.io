@@ -1,595 +1,453 @@
-"use strict";
+const storage = new PuSet.StorageHelper();
 
-const URLObject = window.URL || window.webkitURL || function () { };
-if (!URLObject.createObjectURL) {
-    Object.assign(URLObject, {
-        createObjectURL: function () {
-            return "#"
+function saveLocalConfigure(cofig) {
+    storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(cofig || MainUI.GS)));
+};
+
+/**
+ * 多功能事件绑定工具，支持多种调用形式：
+ * 1. 给单个元素绑定多种事件类型
+ * 2. 批量给多个元素绑定相同事件
+ * 3. 支持对象形式的事件处理器配置
+ * 4. 支持多个事件处理器数组
+ * 
+ * @param {Element|string} target - 目标元素/事件类型/元素选择器
+ * @param {string|Object|Array} eventConfig - 事件类型/事件处理器映射/元素处理器对数组
+ * @param {Function|Array} handlers - 事件处理器或处理器数组
+ * @param {Object} [options] - 事件监听选项
+ * @returns {boolean} 是否全部事件绑定成功
+ */
+function addUniversalEventListener(target, eventConfig, handlers, options) {
+    let allEventsAdded = Boolean(target);
+    if (!allEventsAdded) return false;
+
+    // 场景1：处理单个元素的事件绑定
+    if (target instanceof Element) {
+        const element = target;
+
+        // 场景1-1：对象形式的事件类型映射（{ click: handler, mouseover: handler }）
+        if (typeof eventConfig === 'object' && !Array.isArray(eventConfig)) {
+            Object.entries(eventConfig).forEach(([eventType, eventHandler]) => {
+                allEventsAdded = allEventsAdded &&
+                    addUniversalEventListener(element, eventType, eventHandler, handlers);
+            });
+            return allEventsAdded;
         }
-    });
+
+        // 场景1-2：空格分隔的多个事件类型（"click mouseover"）
+        if (typeof handlers === 'function') {
+            String(eventConfig).trim().split(/\s+/).forEach(eventType => {
+                try {
+                    element.addEventListener(eventType, handlers, options);
+                } catch (error) {
+                    allEventsAdded = false;
+                }
+            });
+            return allEventsAdded;
+        }
+
+        // 场景1-3：多个事件处理器数组（[handler1, handler2]）
+        if (Array.isArray(handlers)) {
+            handlers.forEach(handler => {
+                allEventsAdded = allEventsAdded &&
+                    addUniversalEventListener(element, eventConfig, handler, options);
+            });
+            return allEventsAdded;
+        }
+
+        return false;
+    }
+
+    // 场景2：批量绑定多个元素（[ [elem1,handler1], [elem2,handler2] ]）
+    if (typeof target === 'string') {
+        const eventType = target;
+
+        if (Array.isArray(eventConfig) && eventConfig.every(pair => Array.isArray(pair))) {
+            eventConfig.forEach(([element, handler]) => {
+                allEventsAdded = allEventsAdded &&
+                    addUniversalEventListener(element, eventType, handler, handlers);
+            });
+            return allEventsAdded;
+        }
+
+        return false;
+    }
+
+    if (Array.isArray(target)) {
+        target.forEach(arr => {
+            allEventsAdded = allEventsAdded && addUniversalEventListener(...arr);
+        });
+        return allEventsAdded;
+    }
+
+    return false;
 }
 
-var storage = new PuSet.StorageHelper();
+Interpreter.load('data/template.html').then(function () {
+    const _main = document.getElementById('main');
+    const _search = _main.querySelector("#search");
+    const _word = _search.querySelector("input#word");
+    const _first_submit = _search.querySelector("[type=submit]"); // 默认的搜索引擎
+    const _quickdelete = _search.querySelector("input#word+a.quickdelete");
+    const _search_list = _search.querySelector("ul.search-list");
 
-// 获取本地配置信息
-////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * 
- * @param {string} item 键
- * @param {object} defaultCofig 如果本地存储未找到结果时的替代品
- * @returns defaultCofig
- */
-function getLocalConfig(item, defaultCofig, then) {
-    storage.getItem(item).then(function (result) {
-        then(JSON.parse(result ? LZString.decompress(result) : "null") || defaultCofig);
-    });
-}
+    const _link_manager = document.getElementById("link-manager");
 
-/**
- * 
- * @param {string} item  存储键
- * @param {object} cofig 存储对象
- */
-function setLocalConfig(item, cofig) {
-    storage.setItem(item, LZString.compress(JSON.stringify(cofig)));
-}
+    const _preview = _link_manager.querySelector(".preview");
+    const _preview_background = _preview.querySelector(".preview>.link-button>span.bg");
+    const _preview_title = _preview.querySelector(".preview>.link-button>span.title");
 
-function corsGet(url, type = 'text/html') {
-    return fetch('/api/get', {
-        method: 'post',
-        headers: {
-            // POST 必须的表头
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+    const toString = (string, def = "") => String(string ? string : def);
+    const _link_manager_input = {
+        "title": {
+            e: _link_manager.querySelector("input#link-manager-title"),
+            set(string) {
+                _preview_title.textContent = this.e.value = toString(string);
+            },
+            get() {
+                return this.e.value.trim()
+            }
         },
-        body: `path=${encodeURIComponent(url)}&type=${type};charset=UTF-8`
-    });
-}
-
-/**
- * 为元素设置属性
- * @param {HTMLElement} target 元素
- * @param {*} options 参数
- */
-// function attr(target, options) {
-//     for (let key in options) {
-//         target.setAttribute(key, options[key]);
-//     }
-// }
-
-/**
- * 初始化函数：loadBackground 
- * @param {Element} mBackground 
- * @returns fn
- */
-function loadBackgroundFn(mBackground) {
-    "use strict";
-
-    const mVideo = document.createElement("video"),
-        mCanvas2D = document.createElement("canvas"),
-        mCanvas3D = document.createElement("canvas"),
-        // mMask = document.createElement("div"),
-        n = {
-            hide: false,
-            dx: 0,
-            dy: 0,
-            dw: mCanvas2D.width = mCanvas3D.width = mBackground.clientWidth,
-            dh: mCanvas2D.height = mCanvas3D.height = mBackground.clientHeight
-        };
-
-    const initVideo = function () {
-        mVideo.muted = true, mVideo.loop = true;
-        mVideo.src = "#";
-        mVideo.setAttribute("poster", MainUI.a);
-        mVideo.removeAttribute("style");
+        "href": {
+            e: _link_manager.querySelector("input#link-manager-url"),
+            set(string) {
+                this.e.value = toString(string);
+            },
+            get() {
+                return this.e.value.trim()
+            }
+        },
+        "icon": {
+            e: _link_manager.querySelector("input#link-manager-image-url"),
+            set(string) {
+                this.e.value = toString(string);
+            },
+            get() {
+                return this.e.value.trim()
+            }
+        },
+        "local_icon": {
+            e: _link_manager.querySelector("input#link-manager-image-local"),
+            set(string) {
+                this.e.value = toString(string);
+            },
+            get() {
+                return this.e.value.trim()
+            }
+        },
+        "always": {
+            e: _link_manager.querySelector("input#link-manager-image-always"),
+            set(string) {
+                if (this.e.checked = Boolean(string)) {
+                    _preview_background.style.setProperty("background-image", `url(${_link_manager_input.icon.e.value}))`);
+                } else {
+                    _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value})`);
+                }
+            },
+            get() {
+                return this.e.checked
+            }
+        },
+        "background_color": {
+            e: _link_manager.querySelector("input#link-manager-background"),
+            set(string) {
+                const value = _link_manager_input.background_color.e.value = toString(string, "transparent");
+                _preview_background.style.setProperty("background-color", value);
+            },
+            get() {
+                return this.e.value.trim() || "transparent";
+            }
+        },
+        "selector": {
+            e: _link_manager.querySelector("#link-manager-background-selector"),
+            set(string) {
+                this.e.value = toString(string);
+            },
+            get() {
+                return this.e.value.trim()
+            }
+        }
     };
 
-    mVideo.className = "view wallpaper dynamic";
-    initVideo();
-
-    mCanvas2D.className = "view wallpaper hide";
-    mCanvas3D.className = "view wallpaper hide";
-
-    // mMask.className = "view wallpaper mask";
-
-    mBackground.appendChild(mVideo);
-    mBackground.appendChild(mCanvas2D);
-    mBackground.appendChild(mCanvas3D);
-    // mBackground.appendChild(mMask);
-
-    const ctx = mCanvas2D.getContext("2d", { alpha: true });
-    const webgl = mCanvas3D.getContext("webgl", { alpha: true });
-
-    // 设置隐藏属性和改变可见属性的事件的名称
-    let hidden, visibilitychange;
-    if (typeof document.hidden !== "undefined") {
-        hidden = "hidden";
-        visibilitychange = "visibilitychange";
-    } else if (typeof document.msHidden !== "undefined") {
-        hidden = "msHidden";
-        visibilitychange = "msvisibilitychange";
-    } else if (typeof document.webkitHidden !== "undefined") {
-        hidden = "webkitHidden";
-        visibilitychange = "webkitvisibilitychange";
-    }
-
-    let isVideo = false;
-
-    document.addEventListener(visibilitychange, function () {
-        n.hide = document[hidden];
-        if (isVideo) {
-            n.hide ? mVideo.pause() : mVideo.play();
-        }
-    });
-
-    window.addEventListener("resize", function () {
-        const w = mBackground.clientWidth, h = mBackground.clientHeight;
-        n.dy = n.dx = 0;
-        mCanvas2D.width = n.dw = w;
-        mCanvas2D.height = n.dh = h;
-        mCanvas3D.width = w, mCanvas3D.height = h;
-    });
-
-    function loadImageBackground(path) {
-        MainUI.loadImage(path).then(function () {
-            initVideo();
-            mBackground.setAttribute("style", `background-image:url(${path});`);
-            mBackground?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000, iterations: 1 });
-        });
-    }
-
-    return function loadBackground(path, type) {
-        // 初始化背景状态
-        // ctx.clearRect(0, 0, n.dw, n.dh);
-
-        // 获取背景类型
-        new Promise((resolve, reject) => {
-            if (type) {
-                resolve(type);
-            } else {
-                const xhr = new XMLHttpRequest;
-                xhr.onerror = reject;
-                xhr.onreadystatechange = function () {
-                    if (this.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-                        xhr.abort();
-                        resolve("" + (xhr.getResponseHeader("Content-Type") || "color"));
-                    }
-                };
-                xhr.open("GET", path);
-                xhr.responseType = "blob";
-                xhr.send()
-            }
-        }).then(function (type) {
-            mVideo.pause();
-            isVideo = false;
-            if (type.startsWith("animation")) {
-                fetch(path).then(b => b.text()).then(function (script) {
-                    const fn = eval(script);
-                    if ("function" == typeof fn && fn(ctx, webgl, n));
-                }).catch(function () {
-                    console.error("error: " + path);
-                });
-            } else if (type.startsWith("video")) {
-                initVideo();
-                mVideo.type = type, mVideo.src = path;
-                mVideo.play();
-                isVideo = true;
-            } else if (type.startsWith("image")) {
-                return loadImageBackground(path);
-            } else if (type.startsWith("file")) {
-                storage.getItem("puset-local-wallpaper").then(function (file) {
-                    if (file) {
-                        loadBackground(URLObject.createObjectURL(file), file.type);
-                    }
-                });
-            } else if (type.startsWith("bing")) {
-                let localFile = null;
-                storage.getItem("puset-local-wallpaper-bing").then(function (file) {
-                    if ((localFile = file) && MainUI.isToday(localFile.lastModifiedDate)) {
-                        loadBackground(URLObject.createObjectURL(localFile), localFile.type);
-                    } else throw "overdue";
-                }).catch(function () {
-                    fetch("/api/bing/HPImageArchive.aspx?format=js&idx=0&n=1").then(a => a.json()).then(function (json) {
-                        const base = new URL("/api/bing/", window.location.href).href;
-                        const url = new URL(json?.images?.[0]?.url, window.location.href);
-
-                        return MainUI.loadImage(new URL(url.href.substring(1 + url.origin.length), base).href, true);
-                    }).then(function (img) {
-                        const canvas = document.createElement("canvas");
-                        const w = canvas.width = img.naturalWidth;
-                        const h = canvas.height = img.naturalHeight;
-                        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                        canvas.toBlob(function (blob) {
-                            localFile = new File([blob], "wallpaper", { type: blob.type });
-                            storage.setItem("puset-local-wallpaper-bing", localFile);
-                            loadBackground(URLObject.createObjectURL(localFile), localFile.type);
-                        });
-                    }).catch(function () {
-                        console.warn("无法获取最新 bing 壁纸");
-                        if (localFile) {
-                            loadBackground(URLObject.createObjectURL(localFile), localFile.type);
-                        }
-                    });
-                });
-            } else if (type.startsWith("random")) {
-                loadImageBackground(PuSetting.background.random[path]);
-            } else {
-                initVideo();
-                mBackground.setAttribute("style", "background:" + path);
-            }
-        });
-    }
-};
-
-let MainUI = {
-
-    // 透明图片
-    a: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-
-    // 黑色图片
-    b: "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=",
-
-    // 白色图片
-    w: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P4DwQACfsD/Z8fLAAAAAAASUVORK5CYII=",
-
-    isFirst: true,
-
-    GS: null,
-
-    /**
-     * 
-     * @param {Date} date 
-     * @returns 
-     */
-    isToday: function (date) {
-        return (new Date()).toDateString() === date.toDateString();
-    },
-
-    loadImage: function (src, origin) {
-        return new Promise((resolve, reject) => {
-            let img = new Image;
-            if (origin) {
-                img.crossOrigin = 'anonymous';
-            }
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(img);
-            if ("string" === typeof src) {
-                img.src = src;
-            } else if (src.type) {
-                img.src = URLObject.createObjectURL(src);
-            } else {
-                reject(img);
-            }
-        });
-    },
-
-    jsonp: function jsonp(src, complete) {
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.addEventListener("loadend", ev => script.remove());
-
-        // Use native DOM manipulation to avoid our domManip AJAX trickery
-        document.head.appendChild(script);
-        script.src = src;
-    },
-
-    onchange: function (psid, type, value) {
-        switch (psid) {
-            case "boolean_show_weather":
-            case "boolean_auto_ip":
-            case "string_local_city": {
-                storage.removeItem("puset-local-weather-current").then(x => {
-                    this.updataWeather();
-                });
-                break;
-            }
-            case "boolean_main_show_add_button": {
-                this.showAddLinkButton(MainUI.GS.boolean_main_show_add_button);
-                break;
-            }
-            case "boolean_main_show_links": {
-                this.showLinks(MainUI.GS.boolean_main_show_links);
-                break;
-            }
-            case "map_search_engine":
-            case "map_search_engine_show": {
-                Object.assign(MainUI.vm_search_engine.data, MainUI.GS.map_search_engine_show);
-                break;
-            }
-            case "boolean_random_wallpaper": {
-                if (value) {
-                    if (MainUI.GS.boolean_bing_wallpaper) {
-                        MainUI.GS.string_background_type = 'bing';
-                    } else {
-                        MainUI.GS.string_background_type = 'random';
-                        MainUI.GS.string_background_src = 'portrait';
-                    }
-                } else {
-                    MainUI.GS.string_background_type = 'file';
-                }
-                MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-                break;
-            }
-            case "boolean_bing_wallpaper": {
-                if (value) {
-                    MainUI.GS.string_background_type = 'bing';
-                } else {
-                    MainUI.GS.string_background_type = 'random';
-                    MainUI.GS.string_background_src = 'portrait';
-                }
-                MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-                break;
-            }
-            case "boolean_file_wallpaper": {
-                if (type == "checkbox") {
-
-                    if (value) {
-                        MainUI.GS.string_background_type = 'file';
-                        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-                    } else {
-                        MainUI.GS.string_background_type = 'color';
-                    }
-
-                } else {
-                    const file = MainUI.GS.boolean_file_wallpaper;
-                    MainUI.GS.boolean_file_wallpaper = true;
-                    storage.setItem("puset-local-wallpaper", file).then(() => {
-                        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-                    });
-                }
-                break;
-            }
-            case "string_background_src": {
-                MainUI.GS.string_background_type = 'color';
-                MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-                break;
-            }
-            case "boolean_show_icp": {
-                if (value) {
-                    document.getElementById("about").classList.remove("hide")
-                } else {
-                    document.getElementById("about").classList.add("hide")
-                }
-                break;
-            }
-            case "map_color_set": {
-                if (type === "radio") {
-                    MainUI.GS.string_theme = value;
-                    document.body.setAttribute("theme", value);
-                }
-                break
-            }
-            default: {
-                console.log(psid)
-                console.dir(arguments)
-            }
-        }
-    },
-
-    showAddLinkButton: function (bool) {
-        PuSet.View.show(this.add_link_button, bool);
-    },
-
-    updataWeather: function () {
-        const vm_weather = this.vm_weather;
-        if (MainUI.GS.boolean_show_weather) {
-            PuSet.View.show(vm_weather.target, true);
-            const today = new Date;
-            ParseWeather.getWeatherInfo(MainUI.GS.boolean_auto_ip ? ParseWeather.AUTO : MainUI.GS.string_local_city, today, function (info) {
-                if (!(info instanceof ParseWeather)) {
-                    vm_weather.data.city = "无法获取天气";
-                    return;
-                }
-                const hours = today.getHours();
-                const isNight = (hours < 7 || hours > 18);
-                vm_weather.data.location = MainUI.GS.boolean_auto_ip;
-                vm_weather.data.city = info.name;
-                vm_weather.data.temperature = {
-                    temperature: ParseWeather.ifDefault(info.temperature, (info.low + "&#126;" + info.high), info.temperature),
-                    title: info.title || "",
-                    color: info.severity
-                };
-                vm_weather.data.text = isNight ? info.nightText : info.dayText;
-                vm_weather.data.windScale = ParseWeather.ifDefault(info.windScale, (isNight ? info.nightWindScale : info.dayWindScale), info.windScale);
-            });
-        } else {
-            PuSet.View.show(vm_weather.target, false);
-        }
-    }
-};
-
-// UI 交互区
-// 准备完毕，加载组件，绑定事件监听
-storage.then(() => getLocalConfig("puset-local-configure", null, function (settings) {
-    null == (MainUI.GS = settings) && window.location.replace("/main/reset.html?" + Date.now());
-    
-    document.body.setAttribute("theme", settings.string_theme);
-
-    // console.info('%cconsole.info', 'color: green;');
-
-    const mSearch = document.getElementById("search");
-    const mWord = document.getElementById("word");
-    const mBackground = document.getElementById("background");
-    const mLinks = document.getElementById("links");
-
-    MainUI.dateString = ParseWeather.getDateString(MainUI.today);
-
-    // 快速链接
-    MainUI.showLinks = function (bool) {
-        if (bool) {
-            mSearch.classList.remove("only");
-            mLinks.classList.remove("hide")
-        } else {
-            mSearch.classList.add("only");
-            mLinks.classList.add("hide")
-        }
-    }
-    MainUI.showLinks(settings.boolean_main_show_links);
-
-    // 添加按钮
-    MainUI.add_link_button = document.getElementById("add-link-button");
-    MainUI.showAddLinkButton(settings.boolean_main_show_add_button);
-
-    MainUI.vm_scroll = PuSet.View({
-        target: document.getElementById("scroll"),
-        selector: "a.link-button",
-        insert: "#add-link-button",
-        data: settings.map_all_links,
-        onresize: function (target, value, key) {
-            // 火狐浏览器不会自动撑大grid布局
-            if ("length" === key) {
-                target.style.width = `${(+value + 1) * 80}px`;
-            }
-        },
-        layout: function (target, value, key) {
-            target.dataset.key = key;
-            target.href = value.href;
-            const background = target.querySelector("span.bg");
-            background.style["background-image"] = `url(${value.local_icon || value.icon || (new URLObject("/favicon.ico", value.href)).href})`;
-            if (value.transparent) {
-                background.classList.add("transparent");
-            } else {
-                background.classList.remove("transparent");
-            }
-            target.querySelector("span.title").innerHTML = value.title;
-        }
-    });
-
     // 搜索建议提示列表
-    const mList = document.getElementById("list");
-    const vm_list = PuSet.View({
-        target: mList,
+    const vm_list = Interpreter({
+        target: _search_list,
         data: [],
-        selector: "li",
-        layout: function (target, value, key) {
+        template: "<li></li>",
+        layout: function (target, value) {
             target.dataset.text = value;
-            target.querySelector("span").innerHTML = value;
+            target.textContent = value;
         }
     });
 
     window.op = Object.assign(function op(obj) {
-        mList.classList.remove("hide");
-        Object.assign(vm_list.data, obj.s);
-    }, { t: 0 });
-
-    // 搜索框文本发生变化事件
-    mWord.addEventListener("input", function () {
-        clearTimeout(window.op.t);
-
-        const value = mWord.value.trim();
-        if (value) {
-            window.op.t = setTimeout(function () {
-                if (value.startsWith("--set")) {
-                    window.op(PuSetting);
-                } else {
-                    MainUI.jsonp("https://suggestion.baidu.com/su?cb=op&wd=" + encodeURIComponent(value));
-                }
-            }, 500);
-        } else {
-            mList.classList.add("hide");
-        }
-    });
-
-    mWord.addEventListener("focus", function () {
-        mSearch.classList.add("focus");
-        mBackground.classList.add("scale");
-    });
-
-    mWord.addEventListener("blur", function () {
-        mSearch.classList.remove("focus");
-        mBackground.classList.remove("scale");
-    });
-
-    // 搜索列表点击事件，取消鼠标按下事件冒泡
-    mList.addEventListener("mousedown", ev => ev.preventDefault());
-    mList.addEventListener("click", function (ev) {
-        ev.preventDefault();
-        let text, parent = ev.target.parentElement;
-        if (parent && (text = parent.dataset.text)) {
-            mWord.value = text;
-            if (ev.target === parent.firstElementChild) {
-                mSearch.submit();
+        vm_list.data.length = obj.s.length;
+        vm_list.update(obj.s);
+        _search_list.classList.remove("hide");
+    }, {
+        t: 0,
+        s: [],
+        update(text) {
+            if (!MainUI.GS.boolean_search_history) {
+                this.s.length = 0;
+                return this.s;
             }
+            const index = this.s.indexOf(text);
+            if (index === 0) return this.s;
+            if (index > 0) this.s.splice(index, 1);
+            this.s.unshift(text);
+            if (this.s.length > 10) this.s.length = 10;
+            return this.s;
         }
     });
 
-    // 搜索框内搜索引擎按钮
-    MainUI.vm_search_engine = PuSet.View({
-        target: document.getElementById("search-input"),
-        selector: "span.bg.s_btn_wr",
-        data: settings.map_search_engine_show,
-        layout: function (target, value, key) {
-            const button = target.querySelector("button");
-            const list = settings.map_search_engine[value];
-            button.id = "engine_" + value;
-            button.title = list.title;
-
-            const src = list.local_icon || list.icon || "/mediae/svg/search.svg";
-
-            if (src.startsWith("data:")) {
-                target.querySelector("button").innerHTML = '<img src="' + src + '">';
-            } else fetch(src).then(a => a.text()).then(function (data) {
-                target.querySelector("button").innerHTML = data;
-            });
-
-            if (key == 0) {
-                const array = list.href.split(/\?|\=|\&/);
-                mSearch.action = array[0];
-                mWord.name = array[array.length - 2];
-            }
-        }
-    });
+    // 异步读取搜索历史
+    storage.getItem("puset-search-history").then(value => Array.isArray(value) && Object.assign(window.op.s, value));
 
     // 发起搜索事件
-    mSearch.addEventListener("submit", function (ev) {
+    addUniversalEventListener(_search, "submit", function (ev) {
         ev.preventDefault();
-        const value = mWord.value.trim();
+        const value = _word.value.trim();
         if (value.startsWith("--set")) {
-            PuSetting(value);
-            mWord.value = "";
-            mWord.blur();
+            _word.value = "";
+            _word.blur();
+            MainUI(value);
         } else if (ev.submitter) {
             const [type, engine] = ev.submitter.id.split("_");
-            if ("engine" == type) {
-                window.location.href = (settings.map_search_engine[engine].href + encodeURIComponent(value));
+            if ("engine" === type) {
+                storage.setItem("puset-search-history", window.op.update(value)).then(function () {
+                    const url = (MainUI.GS.map_search_engine[engine].href + encodeURIComponent(value));
+                    window.location.href = url;
+                });
             }
         }
     });
 
-    MainUI.onchange('boolean_show_icp', null, settings.boolean_show_icp);
-
-    // 天气
-    MainUI.vm_weather = PuSet.View({
-        target: document.getElementById("weather"),
-        hidden: true,
-        layout: function (target, value, key) {
-            let item = target.querySelector("." + key);
-            switch (key) {
-                case "location": {
-                    PuSet.View.show(item, value);
-                    break;
-                }
-                case "temperature": {
-                    const tips = target.querySelector('.tips');
-                    tips.innerHTML = value.title;
-                    tips.style.color = value.color;
-
-                    item.innerHTML = value.temperature + "&#8451;";
-                    break;
-                }
-                default: {
-                    if (item) {
-                        PuSet.View.show(item, ParseWeather.ifDefault(value, false, true));
-                        item.innerHTML = value;
+    // 搜索框相关事件
+    addUniversalEventListener(_word, {
+        focus() {
+            if (_word.value) {
+                // _quickdelete.classList.remove("hide");
+            } else {
+                // 如果搜索框没有内容，显示搜索历史
+                window.op(window.op);
+            }
+            _search_list.classList.remove("hide");
+            document.body.classList.add("focus");
+            // MainUI.layer_background.classList.add("focus");
+        },
+        blur() {
+            _quickdelete.classList.add("hide");
+            _search_list.classList.add("hide");
+            document.body.classList.remove("focus");
+            // MainUI.layer_background.classList.remove("focus");
+        },
+        input() {
+            clearTimeout(window.op.t);
+            const value = _word.value.trim();
+            if (value) {
+                // _quickdelete.classList.remove("hide");
+                window.op.t = setTimeout(function () {
+                    if (value.startsWith(MainUI.q)) {
+                        window.op(MainUI);
+                    } else {
+                        MainUI.jsonp("https://suggestion.baidu.com/su?cb=op&wd=" + encodeURIComponent(value));
                     }
+                }, 500);
+            } else {
+                // 如果搜索框没有内容，显示搜索历史
+                window.op(window.op);
+            }
+        }
+    }, false);
+
+    // 搜索列表的点击事件
+    addUniversalEventListener(_search_list, {
+        "contextmenu": function (ev) {
+            return ev.preventDefault(), false;
+        },
+        "pointerdown": function pointerdown(ev) {
+            ev.preventDefault();
+            let text, li = ev.target;
+            if (li && (text = li.dataset.text)) {
+                _word.value = text;
+                // 如果是 --set 开头的命令行，不直接搜索
+                if (_word.value.startsWith(MainUI.q)) return;
+
+                // 如果是鼠标左键按下，直接搜索
+                if (ev.button === 0 || ev.buttons === 1) {
+                    // 不会触发事件监听，不好
+                    // _search.submit();
+
+                    // 采用模拟点击
+                    _first_submit.click();
                 }
             }
         }
     });
-    MainUI.updataWeather();
 
-    // 背景图片或视频
-    MainUI.loadBackground = loadBackgroundFn(mBackground);
-    MainUI.loadBackground(settings.string_background_src, settings.string_background_type);
-    // MainUI.loadBackground( "animation/point.js", "animation");
+    _link_manager.querySelector(".close").addEventListener("click", function () {
+        _link_manager.classList.add("hide");
+    }, false);
 
-}));
+    const needSaveKeys = ["title", "href", "icon", "local_icon", "always", "background_color"];
+    _link_manager.querySelector(".save").addEventListener("click", function () {
+
+        const result = needSaveKeys.reduce(function (acc, key) {
+            acc[key] = _link_manager_input[key].get();
+            return acc;
+        }, {});
+
+        if (!result.href) {
+            return alert("网址不能为空！")
+        }
+
+        const id = Number(_link_manager.dataset.id);
+        if (id < 0) {
+            MainUI.vm_links.data.push(result);
+        } else {
+            MainUI.vm_links.data.splice(id, 1, result);
+        }
+
+        saveLocalConfigure();
+        _link_manager.classList.add("hide");
+    });
+
+    addUniversalEventListener([
+        [_link_manager_input.title.e, "input", function () {
+            _preview_title.textContent = _link_manager_input.title.e.value;
+        }],
+        [_link_manager_input.icon.e, "change", function () {
+            // TODO
+        }],
+        [_preview_background, "click", function () {
+            ImageSelector(function (blob) {
+                MainUI.loadImage(URL.createObjectURL(blob))
+                    .then(image => MainUI.compressImage(image, 128, 128))
+                    .then(function (dataURL) {
+                        _link_manager_input.icon.e.value = "";
+                        _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value = dataURL})`);
+                    });
+            });
+        }],
+        [_link_manager_input.selector.e, "change", function () {
+            _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value = _link_manager_input.selector.e.value);
+        }],
+        [_link_manager_input.background_color.e, "change", function () {
+            _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value);
+        }]
+    ]);
+
+    MainUI.openLinkManager = function openLinkManager(index = "-1") {
+        if ((_link_manager.dataset.id = index) >= 0) {
+            if (index >= MainUI.vm_links.data.length) {
+                return console.warn("IndexOutOfBoundsException");
+            }
+            const obj = MainUI.vm_links.data[index];
+            for (let key in obj) _link_manager_input[key]?.set(obj[key]);
+        }
+        _link_manager.classList.remove("hide");
+    };
+
+    MainUI.setUiTheme = (function () {
+        const list = window.matchMedia("(prefers-color-scheme: dark)");
+        function themeListener() {
+            const hours = new Date().getHours();
+            document.body.setAttribute("theme",  (list.matches || hours < 6 || hours > 20) ? "dark":  "default");
+        }
+        return function setUiTheme(theme) {
+            // 先移除现有的监听器，避免重复添加
+            list.removeEventListener("change", themeListener);
+
+            if ("os" === theme) {
+                // 仅在需要时添加监听器
+                themeListener();
+                list.addEventListener("change", themeListener);
+            } else {
+                document.body.setAttribute("theme", theme);
+            }
+        };
+    }());
+
+    function createMainUi(settings) {
+        if ((MainUI.GS = settings) === null) {
+            return window.location.replace("/main/reset.html?" + Date.now());
+        } else {
+            MainUI.setUiTheme(settings.string_theme);
+            document.body.classList.remove('hide');
+        }
+
+        const _add_link_button = _main.querySelector("#links>#scroll>a#add-link-button");
+        MainUI.showAddLinkButton = bool => Interpreter.show(_add_link_button, bool);
+        MainUI.showAddLinkButton(settings.boolean_main_show_add_button);
+
+        MainUI.showLink = function(bool) {
+            Interpreter.show(MainUI.vm_links.target, bool);
+        };
+
+        // 搜索框内搜索引擎按钮
+        MainUI.vm_search_engine = Interpreter({
+            target: document.getElementById("search-input"),
+            selector: "span.bg.button",
+            data: settings.map_search_engine_show,
+            layout: function (target, value, key) {
+                const button = target.querySelector("button");
+                const list = settings.map_search_engine[value];
+                button.id = "engine_" + value;
+                button.title = list.title;
+
+                const src = list.local_icon || list.icon || "/mediae/svg/search.svg";
+
+                if (src.startsWith("data:")) {
+                    target.querySelector("button").innerHTML = '<img src="' + src + '">';
+                } else fetch(src).then(a => a.text()).then(function (data) {
+                    target.querySelector("button").innerHTML = data;
+                });
+
+                if (key == 0) {
+                    const array = list.href.split(/\?|\=|\&/);
+                    _search.action = array[0];
+                    _word.name = array[array.length - 2];
+                }
+            }
+        });
+
+        MainUI.vm_links = Interpreter({
+            target: _main.querySelector('#links>#scroll'),
+            selector: '#links>#scroll>a.link-button',
+            insert: _add_link_button,
+            data: settings.map_all_links,
+            onresize(target, value, key) {
+                // 火狐浏览器不会自动撑大grid布局
+                if ("length" === key) {
+                    target.style.width = `${(+value + 1) * 80}px`;
+                }
+            },
+            layout(target, value, key) {
+                target.dataset.key = key;
+                target.href = value.href;
+                const background = target.querySelector("span.bg");
+                background.style.setProperty("background-color", value.background_color ?? "transparent");
+                background.style.setProperty("background-image", `url(${value.local_icon || value.icon || (new URL("/favicon.ico", value.href)).href})`);
+                target.querySelector("span.title").innerHTML = value.title;
+            }
+        });
+
+        // 设置背景
+        Interpreter.get('background').init(true, function (root, options) {
+            root.classList.add('view', 'unselect');
+            document.body.insertBefore(root, _main);
+            options.exec(root, settings, options);
+        });
+    }
+    storage.getItem("puset-local-configure")
+        .then(result => JSON.parse(result ? LZString.decompress(result) : "null") ?? null)
+        .then(createMainUi)
+        .then(() => queueMicrotask(console.log.bind(
+            console,
+            "%c PuSet %c v2.0.0 %c Yay, you're finally here! ",
+            "padding: 2px 6px; border-radius: 3px 0 0 3px; color: #fff; background:rgb(64, 62, 213); font-weight: bold;",
+            "padding: 2px 6px; border-radius: 0 0 0 0; color: #fff; background:rgb(96, 118, 183); font-weight: bold;",
+            "padding: 2px 6px; border-radius: 0 3px 3px 0; color: rgb(64, 62, 213); background:rgb(171, 181, 210); font-weight: bold;"
+        )));
+});

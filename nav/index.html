@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航页面</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="header">
+        <input type="text" id="searchInput" placeholder="搜索导航...">
+        <select id="sortSelect" class="sort-select">
+            <option value="default">默认排序</option>
+            <option value="hot">按热度</option>
+            <option value="title">按名称</option>
+        </select>
+    </div>
+
+    <div class="nav-container">
+        <div class="nav-grid" id="navGrid"></div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+
+</html>

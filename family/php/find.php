@@ -106,6 +106,16 @@ if ("{$_POST['key']}" == "id") {
 			// 遍历查询结果并填充到数组中
 			while ($row = mysqli_fetch_array($query, MYSQLI_ASSOC)) {
 				array_push($result, $row);
+
+				if (is_numeric($row['father'])) {
+					$sql = "SELECT * FROM `family` WHERE `id` = '{$row['father']}'";
+					array_push($relevant, getArrayById($sql));
+				}
+	
+				if (is_numeric($row['mother'])) {
+					$sql = "SELECT * FROM `family` WHERE `id` = '{$row['mother']}'";
+					array_push($relevant, getArrayById($sql));
+				}
 			}
 		}
 	}
