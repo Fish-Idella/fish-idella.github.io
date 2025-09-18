@@ -204,7 +204,7 @@ const PuSetPlayer = (function () {
                 loader.setSrc(src).then(() => loader.video.play()).then(function () {
                     // 设置目标时间点
                     loader.video.currentTime = max * x / width;
-                    loader.video.onplaying = function () {
+                    loader.video.onplaying = function onplaying() {
                         // 绘制帧并生成预览图
                         loader.canvas.getContext("2d").drawImage(loader.video, 0, 0);
                         loader.canvas.toBlob(function toBlob(blob) {
@@ -610,10 +610,7 @@ const PuSetPlayer = (function () {
 
     fetch("/api/directory_content_fetcher.php", {
         method: "POST",
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `path=${encodeURIComponent("Videos")}`
+        body: new URLSearchParams({path: `Videos`})
     }).then(a => a.json()).then(json => {
         if (!json.success) return resources;
         return resources = json.data.sort((a, b) => {

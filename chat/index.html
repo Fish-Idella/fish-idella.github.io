@@ -1,67 +1,124 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RWKV</title>
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/style.css">
+    <title>仿微信手机端聊天界面的大语言模型聊天窗口</title>
+    <link rel="stylesheet" href="index.css"></link>
+    <link rel="stylesheet" href="/mediae/fonts/font-awesome/v6.1.1/css/all.min.css">
+    <style>
+    </style>
 </head>
 
-<body>
-    <div class="view chat-layer">
-        <div class="chat-box flex-vertical">
-            <div class="top flex-horizontal">
-                <div>
-                    <button type="button">菜单</button>
-                </div>
-                <div><span>Un</span><button type="button">编辑</button></div>
-            </div>
-            <div class="fill chat-box-content flex-vertical">
-                <div class="fill">
-                    <div class="view scroll">
-                        <div class="chat-list">
-                            <div class="flex-vertical">
-                                <div class="text"></div>
-                                <div class="buttons">
-                                    <button type="button" class="resend">重说</button>
-                                    <button type="button" class="change">修改</button>
-                                    <button type="button" class="reset">回溯</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex-horizontal chat-input-box">
-                    <div><button type="button">重置</button></div>
-                    <textarea id="text" class="fill"></textarea>
-                    <div><button type="button" class="send">发送</button></div>
-                </div>
-            </div>
-        </div>
-        <div class="menu-box">
-            <div class="menu-box-content flex-vertical">
-                <h1 class="unify">对话列表</h1>
-                <ul class="unify fill"></ul>
-                <h1 class="unify">菜单</h1>
-                <ul class="unify menu-list"></ul>
-            </div>
-            <dialog>
-                <div>
-                    <div class="fill">
-                        <input type="url" name="host" id="host" value="http://localhost:11434/">
-                    </div>
+<body class="view flex-vertical">
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay"></div>
 
+    <!-- 主聊天界面 -->
+    <div class="view flex-vertical" id="mainChat">
+        <header class="flex-horizontal">
+            <button class="unify unselect" id="memberListBtn">
+                <i class="fas fa-users"></i>
+            </button>
+            <select class="unify unselect">
+                <option value="huihui_ai/qwen3-abliterated:8b">huihui_ai/qwen3-abliterated:8b</option>
+                <option value="qwen3:8b">qwen3:8b</option>
+                <option value="deepseek-r1:latest">deepseek-r1:latest</option>
+            </select>
+            <button class="unify unselect" id="settingsBtn">
+                <i class="fas fa-cog"></i>
+            </button>
+        </header>
+
+        <section class="flex-vertical" id="chatContent"></section>
+
+        <footer class="flex-vertical">
+            <div class="input-tools flex-horizontal">
+                <div class="tool-button">
+                    <i class="fas fa-image"></i>
                 </div>
-            </dialog>
+                <div class="tool-button">
+                    <i class="fas fa-smile"></i>
+                </div>
+                <div class="tool-button">
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <div class="tool-button">
+                    <i class="fas fa-plus"></i>
+                </div>
+            </div>
+
+            <div class="input-area flex-horizontal">
+                <textarea class="unify" id="messageInput" placeholder="输入消息..."></textarea>
+                <button class="unify send-button" id="sendBtn" disabled>发送</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 聊天成员列表 -->
+    <div class="view member-list flex-vertical" id="memberList">
+        <div class="settings-title">聊天成员 (3)</div>
+        <div class="flex-vertical fc overflow-y-auto">
+            <div class="member-item flex-horizontal">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="member-info">
+                    <div class="member-name">张三</div>
+                    <div class="member-status">在线</div>
+                </div>
+            </div>
+            <div class="member-item flex-horizontal">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="member-info">
+                    <div class="member-name">李四</div>
+                    <div class="member-status">正在输入...</div>
+                </div>
+            </div>
+            <div class="member-item flex-horizontal">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="member-info">
+                    <div class="member-name">王五</div>
+                    <div class="member-status">10分钟前在线</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
-    <!-- <script type="text/javascript" src="/js/puset/puset.storage.js"></script> -->
-    <script type="text/javascript" src="/js/puset/puset.view.js"></script>
-    <script type="text/javascript" src="js/index.js"></script>
+    <!-- 全局设置UI -->
+    <div class="view settings-panel flex-vertical" id="settingsPanel">
+        <div class="settings-title">设置</div>
+        <div class="flex-vertical fc overflow-y-auto">
+            <div class="settings-item flex-horizontal">
+                <span>消息通知</span>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </div>
+            <div class="settings-item flex-horizontal">
+                <span>隐私设置</span>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </div>
+            <div class="settings-item flex-horizontal">
+                <span>通用设置</span>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </div>
+            <div class="settings-item flex-horizontal">
+                <span>存储空间</span>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </div>
+            <div class="settings-item flex-horizontal">
+                <span>关于</span>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
 </body>
 
 </html>
+

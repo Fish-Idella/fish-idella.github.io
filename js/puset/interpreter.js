@@ -10,16 +10,28 @@ const Interpreter = (function () {
     const LENGTH_PROPERTY = "length";            // 数组长度属性名
     const HOST_CLASS_NAME = "template-layer-host";
     const DEFAULT_TEMPLATE_INSTANCE_NAME = Symbol("defaultTemplateInstanceName"); // 默认模板实例名称
+    const DEFAULT_NAMESPACE = "default"; // 默认命名空间
 
     /**
      * 创建类型映射对象，用于类型检测
      * @example
-     * TYPES = { Boolean: "boolean", Number: "number", ... }
+     * Types = { Boolean: "boolean", Number: "number", ... }
      */
-    const TYPES = (function TypeConstructor(arr, obj) {
-        arr.forEach(value => obj[value] = value.toLowerCase());
-        return obj;
-    }("Boolean Number String Function Array Date RegExp Object Error Symbol".split(" "), {}));
+    const Types = Object.freeze("Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ").reduce((e, t) => {
+        const r = t.toLowerCase();
+        Object.defineProperty(e, t, { value: r, enumerable: !0, writable: !1 });
+        return Object.defineProperty(e, `[object ${t}]`, { value: r, enumerable: !1, writable: !1 }), e
+    }, Object.create({
+        type: function (e) {
+            if (null == e) return String(e);
+            const t = typeof e;
+            if (t === this.Object || t === this.Function) {
+                const t = this.toString.call(e);
+                return this.hasOwnProperty(t) ? this[t] : this.Object
+            }
+            return t
+        }
+    })));
 
     /**
      * 初始化隐藏元素的样式
@@ -46,7 +58,7 @@ const Interpreter = (function () {
      * @returns {boolean} - 如果是函数返回true，否则返回false
      */
     const isFunction = function isFunction(obj) {
-        return TYPES.Function === typeof obj && TYPES.Number !== typeof obj.nodeType;
+        return Types.Function === typeof obj && Types.Number !== typeof obj.nodeType;
     };
 
     /**
@@ -92,8 +104,8 @@ const Interpreter = (function () {
          * @returns {ShadowRoot} - 返回Shadow DOM根节点
          */
         init: function init(is = false, handler) {
-            const host1 = host.cloneNode();
-            const root = is ? host1 : host1.attachShadow({ mode: 'open' });
+            const clone = host.cloneNode();
+            const root = is ? clone : clone.attachShadow({ mode: 'open' });
             // 克隆缓存的元素并添加到Shadow DOM
             this.cachedElements.forEach(element => root.appendChild(element.cloneNode(true)));
             try {
@@ -111,7 +123,7 @@ const Interpreter = (function () {
      * @param {Array|Object} options - 源数组或对象
      * @returns {Array} - 合并后的数组
      */
-    const merage = function (arr, options) {
+    const merge = function (arr, options) {
         if (options && Array.isArray(arr)) {
             const values = (Array.isArray(options)) ? options : Object.values(options);
             values.forEach(value => arr.push(value));
@@ -150,10 +162,10 @@ const Interpreter = (function () {
             const vm = Object.assign(this, options);
 
             // 初始化子元素集
-            this.children = merage([], vm.selector ? vm.target.querySelectorAll(vm.selector) : vm.children);
+            this.children = merge([], vm.selector ? vm.target.querySelectorAll(vm.selector) : vm.children);
 
             // 设置插入位置
-            if (vm.insert && TYPES.String === typeof vm.insert) {
+            if (vm.insert && Types.String === typeof vm.insert) {
                 this.insert = vm.target.querySelector(vm.insert);
             }
             this.isInsert = vm.insert instanceof HTMLElement;
@@ -269,7 +281,7 @@ const Interpreter = (function () {
                 return true; // 模板是函数类型
             } else {
                 const div = document.createElement("div");
-                if (TYPES.String === typeof this.template) {
+                if (Types.String === typeof this.template) {
                     // 从HTML字符串创建模板
                     div.innerHTML = this.template;
                     this.template = div.firstChild;
@@ -328,12 +340,26 @@ const Interpreter = (function () {
 
     /**
      * 模板实例管理器
-     * 使用Map存储所有模板实例
+     * 使用双层Map存储所有模板实例，外层为命名空间，内层为该命名空间下的模板
      */
     const TEMPLATE_INSTANCES = new Map([
-        // 默认模板实例
-        [DEFAULT_TEMPLATE_INSTANCE_NAME, new View(DEFAULT_TEMPLATE_INSTANCE_NAME, document.createElement('div'))]
+        // 默认命名空间及其默认模板实例
+        [DEFAULT_NAMESPACE, new Map([
+            [DEFAULT_TEMPLATE_INSTANCE_NAME, new View(DEFAULT_TEMPLATE_INSTANCE_NAME, document.createElement('div'))]
+        ])]
     ]);
+
+    /**
+     * 获取指定命名空间的模板Map，如果不存在则创建
+     * @param {string} namespace - 命名空间
+     * @returns {Map} - 模板Map
+     */
+    const getNamespaceMap = function (namespace = DEFAULT_NAMESPACE) {
+        if (!TEMPLATE_INSTANCES.has(namespace)) {
+            TEMPLATE_INSTANCES.set(namespace, new Map());
+        }
+        return TEMPLATE_INSTANCES.get(namespace);
+    };
 
     /**
      * 主解释器类
@@ -364,26 +390,64 @@ const Interpreter = (function () {
          * @param {Node} node - 模板节点
          * @param {HTMLStyleElement} style - 模板样式
          * @param {Function} handler - 模板初始化处理函数
+         * @param {string} [namespace] - 命名空间，可选
          */
-        set(name, node, style, handler) {
-            TEMPLATE_INSTANCES.set(name, new View(name, node, style, handler));
+        set(name, node, style, handler, namespace = DEFAULT_NAMESPACE) {
+            const namespaceMap = getNamespaceMap(namespace);
+            namespaceMap.set(name, new View(name, node, style, handler));
         },
 
         /**
          * 获取模板
          * @param {string} name - 模板名称
+         * @param {string} [namespace] - 命名空间，可选
          * @returns {View} - 模板实例
          */
-        get(name) {
-            return TEMPLATE_INSTANCES.get(TEMPLATE_INSTANCES.has(name) ? name : DEFAULT_TEMPLATE_INSTANCE_NAME);
+        get(name, namespace = DEFAULT_NAMESPACE) {
+            const namespaceMap = getNamespaceMap(namespace);
+            if (namespaceMap.has(name)) {
+                return namespaceMap.get(name);
+            }
+            return TEMPLATE_INSTANCES.get(DEFAULT_NAMESPACE).get(DEFAULT_TEMPLATE_INSTANCE_NAME);
         },
 
         /**
-         * 从URL加载模板
-         * @param {string} url - 模板文件URL
-         * @returns {Promise<NodeList>} - 包含模板节点的Promise
+         * 获取所有已存在的命名空间
+         * @returns {string[]} - 命名空间数组
          */
-        async load(url) {
+        getNamespaces() {
+            return Array.from(TEMPLATE_INSTANCES.keys());
+        },
+
+        /**
+         * 删除指定命名空间
+         * @param {string} [namespace=DEFAULT_NAMESPACE] - 要删除的命名空间
+         * @returns {boolean} - 是否删除成功
+         */
+        removeNamespace(namespace = DEFAULT_NAMESPACE) {
+            // 保护默认命名空间不被删除
+            if (namespace === DEFAULT_NAMESPACE) return false;
+            return TEMPLATE_INSTANCES.delete(namespace);
+        },
+
+        /**
+         * 获取指定命名空间下的所有模板
+         * @param {string} [namespace=DEFAULT_NAMESPACE] - 命名空间
+         * @returns {string[]} - 模板数组
+         */
+        getTemplates(namespace = DEFAULT_NAMESPACE) {
+            return TEMPLATE_INSTANCES.has(namespace) ? Array.from(TEMPLATE_INSTANCES.get(namespace).keys()) : null;
+        },
+
+        /**
+         * 从URL加载模板到指定命名空间
+         * 模板文件应包含id为"puset-interpreter-template"的元素，其后的template元素将被加载
+         * @param {string} url - 模板文件URL（必须同源）
+         * @param {string} [namespace=DEFAULT_NAMESPACE] - 命名空间
+         * @returns {Promise<NodeList>} - 包含模板节点的Promise
+         * @warning 会执行模板中的脚本，建议仅加载可信来源的模板
+         */
+        async load(url, namespace = DEFAULT_NAMESPACE) {
             try {
                 // 验证URL
                 const testURL = new URL(url, window.location.href);
@@ -404,7 +468,7 @@ const Interpreter = (function () {
 
                 // 解析HTML文本
                 const doc = new DOMParser().parseFromString(text, 'text/html');
-                const nodeList = doc.querySelectorAll('#puset-interpreter-template~template');
+                const nodeList = doc.querySelectorAll('hr#puset-interpreter-template~template');
 
                 // 检查是否找到模板
                 if (nodeList.length === 0) {
@@ -420,6 +484,7 @@ const Interpreter = (function () {
                     // 分类处理模板中的子元素
                     for (const child of node.content.children) {
                         const name = child.nodeName.toLowerCase();
+                        // 单一原则，重复新覆盖旧
                         elements[name in elements ? name : "view"] = child;
                     }
 
@@ -441,11 +506,12 @@ const Interpreter = (function () {
                         } catch (err) {
                             console.error(`执行模板 ${node.id || '[未命名]'} 脚本时出错:`, err);
                             // 可以选择跳过当前模板或使用默认处理器
+                            handler = empty;
                         }
                     }
 
-                    // 注册模板
-                    Interpreter.set(node.id, view, style, handler);
+                    // 注册模板到指定命名空间
+                    Interpreter.set(node.id, view, style, handler, namespace);
                 }
 
                 return nodeList;
@@ -472,8 +538,6 @@ const Interpreter = (function () {
             return targetElement;
         }
     });
-
-    Interpreter.TEMPLATE_INSTANCES = TEMPLATE_INSTANCES;
 
     return Interpreter;
 }());

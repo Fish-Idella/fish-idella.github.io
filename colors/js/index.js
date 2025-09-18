@@ -20,7 +20,7 @@ function setSL(x, y) {
     _saturation.value = (saturation < 0) ? 0 : (saturation > 100 ? 100 : saturation);
     _lightness.value = lightness < 0 ? 0 : lightness > 100 ? 100 : lightness;
 
-    _preview.value = rgb2hex( hslToRgb(_hue.value/360, _saturation.value/100, _lightness.value/100) );
+    _preview.value = rgb2hex(hslToRgb(_hue.value / 360, _saturation.value / 100, _lightness.value / 100));
 
     _preview.nextElementSibling.style.background =
         _preview.style.background = `hsl(${_hue.value}, ${_saturation.value}%, ${_lightness.value}%)`;
@@ -40,8 +40,8 @@ function setHue(x, y) {
 
     _saturation.value = 100;
     _lightness.value = 50;
-    
-    _preview.value = rgb2hex( hslToRgb(_hue.value/360, _saturation.value/100, _lightness.value/100) );
+
+    _preview.value = rgb2hex(hslToRgb(_hue.value / 360, _saturation.value / 100, _lightness.value / 100));
 
     _preview.nextElementSibling.style.background =
         _preview.style.background = `hsl(${angle}, 100%, 50%)`;
@@ -136,7 +136,7 @@ function fillString(str, i) {
     }
 }
 
-function rgb2hex(r, g, b) { 
+function rgb2hex(r, g, b) {
     if (Array.isArray(r)) {
         g = r[1], b = r[2], r = r[0];
     }

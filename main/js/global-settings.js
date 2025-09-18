@@ -26,7 +26,7 @@ const MainUI = (function (attrs, list) {
     b: "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=",
 
     // 白色图片
-    w: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P4DwQACfsD/Z8fLAAAAAAASUVORK5CYII=",
+    w: "data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAUAAAEALAAAAAABAAEAAAICRAEAOw==",
 
     isFirst: true,
 
@@ -50,7 +50,6 @@ const MainUI = (function (attrs, list) {
             cartoon: "http://img.xjh.me/random_img.php", // HTML
             0: 'https://www.dmoe.cc/random.php',
             1: 'https://cdn.seovx.com/?mom=302',
-
         },
         // Bing 官方每日一图
         bing: "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1" // JSON
@@ -144,13 +143,19 @@ const MainUI = (function (attrs, list) {
     boolean_random_wallpaper(type, value) {
         MainUI.GS.boolean_random_wallpaper = value;
         if (MainUI.GS.boolean_random_wallpaper) {
-            MainUI.GS.string_background_type = "image";
-            MainUI.GS.string_background_src = '/mediae/random_wallpaper.php';
+            MainUI.GS.string_background_type = MainUI.GS.boolean_bing_wallpaper ? "bing" : "image";
+            MainUI.GS.string_background_src = '/api/random_wallpaper_provider.php';
         } else {
             MainUI.GS.string_background_type = "file";
         }
         MainUI.resetBackground();
+    },
 
+    boolean_bing_wallpaper(type, value) {
+        MainUI.GS.boolean_random_wallpaper = true;
+        MainUI.GS.boolean_bing_wallpaper = value;
+        MainUI.GS.string_background_type = value ? "bing" : "image";
+        MainUI.resetBackground();
     },
 
     boolean_image_wallpaper(type, value) {
@@ -186,19 +191,12 @@ const MainUI = (function (attrs, list) {
     },
     "export_configuration": function (type, value) {
         if (type === "button") {
-            const save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
-            const date = new Date;
-            save_link.download = `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`;
-
-            storage.getItem("puset-local-configure").then(function (request) {
-                save_link.href = URL.createObjectURL(new Blob([LZString.decompress(request)], { type: "text/plain" }));
-                save_link.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
-            });
+            MainUI.SETTINGS.export_configuration.fn();
         }
     },
 
     onchange(psid, type, value) {
-        if ((this[psid] ||  (() => console.log("未定义的配置项：", psid, type, value)))(type, value) === false) {
+        if ((this[psid] || (() => console.log("未定义的配置项：", psid, type, value)))(type, value) === false) {
             return;
         }
         saveLocalConfigure();
@@ -296,9 +294,8 @@ const MainUI = (function (attrs, list) {
 
     "import_configuration": {
         fn: function (url) {
-
             fetch(url).then(a => a.json()).then(json => {
-                return storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(json)));
+                return storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(json))));
             }).then(() => {
                 window.location.reload(true);
             }).catch(function () {
@@ -313,7 +310,7 @@ const MainUI = (function (attrs, list) {
                 const date = new Date;
                 const save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
                 save_link.download = `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`;
-                save_link.href = URL.createObjectURL(new Blob([LZString.decompress(request)], { type: "text/plain" }));
+                save_link.href = URL.createObjectURL(new Blob([decodeURIComponent(atob(request))], { type: "text/plain" }));
                 save_link.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
             });
         }

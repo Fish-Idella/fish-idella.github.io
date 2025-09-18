@@ -20,7 +20,6 @@ const delegation = (function (getComposedPath) {
     return function delegation(selector, handler) {
         // 返回实际的事件监听器
         return function listener(event) {
-            console.log(event)
             // 获取事件传播路径
             const path = getComposedPath(this, event);
             // 从路径中筛选出匹配选择器的元素
@@ -38,6 +37,13 @@ const delegation = (function (getComposedPath) {
 }));
 
 storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).then(function (json) {
+
+    Interpreter.load("data/t-main.html").then(function (html) {
+        Interpreter.get("link-manager").init(true, function (root, options) {
+            document.body.appendChild(root);
+            options.exec(root, MainUI, options);
+        });
+    });
 
     const _settings = document.getElementById("settings");
     const _left_ul = _settings.querySelector(".menu-list");
@@ -101,6 +107,26 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
         saveLocalConfigure()
     }), false);
 
+    addUniversalEventListener(document.getElementById("add-link-button"), {
+        "click": function (event) {
+            event.preventDefault();
+            MainUI.openLinkManager('-1');
+        },
+        "dragenter dragover dragleave": function (event) {
+            event.preventDefault();
+        },
+        "drop": function (event) {
+            // 阻止默认行为
+            event.preventDefault();
+            // 阻止事件冒泡
+            event.stopPropagation();
+
+            // 获取拖拽源元素的key值
+            let key = Number(event.dataTransfer.getData('text/plain'));
+            MainUI.openLinkManager(key);
+        }
+    });
+
     const getPsId = (function () {
         // 使用箭头函数简化实现
         const modernImplementation = (target) => {
@@ -121,9 +147,22 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
         return typeof Element.prototype.closest === 'function' ? modernImplementation : legacyImplementation;
     }());
 
-    function allSame(obj, array, bool) {
+    /**
+     * 检查对象中指定键的值是否全部等于给定布尔值
+     * 
+     * 当满足以下任一条件时返回 true：
+     * 1. keys 参数不是数组（无效参数）
+     * 2. keys 数组为空
+     * 3. obj 中所有指定键的值均等于 bool
+     *
+     * @param {Object} obj - 要检查的目标对象
+     * @param {Array<string>} [keys] - 需要检查的键名数组（可选）
+     * @param {boolean} bool - 要匹配的目标布尔值
+     * @returns {boolean} 检查结果
+     */
+    function allSame(obj, keys, bool) {
         // 无效参数默认为true
-        return Array.isArray(array) ? array.every(item => bool === obj[item]) : true;
+        return Array.isArray(keys) ? keys.every(key => bool === obj[key]) : true;
     }
 
     function onMenuListOptionsChange(psid) {
@@ -146,7 +185,9 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
 
     function putItem(node, obj) {
         const add = key => {
-            if (!map.has(key)) { map.set(key, new Set); }
+            if (!map.has(key)) {
+                map.set(key, new Set);
+            }
             map.get(key).add([node, obj]);
         };
 
@@ -155,7 +196,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     }
 
 
-    Interpreter.populateContent = function populateContent(target, settings, options) {
+    const populateContent = function populateContent(target, settings, options) {
         try {
             // 缓存DOM查询结果
             const templateEl = target.querySelector(".template");
@@ -183,7 +224,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     function renderSettings(node, settings, options) {
         const view = Interpreter.get(options.type);
         const root = view.init(false);
-        Interpreter.populateContent(root, settings, options);
+        populateContent(root, settings, options);
         view.exec(root, settings, options);
         if (Array.isArray(options.inner)) {
             const content = root.querySelector(".content");
@@ -255,5 +296,4 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
         _menu.addEventListener("click", () => Interpreter.show(_settings, true));
     });
 
-    console.log(map)
 });

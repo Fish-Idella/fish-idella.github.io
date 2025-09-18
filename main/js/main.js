@@ -1,7 +1,7 @@
 const storage = new PuSet.StorageHelper();
 
 function saveLocalConfigure(cofig) {
-    storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(cofig || MainUI.GS)));
+    storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(cofig || MainUI.GS))));
 };
 
 /**
@@ -90,84 +90,6 @@ Interpreter.load('data/template.html').then(function () {
     const _first_submit = _search.querySelector("[type=submit]"); // 默认的搜索引擎
     const _quickdelete = _search.querySelector("input#word+a.quickdelete");
     const _search_list = _search.querySelector("ul.search-list");
-
-    const _link_manager = document.getElementById("link-manager");
-
-    const _preview = _link_manager.querySelector(".preview");
-    const _preview_background = _preview.querySelector(".preview>.link-button>span.bg");
-    const _preview_title = _preview.querySelector(".preview>.link-button>span.title");
-
-    const toString = (string, def = "") => String(string ? string : def);
-    const _link_manager_input = {
-        "title": {
-            e: _link_manager.querySelector("input#link-manager-title"),
-            set(string) {
-                _preview_title.textContent = this.e.value = toString(string);
-            },
-            get() {
-                return this.e.value.trim()
-            }
-        },
-        "href": {
-            e: _link_manager.querySelector("input#link-manager-url"),
-            set(string) {
-                this.e.value = toString(string);
-            },
-            get() {
-                return this.e.value.trim()
-            }
-        },
-        "icon": {
-            e: _link_manager.querySelector("input#link-manager-image-url"),
-            set(string) {
-                this.e.value = toString(string);
-            },
-            get() {
-                return this.e.value.trim()
-            }
-        },
-        "local_icon": {
-            e: _link_manager.querySelector("input#link-manager-image-local"),
-            set(string) {
-                this.e.value = toString(string);
-            },
-            get() {
-                return this.e.value.trim()
-            }
-        },
-        "always": {
-            e: _link_manager.querySelector("input#link-manager-image-always"),
-            set(string) {
-                if (this.e.checked = Boolean(string)) {
-                    _preview_background.style.setProperty("background-image", `url(${_link_manager_input.icon.e.value}))`);
-                } else {
-                    _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value})`);
-                }
-            },
-            get() {
-                return this.e.checked
-            }
-        },
-        "background_color": {
-            e: _link_manager.querySelector("input#link-manager-background"),
-            set(string) {
-                const value = _link_manager_input.background_color.e.value = toString(string, "transparent");
-                _preview_background.style.setProperty("background-color", value);
-            },
-            get() {
-                return this.e.value.trim() || "transparent";
-            }
-        },
-        "selector": {
-            e: _link_manager.querySelector("#link-manager-background-selector"),
-            set(string) {
-                this.e.value = toString(string);
-            },
-            get() {
-                return this.e.value.trim()
-            }
-        }
-    };
 
     // 搜索建议提示列表
     const vm_list = Interpreter({
@@ -286,69 +208,6 @@ Interpreter.load('data/template.html').then(function () {
         }
     });
 
-    _link_manager.querySelector(".close").addEventListener("click", function () {
-        _link_manager.classList.add("hide");
-    }, false);
-
-    const needSaveKeys = ["title", "href", "icon", "local_icon", "always", "background_color"];
-    _link_manager.querySelector(".save").addEventListener("click", function () {
-
-        const result = needSaveKeys.reduce(function (acc, key) {
-            acc[key] = _link_manager_input[key].get();
-            return acc;
-        }, {});
-
-        if (!result.href) {
-            return alert("网址不能为空！")
-        }
-
-        const id = Number(_link_manager.dataset.id);
-        if (id < 0) {
-            MainUI.vm_links.data.push(result);
-        } else {
-            MainUI.vm_links.data.splice(id, 1, result);
-        }
-
-        saveLocalConfigure();
-        _link_manager.classList.add("hide");
-    });
-
-    addUniversalEventListener([
-        [_link_manager_input.title.e, "input", function () {
-            _preview_title.textContent = _link_manager_input.title.e.value;
-        }],
-        [_link_manager_input.icon.e, "change", function () {
-            // TODO
-        }],
-        [_preview_background, "click", function () {
-            ImageSelector(function (blob) {
-                MainUI.loadImage(URL.createObjectURL(blob))
-                    .then(image => MainUI.compressImage(image, 128, 128))
-                    .then(function (dataURL) {
-                        _link_manager_input.icon.e.value = "";
-                        _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value = dataURL})`);
-                    });
-            });
-        }],
-        [_link_manager_input.selector.e, "change", function () {
-            _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value = _link_manager_input.selector.e.value);
-        }],
-        [_link_manager_input.background_color.e, "change", function () {
-            _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value);
-        }]
-    ]);
-
-    MainUI.openLinkManager = function openLinkManager(index = "-1") {
-        if ((_link_manager.dataset.id = index) >= 0) {
-            if (index >= MainUI.vm_links.data.length) {
-                return console.warn("IndexOutOfBoundsException");
-            }
-            const obj = MainUI.vm_links.data[index];
-            for (let key in obj) _link_manager_input[key]?.set(obj[key]);
-        }
-        _link_manager.classList.remove("hide");
-    };
-
     MainUI.setUiTheme = (function () {
         const list = window.matchMedia("(prefers-color-scheme: dark)");
         function themeListener() {
@@ -381,9 +240,8 @@ Interpreter.load('data/template.html').then(function () {
         MainUI.showAddLinkButton = bool => Interpreter.show(_add_link_button, bool);
         MainUI.showAddLinkButton(settings.boolean_main_show_add_button);
 
-        MainUI.showLink = function(bool) {
-            Interpreter.show(MainUI.vm_links.target, bool);
-        };
+        MainUI.showLink = bool => _main.classList.toggle("hide-links", !bool);
+        MainUI.showLink(settings.boolean_main_show_links);
 
         // 搜索框内搜索引擎按钮
         MainUI.vm_search_engine = Interpreter({
@@ -441,7 +299,7 @@ Interpreter.load('data/template.html').then(function () {
         });
     }
     storage.getItem("puset-local-configure")
-        .then(result => JSON.parse(result ? LZString.decompress(result) : "null") ?? null)
+        .then(result => JSON.parse(result ? decodeURIComponent(atob(result)) : "null") ?? null)
         .then(createMainUi)
         .then(() => queueMicrotask(console.log.bind(
             console,

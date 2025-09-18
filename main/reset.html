@@ -28,12 +28,11 @@
 
     <!-- <script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script> -->
     <script type="text/javascript" src="/js/puset/puset.storage.js"></script>
-    <script type="text/javascript" src="/js/lz-string.min.js"></script>
     <script type="text/javascript">
         (function (storage) {
             document.getElementById("reset").addEventListener("click", function init() {
                 fetch(`data/save.json?${Date.now()}`).then(a => a.json())
-                    .then(json => storage.setItem("puset-local-configure", LZString.compress(JSON.stringify(json))))
+                    .then(json => storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(json)))))
                     .then(() => window.location.replace("/main"));
             });
             storage.getItem("puset-local-configure").then(function (result) {

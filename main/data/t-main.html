@@ -1,0 +1,189 @@
+<!-- 必须的标签和 id, 告知解释器这是一个模板文件 -->
+<!-- 只解释 hr 标签之后的内容 -->
+<hr id="puset-interpreter-template" />
+
+<template id="link-manager">
+    <div id="link-manager" class="view dialog hide">
+        <div class="flex-vertical dialog-box">
+            <div class="flex-horizontal top">
+                <div class="fill title">链接管理器<span class="help-hover" title="">ⓘ</span></div>
+                <div class="button-box">
+                    <button class="delete">删除</button>
+                    <button class="save">保存</button>
+                    <button class="close">关闭</button>
+                </div>
+            </div>
+            <div class="fill dialog-content flex-horizontal">
+                <div class="preview flex-horizontal">
+                    <a class="link-button unselect" draggable="true"><span class="bg"></span><span
+                            class="title">预览</span></a>
+                </div>
+                <div class="fill input-box">
+                    <div class="subtitle">标题：</div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-title" value="预览"
+                            autocomplete="off"></div>
+                    <div class="subtitle">网址：</div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-url"
+                            autocomplete="off"></div>
+                    <div class="subtitle flex-horizontal space"><span>图标网址：（临时加载一次后缓存到浏览器存储）</span><label
+                            class="checkbox"><input type="checkbox" id="link-manager-image-always"><span
+                                class="text">每次都从网络加载</span></label></div>
+                    <div class="input flex-vertical"><input class="unify" type="url" id="link-manager-image-url"
+                            autocomplete="off"></div>
+                    <div class="subtitle">图标缓存：（点击左侧预览图标可更换为本地图片）</div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-image-local"
+                            readonly="readonly" autocomplete="off"></div>
+                    <div class="subtitle flex-horizontal"><span>背景颜色：颜色选择器：</span><input class="unify" type="color"
+                            id="link-manager-background-selector" value="#ffffff"><span>（实际以预览效果为准）</span></div>
+                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-background"
+                            value="#ffffff" autocomplete="off"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        return function (root, MainUI, options) {
+            console.log(arguments)
+            const _link_manager = document.getElementById("link-manager");
+
+            const _preview = _link_manager.querySelector(".preview");
+            const _preview_background = _preview.querySelector(".preview>.link-button>span.bg");
+            const _preview_title = _preview.querySelector(".preview>.link-button>span.title");
+
+            const toString = (string, def = "") => String(string ? string : def);
+            const _link_manager_input = {
+                "title": {
+                    e: _link_manager.querySelector("input#link-manager-title"),
+                    set(string) {
+                        _preview_title.textContent = this.e.value = toString(string);
+                    },
+                    get() {
+                        return this.e.value.trim()
+                    }
+                },
+                "href": {
+                    e: _link_manager.querySelector("input#link-manager-url"),
+                    set(string) {
+                        this.e.value = toString(string);
+                    },
+                    get() {
+                        return this.e.value.trim()
+                    }
+                },
+                "icon": {
+                    e: _link_manager.querySelector("input#link-manager-image-url"),
+                    set(string) {
+                        this.e.value = toString(string);
+                    },
+                    get() {
+                        return this.e.value.trim()
+                    }
+                },
+                "local_icon": {
+                    e: _link_manager.querySelector("input#link-manager-image-local"),
+                    set(string) {
+                        this.e.value = toString(string);
+                    },
+                    get() {
+                        return this.e.value.trim()
+                    }
+                },
+                "always": {
+                    e: _link_manager.querySelector("input#link-manager-image-always"),
+                    set(string) {
+                        if (this.e.checked = Boolean(string)) {
+                            _preview_background.style.setProperty("background-image", `url(${_link_manager_input.icon.e.value}))`);
+                        } else {
+                            _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value})`);
+                        }
+                    },
+                    get() {
+                        return this.e.checked
+                    }
+                },
+                "background_color": {
+                    e: _link_manager.querySelector("input#link-manager-background"),
+                    set(string) {
+                        const value = _link_manager_input.background_color.e.value = toString(string, "transparent");
+                        _preview_background.style.setProperty("background-color", value);
+                    },
+                    get() {
+                        return this.e.value.trim() || "transparent";
+                    }
+                },
+                "selector": {
+                    e: _link_manager.querySelector("#link-manager-background-selector"),
+                    set(string) {
+                        this.e.value = toString(string);
+                    },
+                    get() {
+                        return this.e.value.trim()
+                    }
+                }
+            };
+
+            _link_manager.querySelector(".close").addEventListener("click", function () {
+                _link_manager.classList.add("hide");
+            }, false);
+
+            const needSaveKeys = ["title", "href", "icon", "local_icon", "always", "background_color"];
+            _link_manager.querySelector(".save").addEventListener("click", function () {
+
+                const result = needSaveKeys.reduce(function (acc, key) {
+                    acc[key] = _link_manager_input[key].get();
+                    return acc;
+                }, {});
+
+                if (!result.href) {
+                    return alert("网址不能为空！")
+                }
+
+                const id = Number(_link_manager.dataset.id);
+                if (id < 0) {
+                    MainUI.vm_links.data.push(result);
+                } else {
+                    MainUI.vm_links.data.splice(id, 1, result);
+                }
+
+                saveLocalConfigure();
+                _link_manager.classList.add("hide");
+            });
+
+            addUniversalEventListener([
+                [_link_manager_input.title.e, "input", function () {
+                    _preview_title.textContent = _link_manager_input.title.e.value;
+                }],
+                [_link_manager_input.icon.e, "change", function () {
+                    // TODO
+                }],
+                [_preview_background, "click", function () {
+                    ImageSelector(function (blob) {
+                        MainUI.loadImage(URL.createObjectURL(blob))
+                            .then(image => MainUI.compressImage(image, 128, 128))
+                            .then(function (dataURL) {
+                                _link_manager_input.icon.e.value = "";
+                                _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value = dataURL})`);
+                            });
+                    });
+                }],
+                [_link_manager_input.selector.e, "change", function () {
+                    _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value = _link_manager_input.selector.e.value);
+                }],
+                [_link_manager_input.background_color.e, "change", function () {
+                    _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value);
+                }]
+            ]);
+
+            MainUI.openLinkManager = function openLinkManager(index = "-1") {
+                if ((_link_manager.dataset.id = index) >= 0) {
+                    if (index >= MainUI.vm_links.data.length) {
+                        return console.warn("IndexOutOfBoundsException");
+                    }
+                    const obj = MainUI.vm_links.data[index];
+                    for (let key in obj) _link_manager_input[key]?.set(obj[key]);
+                }
+                _link_manager.classList.remove("hide");
+            };
+        }
+    </script>
+</template>

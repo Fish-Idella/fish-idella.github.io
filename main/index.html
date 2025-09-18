@@ -27,7 +27,7 @@
             <div id="scroll" class="grid-horizontal">
                 <a class="link-button unselect" v-hide="true" draggable="true"><span class="bg"></span><span
                         class="title">模板</span></a>
-                <a id="add-link-button" class="unselect" href="javascript:MainUI.openLinkManager('-1');" draggable="false" v-hide="v-hide">
+                <a id="add-link-button" class="unselect" href="javascript:;" draggable="false" v-hide="v-hide">
                     <span class="bg"
                         style="background-image: url(/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);"></span>
                     <span class="title">添加</span>
@@ -75,45 +75,7 @@
             </div>
         </div>
     </div>
-    <div id="link-manager" class="view dialog hide">
-        <div class="flex-vertical dialog-box">
-            <div class="flex-horizontal top">
-                <div class="fill title">链接管理器</div>
-                <div class="button-box">
-                    <button class="save">保存</button>
-                    <button class="close">关闭</button>
-                </div>
-            </div>
-            <div class="fill dialog-content flex-horizontal">
-                <div class="preview flex-horizontal">
-                    <a class="link-button unselect" draggable="true"><span class="bg"></span><span
-                            class="title">预览</span></a>
-                </div>
-                <div class="fill input-box">
-                    <div class="subtitle">标题：</div>
-                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-title" value="预览"
-                            autocomplete="off"></div>
-                    <div class="subtitle">网址：</div>
-                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-url"
-                            autocomplete="off"></div>
-                    <div class="subtitle flex-horizontal space"><span>图标网址：（临时加载一次后缓存到浏览器存储）</span><label
-                            class="checkbox"><input type="checkbox" id="link-manager-image-always"><span
-                                class="text">每次都从网络加载</span></label></div>
-                    <div class="input flex-vertical"><input class="unify" type="url" id="link-manager-image-url"
-                            autocomplete="off"></div>
-                    <div class="subtitle">图标缓存：（点击左侧预览图标可更换为本地图片）</div>
-                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-image-local"
-                            readonly="readonly" autocomplete="off"></div>
-                    <div class="subtitle flex-horizontal"><span>背景颜色：颜色选择器：</span><input class="unify" type="color"
-                            id="link-manager-background-selector" value="#ffffff"><span>（实际以预览效果为准）</span></div>
-                    <div class="input flex-vertical"><input class="unify" type="text" id="link-manager-background"
-                            value="#ffffff" autocomplete="off"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <script src="/js/lz-string.min.js"></script>
     <script src="/js/puset/puset-2.1.2.js"></script>
     <script src="/js/puset/puset.storage.js"></script>
     <script src="/js/puset/interpreter.js"></script>

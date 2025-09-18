@@ -56,8 +56,12 @@
                     "Accept": "application/json"
                 },
                 body: JSON.stringify(options)
-            }).then(res => res.json()).then(data => {
+            }).then(res => res.json()).catch(function() {
+                t(string, callback);
+            }).then(data => {
                 callback(string, data.choices[0].message.content.split("</think>")[1].trim());
+            }).catch(function() {
+                callback(string, string);
             });
         }
 

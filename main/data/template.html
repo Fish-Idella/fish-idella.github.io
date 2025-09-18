@@ -1,4 +1,4 @@
-<div id="puset-interpreter-template">文件头</div>
+<hr id="puset-interpreter-template" />
 
 
 <template id="background">
@@ -9,154 +9,251 @@
     </div>
     <script>
         "use strict";
-        // 设置隐藏属性和改变可见属性的事件的名称
-        let hidden, visibilitychange;
-        if (typeof document.hidden !== "undefined") {
-            hidden = "hidden";
-            visibilitychange = "visibilitychange";
-        } else if (typeof document.msHidden !== "undefined") {
-            hidden = "msHidden";
-            visibilitychange = "msvisibilitychange";
-        } else if (typeof document.webkitHidden !== "undefined") {
-            hidden = "webkitHidden";
-            visibilitychange = "webkitvisibilitychange";
+
+        // 设置隐藏属性和可见性变化事件的名称
+        const { hidden, visibilitychange } = (() => {
+            if (typeof document.hidden !== "undefined") {
+                return { hidden: "hidden", visibilitychange: "visibilitychange" };
+            } else if (typeof document.msHidden !== "undefined") {
+                return { hidden: "msHidden", visibilitychange: "msvisibilitychange" };
+            } else if (typeof document.webkitHidden !== "undefined") {
+                return { hidden: "webkitHidden", visibilitychange: "webkitvisibilitychange" };
+            }
+            return { hidden: "", visibilitychange: "" };
+        })();
+
+        // 重构为返回Promise的形式，便于使用async/await
+        function getResponseHeader(path) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.onerror = reject;
+                xhr.onreadystatechange = function () {
+                    if (this.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+                        xhr.abort();
+                        resolve(String(xhr.getResponseHeader("Content-Type") || "color"));
+                    }
+                };
+                xhr.open("GET", path);
+                xhr.responseType = "blob";
+                xhr.send();
+            });
         }
-        function getResponseHeader(path, resolve, reject) {
-            const xhr = new XMLHttpRequest;
-            xhr.onerror = reject;
-            xhr.onreadystatechange = function () {
-                if (this.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-                    xhr.abort();
-                    resolve("" + (xhr.getResponseHeader("Content-Type") || "color"));
-                }
-            };
-            xhr.open("GET", path);
-            xhr.responseType = "blob";
-            xhr.send()
-        }
+
         /**
-         * 需要用户自定义的函数
+         * 用户自定义的背景处理函数
          * @param {Element} target 
          * @param {*} settings 保存的设置
          * @param {*} options 设置相关的属性
          */
         return function background(target, settings, options) {
             "use strict";
+
+            // 获取DOM元素
             const mBackground = target.querySelector('div.background');
-            const mVideo = mBackground.querySelector('video.wallpaper'),
-                mCanvas2D = mBackground.querySelector("canvas.d2"),
-                mCanvas3D = mBackground.querySelector("canvas.d3"),
-                // mMask = document.createElement("div"),
-                n = {
-                    hide: false,
-                    dx: 0,
-                    dy: 0,
-                    dw: mCanvas2D.width = mCanvas3D.width = mBackground.clientWidth,
-                    dh: mCanvas2D.height = mCanvas3D.height = mBackground.clientHeight
-                };
-            const initVideo = function () {
-                mVideo.muted = true, mVideo.loop = true;
+            const mVideo = mBackground.querySelector('video.wallpaper');
+            const mCanvas2D = mBackground.querySelector("canvas.d2");
+            const mCanvas3D = mBackground.querySelector("canvas.d3");
+
+            // 状态对象
+            const state = {
+                hide: false,
+                dx: 0,
+                dy: 0,
+                dw: mBackground.clientWidth,
+                dh: mBackground.clientHeight
+            };
+
+            // 初始化画布尺寸
+            mCanvas2D.width = mCanvas3D.width = state.dw;
+            mCanvas2D.height = mCanvas3D.height = state.dh;
+
+            // 画布上下文
+            const ctx = mCanvas2D.getContext("2d", { alpha: true });
+            const webgl = mCanvas3D.getContext("webgl", { alpha: true });
+            let isVideo = false;
+
+            // 视频初始化函数
+            const initVideo = () => {
+                mVideo.muted = true;
+                mVideo.loop = true;
                 mVideo.src = "";
                 mVideo.setAttribute("poster", MainUI.a);
                 mVideo.removeAttribute("style");
             };
-            const pause = () => mVideo.pause();
-            const play = () => mVideo.play();
-            const ctx = mCanvas2D.getContext("2d", { alpha: true });
-            const webgl = mCanvas3D.getContext("webgl", { alpha: true });
-            let isVideo = false;
-            document.addEventListener(visibilitychange, function () {
-                n.hide = document[hidden];
+
+            // 视频控制函数
+            const pauseVideo = () => mVideo.pause();
+            const playVideo = () => mVideo.play();
+
+            // 可见性变化处理
+            document.addEventListener(visibilitychange, () => {
+                state.hide = document[hidden];
                 if (isVideo) {
-                    n.hide ? pause() : play();
+                    state.hide ? pauseVideo() : playVideo();
                 }
             });
-            window.addEventListener("resize", function () {
-                const w = mBackground.clientWidth, h = mBackground.clientHeight;
-                n.dy = n.dx = 0;
-                mCanvas2D.width = n.dw = w;
-                mCanvas2D.height = n.dh = h;
-                mCanvas3D.width = w, mCanvas3D.height = h;
+
+            // 窗口大小调整处理
+            window.addEventListener("resize", () => {
+                const w = mBackground.clientWidth;
+                const h = mBackground.clientHeight;
+
+                state.dx = 0;
+                state.dy = 0;
+                state.dw = w;
+                state.dh = h;
+
+                mCanvas2D.width = w;
+                mCanvas2D.height = h;
+                mCanvas3D.width = w;
+                mCanvas3D.height = h;
             });
-            function loadImageBackground(path) {
-                MainUI.loadImage(path).then(function () {
-                    initVideo();
-                    mBackground.setAttribute("style", `background-image:url(${path});`);
-                    mBackground?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1000, iterations: 1 });
-                });
-            }
-            // 初始化背景状态
-            // ctx.clearRect(0, 0, n.dw, n.dh);
-            options.loadBackground = function loadBackground(path, type) {
-                // 获取背景类型
-                new Promise((resolve, reject) => {
-                    if (type) {
-                        resolve(type);
-                    } else {
-                        getResponseHeader(path, resolve, reject);
+
+            // 加载图片背景
+            const loadImageBackground = async (path) => {
+                await MainUI.loadImage(path);
+                initVideo();
+                mBackground?.setAttribute("style", `background-image:url(${path});`);
+                mBackground?.animate(
+                    [{ opacity: 0 }, { opacity: 1 }],
+                    { duration: 1000, iterations: 1 }
+                );
+            };
+
+            // 处理动画类型背景
+            const handleAnimation = async (path) => {
+                try {
+                    const response = await fetch(path);
+                    const script = await response.text();
+                    const fn = eval(script);
+                    if (typeof fn === "function") {
+                        fn(ctx, webgl, state);
                     }
-                }).then(function (type) {
-                    pause();
+                } catch (error) {
+                    console.error("Error loading animation:", path, error);
+                }
+            };
+
+            // 处理视频类型背景
+            const handleVideo = (path, type) => {
+                initVideo();
+                mVideo.type = type;
+                mVideo.src = path;
+                playVideo();
+                isVideo = true;
+            };
+
+            // 处理文件类型背景
+            const handleFile = async () => {
+                try {
+                    const file = await storage.getItem("puset-local-wallpaper");
+                    if (file) {
+                        options.loadBackground(URL.createObjectURL(file), file.type);
+                    } else {
+                        console.warn("本地壁纸丢失");
+                        loadImageBackground('/api/random_wallpaper_provider.php');
+                    }
+                } catch (error) {
+                    console.error("Error handling file background:", error);
+                }
+            };
+
+            // 处理Bing壁纸
+            const handleBing = async () => {
+                let localFile = null;
+                try {
+                    localFile = await storage.getItem("puset-local-wallpaper-bing");
+                    if (localFile && MainUI.isToday(localFile.lastModifiedDate)) {
+                        options.loadBackground(URL.createObjectURL(localFile), localFile.type);
+                        return;
+                    }
+                } catch (error) {
+                    console.log("Bing wallpaper is overdue or not found");
+                }
+
+                try {
+                    const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.background.bing)}`);
+                    const json = await response.json();
+                    const imageUrl = new URL(json?.images?.[0]?.url, MainUI.background.bing).href;
+                    const img = await MainUI.loadImage(imageUrl, true);
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    canvas.getContext("2d").drawImage(img, 0, 0);
+
+                    canvas.toBlob(blob => {
+                        localFile = new File([blob], "wallpaper", { type: blob.type });
+                        storage.setItem("puset-local-wallpaper-bing", localFile);
+                        options.loadBackground(URL.createObjectURL(localFile), localFile.type);
+                    });
+                } catch (error) {
+                    console.warn("无法获取最新 bing 壁纸", error);
+                    if (localFile) {
+                        options.loadBackground(URL.createObjectURL(localFile), localFile.type);
+                    } else {
+                        loadImageBackground('/api/random_wallpaper_provider.php');
+                    }
+                }
+            };
+
+            // 加载背景主函数
+            options.loadBackground = async (path, type) => {
+                try {
+                    // 确定背景类型
+                    const contentType = type || await getResponseHeader(path);
+
+                    // 暂停当前视频（如果有）
+                    pauseVideo();
                     isVideo = false;
-                    if (type.startsWith("animation")) {
-                        fetch(path).then(b => b.text()).then(function (script) {
-                            const fn = eval(script);
-                            if ("function" == typeof fn && fn(ctx, webgl, n));
-                        }).catch(function () {
-                            console.error("error: " + path);
-                        });
-                    } else if (type.startsWith("video")) {
-                        initVideo();
-                        mVideo.type = type, mVideo.src = path;
-                        play();
-                        isVideo = true;
-                    } else if (type.startsWith("image")) {
-                        return loadImageBackground(path);
-                    } else if (type.startsWith("file")) {
-                        storage.getItem("puset-local-wallpaper").then(function (file) {
-                            if (file) {
-                                loadBackground(URL.createObjectURL(file), file.type);
-                            }
-                        });
-                    } else if (type.startsWith("bing")) {
-                        let localFile = null;
-                        storage.getItem("puset-local-wallpaper-bing").then(function (file) {
-                            if ((localFile = file) && MainUI.isToday(localFile.lastModifiedDate)) {
-                                loadBackground(URL.createObjectURL(localFile), localFile.type);
-                            } else throw "overdue";
-                        }).catch(function () {
-                            fetch("/api/bing/HPImageArchive.aspx?format=js&idx=0&n=1").then(a => a.json()).then(function (json) {
-                                const base = new URL("/api/bing/", window.location.href).href;
-                                const url = new URL(json?.images?.[0]?.url, window.location.href);
-                                return MainUI.loadImage(new URL(url.href.substring(1 + url.origin.length), base).href, true);
-                            }).then(function (img) {
-                                const canvas = document.createElement("canvas");
-                                const w = canvas.width = img.naturalWidth;
-                                const h = canvas.height = img.naturalHeight;
-                                canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                                canvas.toBlob(function (blob) {
-                                    localFile = new File([blob], "wallpaper", { type: blob.type });
-                                    storage.setItem("puset-local-wallpaper-bing", localFile);
-                                    loadBackground(URL.createObjectURL(localFile), localFile.type);
-                                });
-                            }).catch(function () {
-                                console.warn("无法获取最新 bing 壁纸");
-                                if (localFile) {
-                                    loadBackground(URL.createObjectURL(localFile), localFile.type);
-                                }
-                            });
-                        });
-                    } else if (type.startsWith("random")) {
-                        loadImageBackground(PuSetting.background.random[path]);
-                    } else {
-                        initVideo();
-                        mBackground.setAttribute("style", "background:" + path);
+
+                    // 根据类型处理不同的背景
+
+                    if (contentType.startsWith("image")) {
+                        await loadImageBackground(path);
+                        return;
                     }
-                });
-            }
+
+                    if (contentType.startsWith("file")) {
+                        await handleFile();
+                        return;
+                    }
+
+                    if (contentType.startsWith("video")) {
+                        handleVideo(path, contentType);
+                        return;
+                    }
+
+                    if (contentType.startsWith("random")) {
+                        await loadImageBackground('/api/random_wallpaper_provider.php');
+                        return;
+                    }
+
+                    if (contentType.startsWith("bing")) {
+                        await handleBing();
+                        return;
+                    }
+
+                    if (contentType.startsWith("animation")) {
+                        await handleAnimation(path);
+                        return;
+                    }
+
+                    // 默认情况：纯色背景，如：background: #000;
+                    initVideo();
+                    mBackground.setAttribute("style", `background:${path}`);
+
+                } catch (error) {
+                    console.error("Error loading background:", error);
+                }
+            };
+
+            // 暴露目标元素
             options.target = mBackground;
+
+            // 初始化背景
             options.loadBackground(settings.string_background_src, settings.string_background_type);
-        }
+        };
     </script>
 </template>
 
@@ -502,7 +599,7 @@
             const content = target.querySelector("ul.content");
             let checkbox;
             Interpreter.show(content, settings[psid]);
-            Interpreter.get("switch").init(false, function(root, view) {
+            Interpreter.get("switch").init(false, function (root, view) {
                 Interpreter.populateContent(root, settings, options);
                 view.exec(root, settings, options);
                 checkbox = root.querySelector("input");
