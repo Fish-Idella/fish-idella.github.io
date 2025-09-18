@@ -40,7 +40,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
 
     Interpreter.load("data/t-main.html").then(function (html) {
         Interpreter.get("link-manager").init(true, function (root, options) {
-            document.body.appendChild(root);
+            document.body.appendChild(root.firstElementChild);
             options.exec(root, MainUI, options);
         });
     });
@@ -196,7 +196,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     }
 
 
-    const populateContent = function populateContent(target, settings, options) {
+    Interpreter.populateContent = function populateContent(target, settings, options) {
         try {
             // 缓存DOM查询结果
             const templateEl = target.querySelector(".template");
@@ -224,7 +224,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     function renderSettings(node, settings, options) {
         const view = Interpreter.get(options.type);
         const root = view.init(false);
-        populateContent(root, settings, options);
+        Interpreter.populateContent(root, settings, options);
         view.exec(root, settings, options);
         if (Array.isArray(options.inner)) {
             const content = root.querySelector(".content");

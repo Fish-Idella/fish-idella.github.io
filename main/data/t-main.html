@@ -43,7 +43,6 @@
     </div>
     <script>
         return function (root, MainUI, options) {
-            console.log(arguments)
             const _link_manager = document.getElementById("link-manager");
 
             const _preview = _link_manager.querySelector(".preview");
@@ -122,11 +121,21 @@
                 }
             };
 
+            const needSaveKeys = ["title", "href", "icon", "local_icon", "always", "background_color"];
             _link_manager.querySelector(".close").addEventListener("click", function () {
                 _link_manager.classList.add("hide");
             }, false);
-
-            const needSaveKeys = ["title", "href", "icon", "local_icon", "always", "background_color"];
+            _link_manager.querySelector(".delete").addEventListener("click", function () {
+                const id = Number(_link_manager.dataset.id);
+                if (id < 0) {
+                    return
+                }
+                if (confirm("确定要删除吗？")) {
+                    MainUI.vm_links.data.splice(id, 1);
+                    saveLocalConfigure();
+                    _link_manager.classList.add("hide");
+                }
+            }, false);
             _link_manager.querySelector(".save").addEventListener("click", function () {
 
                 const result = needSaveKeys.reduce(function (acc, key) {
