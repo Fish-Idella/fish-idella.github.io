@@ -188,10 +188,10 @@ Interpreter.load('data/template.html').then(function () {
         "contextmenu": function (ev) {
             return ev.preventDefault(), false;
         },
-        "pointerdown": function pointerdown(ev) {
+        "pointerdown": Interpreter.delegation("li", function pointerdown(ev) {
             ev.preventDefault();
-            let text, li = ev.target;
-            if (li && (text = li.dataset.text)) {
+            let text;
+            if (text = this.dataset.text) {
                 _word.value = text;
                 // 如果是 --set 开头的命令行，不直接搜索
                 if (_word.value.startsWith(MainUI.q)) return;
@@ -205,7 +205,7 @@ Interpreter.load('data/template.html').then(function () {
                     _first_submit.click();
                 }
             }
-        }
+        })
     });
 
     MainUI.setUiTheme = (function () {

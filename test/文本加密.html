@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨设备加密/解密工具</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--dark);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        textarea:focus, input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        .btn-encrypt {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-encrypt:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-decrypt {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-decrypt:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+        
+        .btn-reset {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+        
+        .result h3 {
+            margin-top: 0;
+            color: var(--dark);
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+        }
+        
+        .result h3 i {
+            margin-right: 10px;
+        }
+        
+        .result-text {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            font-family: monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: vertical;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .copy-btn {
+            background: var(--gray);
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background: #7f8c8d;
+        }
+        
+        .save-btn {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .save-btn:hover {
+            background: #2980b9;
+        }
+        
+        .file-btn {
+            background: var(--success);
+            color: white;
+        }
+        
+        .file-btn:hover {
+            background: #27ae60;
+        }
+        
+        .error {
+            color: var(--danger);
+            background-color: #fdeded;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .compatibility {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .compatibility h3 {
+            margin-top: 0;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+        
+        .compatibility-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .compatibility-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .compatibility-item i {
+            margin-right: 10px;
+            color: var(--success);
+            font-size: 20px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 14px;
+            border-top: 1px solid var(--light);
+        }
+        
+        @media (max-width: 600px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .compatibility-list {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-lock"></i> 跨设备加密/解密工具</h1>
+            <p>在任何设备上安全加密，在其他设备上使用相同密码解密</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-key"></i> 加密/解密操作</h2>
+                
+                <div class="form-group">
+                    <label for="inputText"><i class="fas fa-font"></i> 输入文本:</label>
+                    <textarea id="inputText" placeholder="输入要加密的文本或要解密的加密字符串..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px;">
+                        <button id="loadFileBtn" class="file-btn"><i class="fas fa-file-import"></i> 从文件加载</button>
+                        <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-unlock-alt"></i> 密码:</label>
+                    <input type="password" id="password" placeholder="输入加密/解密密码...">
+                </div>
+                
+                <div class="btn-group">
+                    <button id="encryptBtn" class="btn-encrypt"><i class="fas fa-lock"></i> 加密</button>
+                    <button id="decryptBtn" class="btn-decrypt"><i class="fas fa-unlock"></i> 解密</button>
+                    <button id="resetBtn" class="btn-reset"><i class="fas fa-redo"></i> 重置</button>
+                </div>
+                
+                <div class="result">
+                    <h3><i class="fas fa-result"></i> 结果:</h3>
+                    <textarea id="resultOutput" class="result-text" readonly></textarea>
+                    
+                    <div class="action-buttons">
+                        <button id="copyBtn" class="action-btn copy-btn"><i class="fas fa-copy"></i> 复制结果</button>
+                        <button id="saveBtn" class="action-btn save-btn"><i class="fas fa-save"></i> 保存到文件</button>
+                    </div>
+                </div>
+                
+                <div id="errorMessage" class="error"></div>
+            </div>
+            
+            <div class="compatibility">
+                <h3><i class="fas fa-sync-alt"></i> 跨设备兼容性</h3>
+                <p>此工具使用标准加密算法，确保在任何设备上都能正确解密：</p>
+                
+                <div class="compatibility-list">
+                    <div class="compatibility-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>不同浏览器</span>
+                    </div>
+                    <div class="compatibility-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>不同操作系统</span>
+                    </div>
+                    <div class="compatibility-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>移动设备</span>
+                    </div>
+                    <div class="compatibility-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>桌面设备</span>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 15px;"><strong>技术基础:</strong> 使用 AES-GCM 算法和 PBKDF2 密钥派生，符合行业标准，确保跨设备兼容性。</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>使用标准加密算法 | 数据不会离开您的设备 | 完全兼容所有现代浏览器</p>
+        </footer>
+    </div>
+
+    <script>
+        // 加密函数 - 跨设备兼容
+        async function encryptionString(baseString, password) {
+            try {
+                // 1. 将输入字符串转换为Uint8Array
+                const encoder = new TextEncoder();
+                const data = encoder.encode(baseString);
+                
+                // 2. 生成随机盐和初始化向量(IV) - 固定长度确保跨设备兼容
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                
+                // 3. 从密码派生密钥 - 使用标准PBKDF2算法
+                const passwordKey = await getKeyFromPassword(password, salt);
+                
+                // 4. 执行加密 - 使用AES-GCM标准算法
+                const algorithm = { name: 'AES-GCM', iv: iv };
+                const encryptedData = await crypto.subtle.encrypt(algorithm, passwordKey, data);
+                
+                // 5. 组合盐、IV和加密数据 - 固定顺序确保跨设备兼容
+                const combined = new Uint8Array(salt.length + iv.length + encryptedData.byteLength);
+                combined.set(salt);
+                combined.set(iv, salt.length);
+                combined.set(new Uint8Array(encryptedData), salt.length + iv.length);
+                
+                // 6. 转换为Base64字符串 - 标准编码确保跨设备兼容
+                return arrayBufferToBase64(combined);
+            } catch (error) {
+                showError(`加密失败: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // 解密函数 - 跨设备兼容
+        async function decryptionString(encryptedString, password) {
+            try {
+                // 1. 将Base64字符串转换为Uint8Array
+                const combined = base64ToArrayBuffer(encryptedString);
+                
+                // 2. 提取盐、IV和加密数据 - 固定位置确保跨设备兼容
+                const salt = combined.slice(0, 16);
+                const iv = combined.slice(16, 16 + 12);
+                const encryptedData = combined.slice(16 + 12);
+                
+                // 3. 从密码派生密钥 - 使用与加密相同的算法和参数
+                const passwordKey = await getKeyFromPassword(password, salt);
+                
+                // 4. 执行解密 - 使用AES-GCM标准算法
+                const algorithm = { name: 'AES-GCM', iv: iv };
+                const decryptedData = await crypto.subtle.decrypt(algorithm, passwordKey, encryptedData);
+                
+                // 5. 转换为字符串
+                const decoder = new TextDecoder();
+                return decoder.decode(decryptedData);
+            } catch (error) {
+                showError(`解密失败: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // 从密码派生密钥 - 使用标准算法确保跨设备兼容
+        async function getKeyFromPassword(password, salt) {
+            const encoder = new TextEncoder();
+            const passwordBuffer = encoder.encode(password);
+            
+            // 使用PBKDF2派生密钥 - 标准算法
+            const baseKey = await crypto.subtle.importKey(
+                'raw',
+                passwordBuffer,
+                { name: 'PBKDF2' },
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+            
+            // 使用固定参数确保跨设备兼容
+            return crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000, // 固定迭代次数
+                    hash: 'SHA-256'    // 固定哈希算法
+                },
+                baseKey,
+                { name: 'AES-GCM', length: 256 }, // 固定密钥长度
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        // 工具函数：ArrayBuffer 转 Base64
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // 工具函数：Base64 转 ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // 5秒后隐藏错误信息
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // DOM 事件处理
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputText = document.getElementById('inputText');
+            const password = document.getElementById('password');
+            const encryptBtn = document.getElementById('encryptBtn');
+            const decryptBtn = document.getElementById('decryptBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const resultOutput = document.getElementById('resultOutput');
+            const copyBtn = document.getElementById('copyBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const loadFileBtn = document.getElementById('loadFileBtn');
+            const fileInput = document.getElementById('fileInput');
+            
+            // 加密按钮点击事件
+            encryptBtn.addEventListener('click', async () => {
+                if (!inputText.value) {
+                    showError('请输入要加密的文本');
+                    return;
+                }
+                
+                if (!password.value) {
+                    showError('请输入密码');
+                    return;
+                }
+                
+                try {
+                    const encrypted = await encryptionString(inputText.value, password.value);
+                    resultOutput.value = encrypted;
+                } catch (error) {
+                    console.error('加密错误:', error);
+                }
+            });
+            
+            // 解密按钮点击事件
+            decryptBtn.addEventListener('click', async () => {
+                if (!inputText.value) {
+                    showError('请输入要解密的文本');
+                    return;
+                }
+                
+                if (!password.value) {
+                    showError('请输入密码');
+                    return;
+                }
+                
+                try {
+                    const decrypted = await decryptionString(inputText.value, password.value);
+                    resultOutput.value = decrypted;
+                } catch (error) {
+                    showError('解密失败：密码错误或加密数据损坏');
+                    console.error('解密错误:', error);
+                }
+            });
+            
+            // 重置按钮点击事件
+            resetBtn.addEventListener('click', () => {
+                inputText.value = '';
+                password.value = '';
+                resultOutput.value = '';
+                document.getElementById('errorMessage').style.display = 'none';
+            });
+            
+            // 复制按钮点击事件
+            copyBtn.addEventListener('click', () => {
+                resultOutput.select();
+                document.execCommand('copy');
+                
+                // 显示复制成功提示
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> 已复制!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            });
+            
+            // 保存按钮点击事件
+            saveBtn.addEventListener('click', () => {
+                if (!resultOutput.value) {
+                    showError('没有内容可保存');
+                    return;
+                }
+                
+                const blob = new Blob([resultOutput.value], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // 根据内容类型设置文件名
+                if (resultOutput.value.includes('==') || resultOutput.value.length > 100) {
+                    a.download = 'encrypted_result.txt';
+                } else {
+                    a.download = 'decrypted_result.txt';
+                }
+                
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+            
+            // 文件加载按钮点击事件
+            loadFileBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件选择事件
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // 检查文件类型
+                if (!file.name.endsWith('.txt')) {
+                    showError('请选择文本文件 (.txt)');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    inputText.value = e.target.result;
+                };
+                reader.onerror = function() {
+                    showError('读取文件失败');
+                };
+                reader.readAsText(file);
+            });
+        });
+    </script>
+</body>
+</html>

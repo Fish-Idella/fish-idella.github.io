@@ -1,40 +1,3 @@
-// 事件代理 - 实现元素事件委托处理的高阶函数
-// 使用立即执行函数(IIFE)封装逻辑，避免全局变量污染
-const delegation = (function (getComposedPath) {
-    // 检查浏览器是否支持Element.prototype.matches方法
-    const hasMatches = "function" === typeof Element.prototype.matches;
-    // const hasClosest = "function" === typeof Element.prototype.closest;
-
-    // 创建自定义匹配函数，用于判断元素是否匹配选择器
-    const customMatches = function customMatches(target, selector) {
-        // 如果支持matches方法，则直接使用它
-        // if (hasMatches) return item => item.matches && item.matches(selector);
-        // if (hasClosest) return item => item === item.closest(selector);
-
-        // 备选方案：通过查询所有匹配元素创建集合进行判断
-        const children = new Set(target.querySelectorAll(selector));
-        return item => item && children.has(item);
-    };
-
-    // 返回事件代理函数，接收选择器和事件处理函数
-    return function delegation(selector, handler) {
-        // 返回实际的事件监听器
-        return function listener(event) {
-            // 获取事件传播路径
-            const path = getComposedPath(this, event);
-            // 从路径中筛选出匹配选择器的元素
-            const inner = path.filter(customMatches(this, selector));
-            // 对每个匹配元素调用处理函数，并绑定this为当前元素
-            inner.forEach(child => handler.call(child, event, listener));
-        }
-    }
-}(function getComposedPath(target, event) {
-    let path, node;
-    if (event.composedPath) { path = Array.from(event.composedPath()); }
-    else if (event.path) { path = Array.from(event.path); }
-    else for (node = event.target, path = []; node = node.parentNode;) { path.push(node); if (node === target) break; }
-    return path.slice(0, 1 + path.indexOf(target));
-}));
 
 storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).then(function (json) {
 
@@ -62,7 +25,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     // 为容器内的所有a.link-button元素添加拖放相关事件处理
 
     // 拖动开始事件处理
-    _scroll.addEventListener("dragstart", delegation("a.link-button", function dragstart(event) {
+    _scroll.addEventListener("dragstart", Interpreter.delegation("a.link-button", function dragstart(event) {
         // 阻止事件冒泡
         event.stopPropagation();
         // 设置拖拽数据为当前元素的data-key属性值
@@ -72,7 +35,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     }), false);
 
     // 拖拽经过事件处理
-    _scroll.addEventListener("dragover", delegation("a.link-button", function dragover(event) {
+    _scroll.addEventListener("dragover", Interpreter.delegation("a.link-button", function dragover(event) {
         // 阻止默认行为(允许放置)
         event.preventDefault();
         // 阻止事件冒泡
@@ -82,7 +45,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     }), false);
 
     // 放置事件处理
-    _scroll.addEventListener("drop", delegation("a.link-button", function drop(event) {
+    _scroll.addEventListener("drop", Interpreter.delegation("a.link-button", function drop(event) {
         // 阻止默认行为
         event.preventDefault();
         // 阻止事件冒泡
@@ -257,7 +220,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
         }
     });
 
-    _left_ul.addEventListener("click", delegation("li", function (event) {
+    _left_ul.addEventListener("click", Interpreter.delegation("li", function (event) {
         const psid = this.dataset.psid;
         const children = _right_scroll_content.children;
         for (const child of children) {
