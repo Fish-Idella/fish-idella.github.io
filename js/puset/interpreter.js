@@ -2,7 +2,7 @@
  * 视图解释器模块 - 用于创建和管理视图模板，并将数据动态展示到DOM中
  * 支持模板定义、数据绑定、动态渲染和Shadow DOM
  */
-const Interpreter = (function () {
+const Interpreter = (function IIFE() {
     "use strict";
 
     // 常量定义
@@ -17,10 +17,10 @@ const Interpreter = (function () {
      * @example
      * Types = { Boolean: "boolean", Number: "number", ... }
      */
-    const Types = Object.freeze("Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ").reduce((e, t) => {
+    const Types = Object.freeze("Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ").reduce(function reduce(e, t) {
         const r = t.toLowerCase();
-        Object.defineProperty(e, t, { value: r, enumerable: !0, writable: !1 });
-        return Object.defineProperty(e, `[object ${t}]`, { value: r, enumerable: !1, writable: !1 }), e
+        Object.defineProperty(e, t, { value: r, enumerable: true, writable: false });
+        return Object.defineProperty(e, `[object ${t}]`, { value: r, enumerable: false, writable: false }), e
     }, Object.create({
         type: function (e) {
             if (null == e) return String(e);
@@ -329,6 +329,12 @@ const Interpreter = (function () {
             return child;
         },
 
+        delegation: function (event, selector, handler, options) {
+            const callback = Interpreter.delegation(selector, handler);
+            this.target.addEventListener(event, callback, options);
+            return callback;
+        },
+
         /**
          * 更新数据
          * @param {Object|Array} data - 新数据
@@ -521,6 +527,47 @@ const Interpreter = (function () {
                 throw error; // 将错误继续抛出，由调用者决定如何处理
             }
         },
+
+        delegation: (function IIFE(getComposedPath) {
+            // 检查浏览器是否支持Element.prototype.matches方法
+            const hasMatches = "function" === typeof Element.prototype.matches;
+
+            // 检查浏览器是否支持Element.prototype.closest方法
+            const hasClosest = "function" === typeof Element.prototype.closest;
+
+            // 创建自定义匹配函数，用于判断元素是否匹配选择器
+            const customMatches = function customMatches(target, selector) {
+
+                // 如果支持matches方法，则直接使用它
+                if (hasMatches) return item => item.matches && item.matches(selector);
+
+                // 如果支持closest方法，则直接使用它
+                if (hasClosest) return item => item === item.closest(selector);
+
+                // 备选方案：通过查询所有匹配元素创建集合进行判断
+                const children = new Set(target.querySelectorAll(selector));
+                return item => item && children.has(item);
+            };
+
+            // 返回事件代理函数，接收选择器和事件处理函数
+            return function delegation(selector, handler) {
+                // 返回实际的事件监听器
+                return function listener(event) {
+                    // 获取事件传播路径
+                    const path = getComposedPath(this, event);
+                    // 从路径中筛选出匹配选择器的元素
+                    const inner = path.filter(customMatches(this, selector));
+                    // 对每个匹配元素调用处理函数，并绑定this为当前元素
+                    inner.forEach(child => handler.call(child, event, listener));
+                }
+            }
+        }(function getComposedPath(target, event) {
+            let path, node;
+            if (event.composedPath) { path = Array.from(event.composedPath()); }
+            else if (event.path) { path = Array.from(event.path); }
+            else for (node = event.target, path = []; node = node.parentNode;) { path.push(node); if (node === target) break; }
+            return path.slice(0, 1 + path.indexOf(target));
+        })),
 
         /**
          * 显示/隐藏元素

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
+    <meta charset="UTF-8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache" />
@@ -9,22 +11,138 @@
     <link rel="stylesheet" type="text/css" href="/css/index.css" />
     <link rel="stylesheet" type="text/css" href="css/index.css" />
     <title>Password</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站登录信息管理器</title>
 </head>
 
 <body>
-    <div class="view flex-vertical main">
-        <div class="title">Password</div>
-        <div class="fill flex-horizontal">
-            <ul class="mian-list">
-                <li style="background-image: url(icon/b.svg);">
-                    <div>Bethesda</div>
-                </li>
-            </ul>
-            <div class="fill content" id="password"></div>
-            <div class="tools"></div>
+    <div class="view flex-vertical">
+        <header>
+            <button class="header-btn" id="showButtonsBtn">功能</button>
+            <h1>网站登录信息管理</h1>
+        </header>
+
+        <div class="fill main-content">
+            <div id="button-list-layer" class="layer flex-vertical">
+                <h2 class="section-title">数据管理</h2>
+                <div class="fill scroll-container">
+                    <div class="btn-group">
+                        <label for="importBtn" class="flex-vertical">
+                            <button id="importBtn">导入JSON文件</button>
+                            <span>加载已有的数据文件。</span>
+                            <input type="file" id="file-input" accept=".json">
+                        </label>
+                        <label for="exportBtn" class="flex-vertical">
+                            <button id="exportBtn">导出JSON文件</button>
+                            <span>将当前所有数据保存为JSON文件。</span>
+                        </label>
+                    </div>
+
+                    <div class="import-export-info">
+                        <p><strong>注意：</strong>请妥善保管您的登录信息文件，确保信息安全。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="website-list-layer" class="layer flex-vertical">
+                <h2 class="section-title">网站列表</h2>
+                <div class="fill scroll-container">
+                    <div id="websitesContainer">
+                        <div class="flex-vertical website-item" data-id="0">
+                            <div class="fill flex-horizontal website-info">
+                                <label class="website-logo">
+                                    <input type="file" name="" id="">
+                                    <span class="view logo"></span>
+                                </label>
+                                <div class="fill flex-vertical">
+                                    <div class="flex-horizontal">
+                                        <input type="text" class="fill website-name" name="" placeholder="用户名"
+                                            value="xxxxxxxxx" readonly />
+                                        <div class="website-actions">
+                                            <button class="edit-website noedit">编辑</button>
+                                            <button class="save-website edit">保存</button>
+                                            <button class="cancel-website edit">取消</button>
+                                            <button class="delete-website edit danger">删除</button>
+                                        </div>
+                                    </div>
+                                    <a class="flex-vertical website-home" target="_blank" href="#"><input type="text" class="unify"
+                                            name="" placeholder="网站主页" value="#" readonly /></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="addWebsiteBtn" class="add-button">+ 添加新网站</button>
+                </div>
+            </div>
+
+            <div id="user-list-layer" class="layer flex-vertical">
+                <h2 class="section-title" id="userSectionTitle">用户信息</h2>
+                <div class="fill scroll-container">
+                    <div id="usersContainer">
+                        <div class="user-item edit">
+                            <div class="flex-horizontal user-field">
+                                <input type="text" class="fill username" name="username" placeholder="用户名"
+                                    value="xxxxxxxxx" readonly />
+                                <div class="user-actions">
+                                    <button class="edit-user noedit" data-id="1" data-website-id="1">编辑</button>
+                                    <button class="save-user edit">保存</button>
+                                    <button class="cancel-user edit">取消</button>
+                                    <button class="delete-user edit danger" data-id="1" data-website-id="1">删除</button>
+                                </div>
+                            </div>
+                            <div class="user-field">
+                                <label>密码：</label>
+                                <ul>
+                                    <li>
+                                        <input type="text" class="list-item password" name="password" placeholder="密码"
+                                            value="xxxxxxxxx" readonly />
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="user-field">
+                                <label>邮箱：</label>
+                                <ul>
+                                    <li>
+                                        <input type="text" name="list-item" class="list-item" value="aa@xx.com"
+                                            readonly />
+                                        <button type="button" class="edit danger remove-array-item">×</button>
+                                    </li>
+                                    <button type="button" class="edit add-array-item" data-target="emailsContainer">+
+                                        添加邮箱</button>
+                                </ul>
+                            </div>
+                            <div class="user-field">
+                                <label>电话：</label>
+                                <ul>
+                                    <li>
+                                        <input type="text" name="list-item" class="list-item" value="123-456"
+                                            readonly />
+                                        <button type="button" class="edit danger remove-array-item">×</button>
+                                    </li>
+                                    <button type="button" class="edit add-array-item" data-target="telsContainer">+
+                                        添加电话</button>
+                                </ul>
+                            </div>
+                            <div class="user-field">
+                                <label>自定义：</label>
+                                <ul>
+                                    <li>
+                                        <input type="text" name="list-item" class="list-item" value="key" readonly />
+                                        <b>:</b>
+                                        <input type="text" name="list-item" class="list-item" value="value" readonly />
+                                        <button type="button" class="edit danger remove-array-item">×</button>
+                                    </li>
+                                    <button type="button" class="edit add-array-item" data-target="customContainer">+
+                                        添加自定义字段</button>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="addUserBtn" class="add-button">+ 添加用户</button>
+                </div>
+            </div>
         </div>
     </div>
-
 
     <script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
     <script type="text/javascript" src="/js/puset/interpreter.js"></script>

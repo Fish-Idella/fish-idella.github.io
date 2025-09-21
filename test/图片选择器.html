@@ -184,7 +184,7 @@
             let isDragging = false;
             let lastX = 0;
             let lastY = 0;
-            
+
             function calculateEdgeValue(number, threshold, amplitude) {
                 const edge = (threshold - 256 / amplitude) / 2;
                 return Math.max(0 - edge, Math.min(number, edge));
@@ -356,7 +356,9 @@
         }());
 
 
-        ImageSelector()
+        ImageSelector(function (blob) {
+            console.log(blob);
+        })
     </script>
 </body>
 
