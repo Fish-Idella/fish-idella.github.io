@@ -21,10 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['path'])) {
 }
 
 // 过滤并清理用户输入，防止目录遍历攻击
-$path = filter_input(INPUT_POST, 'path', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
-// $path = str_replace(['..', '/', '\\'], '', $path);
-
-$path = str_replace('..', '', $path); // 移除点，防止目录遍历
+$path = str_replace('..', '', $_POST['path']); // 移除点，防止目录遍历
 
 // 保存相对路径
 $result['path'] = $path;

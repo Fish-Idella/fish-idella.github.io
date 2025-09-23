@@ -465,3 +465,16 @@ label[type=file]>span {
     height: 100%;
     padding: 0
 }
+
+ul.file-list {
+    /* padding: 10px; */
+}
+
+
+ul.file-list>li { 
+    /* display: block; */
+    border: 1px solid transparent;
+    border-width: 0 10px 1px 10px;
+    border-bottom-color: #000;
+    list-style: none;
+}

@@ -14,7 +14,7 @@
         <div class="out-box">
             <div id="player" class="content">
                 <div id="player-video-layer" class="video-layer grid-vertical center">
-                    <video class="video fill" poster="/mediae/images/0x300a0a0.png" muted="muted" preload="metadata">
+                    <video class="video fill" poster="/mediae/icons/0x300a0a0.png" muted="muted" preload="metadata">
                         <span>你的浏览器不支持 HTML5 视频。</span>
                     </video>
                     <canvas class="fill danmu">你的浏览器不支持弹幕功能，请关闭弹幕。</canvas>
@@ -122,12 +122,18 @@
                             class="fc unify"><button type="button">加入</button></label>
                 </div>
             </div>
-            <div class="box fc mt">
-                <div>1</div>
+            <div class="box fc mt flex-vertical">
+                <div>文件列表</div>
+                <div class="fill">
+                    <ul class="view flex-vertical scroll file-list">
+                        <li class="directory"><span class="icon"></span><span class="filename"></span></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
+    <script type="text/javascript" src="/js/puset/interpreter.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
 </body>
 

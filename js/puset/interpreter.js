@@ -40,7 +40,7 @@ const Interpreter = (function IIFE() {
     if (document.querySelector('style.v-hide') === null) {
         const styleElement = document.createElement("style");
         styleElement.className = HIDE_ATTRIBUTE;
-        styleElement.innerHTML = `[${HIDE_ATTRIBUTE}] {display: none !important;}`;
+        styleElement.innerHTML = `.hide, [${HIDE_ATTRIBUTE}] {display: none !important;}`;
         document.head.appendChild(styleElement);
     }
 

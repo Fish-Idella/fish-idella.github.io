@@ -125,7 +125,7 @@
         }
     },
     "map_search_engine_show": [ "bing", "baidu", "quark" ],
-    "string_background_src": "/mediae/images/6ceb79738048d730f037e836a97ac3b7.jpg",
+    "string_background_src": "/mediae/images/background-image-light.avif",
     "string_background_type": "image",
     "string_local_city": "北京",
     "string_theme": "default"

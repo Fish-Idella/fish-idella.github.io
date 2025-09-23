@@ -63,7 +63,7 @@ const PuSetPlayer = (function () {
     function addUniversalEventListener(target, eventConfig, handlers, options) {
         let allEventsAdded = Boolean(target);
         if (!allEventsAdded) return false;
-        
+
         // 场景2：批量绑定多个元素（[ [elem1,handler1], [elem2,handler2] ]）
         if (typeof target === 'string') {
             const eventType = target;
@@ -85,7 +85,7 @@ const PuSetPlayer = (function () {
             });
             return allEventsAdded;
         }
-        
+
 
         // 场景1：处理单个元素的事件绑定
         if ('function' === typeof target.addEventListener) {
@@ -605,26 +605,54 @@ const PuSetPlayer = (function () {
 
 
 (function 加载列表() {
-    let promise = 0, resources = [];
     const player = new PuSetPlayer(document.getElementById("player-video-layer"));
 
-    fetch("/api/directory_content_fetcher.php", {
-        method: "POST",
-        body: new URLSearchParams({path: `Videos`})
-    }).then(a => a.json()).then(json => {
-        if (!json.success) return resources;
-        return resources = json.data.sort((a, b) => {
-            // 文件夹排在文件前
-            if (a.type === 'directory' && b.type !== 'directory') {
-                return -1;
+    const list = document.querySelector("ul.file-list");
+    const vm_list = new Interpreter({
+        target: list,
+        selector: "li",
+        json: null,
+        data: [],
+        layout(li, value, key, index) {
+            li.className = value.type;
+            li.dataset.index = index;
+            li.querySelector("span.filename").textContent = value.name;
+        },
+        async getFileList(path) {
+            const a = await fetch("/api/directory_content_fetcher.php", {
+                method: "POST",
+                body: new URLSearchParams({ path })
+            });
+            vm_list.json = await a.json();
+            if (vm_list.json.success) {
+                vm_list.json.data.sort((a_1, b) => {
+                    // 文件夹排在文件前
+                    if (a_1.type === 'directory' && b.type !== 'directory') {
+                        return -1;
+                    }
+                    if (a_1.type !== 'directory' && b.type === 'directory') {
+                        return 1;
+                    }
+                    // 同类项目按名称排序（使用localeCompare进行本地化排序）
+                    return a_1.name.localeCompare(b.name, 'zh-CN', { sensitivity: 'base' });
+                });
+                vm_list.update(vm_list.json.data);
+                vm_list.data.length = vm_list.json.data.length;
+            } else {
+                alert(vm_list.json.message);
             }
-            if (a.type !== 'directory' && b.type === 'directory') {
-                return 1;
-            }
-            // 同类项目按名称排序（使用localeCompare进行本地化排序）
-            return a.name.localeCompare(b.name, 'zh-CN', { sensitivity: 'base' });
-        });
-    }).then(arr => {
-        console.log(arr)
-    })
+        }
+    });
+
+    vm_list.delegation("click", "li", function (ev) {
+        ev.preventDefault();
+        const path = vm_list.json.path + "/" + vm_list.json.data[this.dataset.index].name;
+        if (this.className === "directory") {
+            vm_list.getFileList(path);
+        } else if (this.className === "file") {
+            player.play("/av/" + path);
+        }
+    }, false);
+
+    vm_list.getFileList(`Videos`);
 }());
