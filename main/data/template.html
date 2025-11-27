@@ -374,8 +374,8 @@
     </div>
     <script>
         return function renderSubTitle(target, settings, options) {
-            Interpreter.get("button").init(false, function (root, view) {
-                Interpreter.populateContent(root, settings, options);
+            PuSet.get("button").init(false, function (root, view) {
+                PuSet.populateContent(root, settings, options);
                 const template_widget = target.querySelector(".template-widget");
                 const input = template_widget.querySelector("input");
 
@@ -459,7 +459,7 @@
         }
         return function renderLocalFile(target, settings, options) {
             const fileBox = target.querySelector(".custom-button.file");
-            addUniversalEventListener(fileBox, {
+            PuSet(fileBox).on({
                 "change": function (event) {
                     readAsDataURL(options.psid, event.target.files);
                 },
@@ -502,13 +502,13 @@
     <script>
         return function renderObjectList(target, settings, options) {
             "use strict";
-            Interpreter.get("button").init(false, function (root, view) {
-                Interpreter.populateContent(root, settings, options);
+            PuSet.get("button").init(false, function (root, view) {
+                PuSet.populateContent(root, settings, options);
                 view.exec(root, settings, options);
                 const template_widget = target.querySelector(".template-widget");
                 template_widget.insertBefore(root.host, template_widget.firstElementChild);
             });
-            Interpreter({
+            PuSet.ViewManager({
                 target: target.querySelector("ul.content"),
                 selector: "li",
                 list: settings[options.value],
@@ -598,16 +598,16 @@
             const psid = options.psid;
             const content = target.querySelector("ul.content");
             let checkbox;
-            Interpreter.show(content, settings[psid]);
-            Interpreter.get("switch").init(false, function (root, view) {
-                Interpreter.populateContent(root, settings, options);
+            PuSet.show(content, settings[psid]);
+            PuSet.get("switch").init(false, function (root, view) {
+                PuSet.populateContent(root, settings, options);
                 view.exec(root, settings, options);
                 checkbox = root.querySelector("input");
-                checkbox.addEventListener("change", () => Interpreter.show(content, checkbox.checked));
+                checkbox.addEventListener("change", () => PuSet.show(content, checkbox.checked));
                 const a = target.querySelector(".template-widget.image-list");
                 a.insertBefore(root.host, a.firstElementChild);
             });
-            Interpreter({
+            PuSet.ViewManager({
                 target: content,
                 selector: "li",
                 data: options.list,
@@ -637,7 +637,7 @@
                 }
             });
             const fileBox = target.querySelector(".custom-button.file");
-            addUniversalEventListener(fileBox, {
+            PuSet(fileBox).on({
                 "change": function (event) {
                     checkbox.checked = true;
                     readAsDataURL(psid, event.target.files);
@@ -711,7 +711,7 @@
         return function renderRadioList(target, settings, options) {
             "use strict";
             const psid = options.psid;
-            Interpreter({
+            PuSet.ViewManager({
                 target: target.querySelector(".template-widget>.grid-horizontal"),
                 selector: "label.custom-radio",
                 data: options.list,

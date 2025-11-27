@@ -1,5 +1,6 @@
 // 持久化本地存储方案
-const StorageHelper = (function (PuSet) {
+const StorageHelper = (function () {
+    // "use strict";
 
     // In the following line, you should include the prefixes of implementations you want to test.
     window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -433,6 +434,10 @@ const StorageHelper = (function (PuSet) {
         });
     };
 
-    return PuSet.StorageHelper = StorageHelper;
+    if ("function" === typeof PuSet) {
+        PuSet.StorageHelper = StorageHelper;
+    }
 
-}(window.PuSet || {}));
+    return StorageHelper;
+
+}());

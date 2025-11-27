@@ -270,8 +270,8 @@ body.focus>#main>#links {
 	overflow: hidden scroll;
 	place-items: center;
 	place-content: start space-around;
-	grid-row-gap: 1rem;
-	grid-template-columns: repeat(auto-fill, 6rem);
+	/* grid-row-gap: 1rem; */
+	grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
 }
 
 #links>#scroll::-webkit-scrollbar {
@@ -293,16 +293,22 @@ body.focus>#main>#links {
 #links>#scroll>a {
 	position: relative;
 	display: flex;
-	width: 6rem;
-	height: auto;
+	min-width: 6rem;
+	height: 6rem;
 	flex-direction: column;
 	place-items: center;
 	place-content: center;
 	text-align: center;
 	text-decoration: none;
 	font-weight: 400;
+	/* aspect-ratio: 1; */
 	text-shadow: 0 0 5px var(--text-shadow);
 	transition: transform 100ms ease-in-out;
+}
+
+#links>#scroll>a.dragging {
+	opacity: 0.5;
+	transform: scale(1);
 }
 
 #links>#scroll>a:hover {
@@ -322,6 +328,7 @@ body.focus>#main>#links {
 #links>#scroll>a>span.title {
 	font-size: 0.8rem;
 	text-overflow: ellipsis;
+	/* -webkit-text-stroke: 0.1px black; */
 	white-space: nowrap;
 	width: 100%;
 	max-width: 100%;
@@ -335,11 +342,11 @@ body.focus>#main>#links {
 
 
 .dialog {
+	display: flex;
 	color: var(--color-text);
 	padding: 0;
 	place-content: center;
 	place-items: center;
-	/* place-self: stretch; */
 }
 
 .dialog>.dialog-box {

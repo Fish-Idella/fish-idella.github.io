@@ -90,6 +90,14 @@ video.video {
     aspect-ratio: 16 / 9;
 }
 
+video::cue {
+    color: #ffffff;
+    background: none;
+    opacity: 0.9;
+    font-family: 'MiSans', sans-serif;
+    text-shadow: 0 0 4px #000000;
+}
+
 .controls {
     font-size: 1rem;
     text-align: center;
@@ -432,6 +440,17 @@ label[type=file]>span {
     margin-bottom: 10px
 }
 
+span.goback {
+    display: inline-block;
+    width: 2rem;
+    text-align: center;
+}
+
+.file-list-title:hover {
+    color: blue;
+    cursor: pointer;
+}
+
 .address {
     line-height: 2rem;
     word-wrap: normal;
@@ -467,14 +486,34 @@ label[type=file]>span {
 }
 
 ul.file-list {
-    /* padding: 10px; */
+    /* padding: 10px 0; */
 }
 
 
-ul.file-list>li { 
-    /* display: block; */
+ul.file-list>li {
+    cursor: pointer;
     border: 1px solid transparent;
     border-width: 0 10px 1px 10px;
     border-bottom-color: #000;
     list-style: none;
+}
+
+ul.file-list>li>.icon::after {
+    content: "F";
+    font-weight: bold;
+    margin: 0 4px 0 0;
+}
+
+ul.file-list>li.directory>.icon::after {
+    content: "D";
+    color: chocolate;
+}
+
+ul.file-list>li.file>.icon::after {
+    content: "F";
+    color: cornflowerblue;
+}
+
+ul.file-list>li:hover {
+    border-color: blue;
 }

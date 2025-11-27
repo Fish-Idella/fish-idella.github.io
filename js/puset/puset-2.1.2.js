@@ -119,7 +119,7 @@
 
     const
 
-        rstandardizedAttributeName = /^((?!\d)[$_\w]+|[1-9]\d*)$/,
+        rstandardizedAttributeName = /^(?:0|[1-9]\d*|(?![0-9])[$\w]+)$/,
 
         version = "2.1.1",
 
@@ -936,11 +936,11 @@
             if (isFunction(attrs)) {
                 func = attrs, attrs = obj == null ? null : Object.keys(obj);
             }
-            while (length--) {
+            f: while (length--) {
                 elem = arr[length], all = true;
                 PuSet.each(attrs, attr => all = all && elem[attr] === obj[attr]);
                 if (all && (func(elem, length) === false)) {
-                    break;
+                    break f;
                 }
             }
         }

@@ -519,6 +519,7 @@ const PuSetPlayer = (function () {
             const self = this;
             self.playerContainer = playerContainer;
             self.video = self.playerContainer.querySelector("video.video");
+            self.track = self.video.querySelector("track");
             self.controlsContainer = self.playerContainer.querySelector(".controls");
             self.bottomControls = self.controlsContainer.querySelector(".bottom");
 
@@ -563,6 +564,7 @@ const PuSetPlayer = (function () {
                 URL.revokeObjectURL(this.video.src);
                 this.video.src = url;
                 this.video.currentTime = 0;
+                this.track.src = url.replace(/\.mp4$/, ".vtt");
             }
             this.video.play();
         },
@@ -612,6 +614,7 @@ const PuSetPlayer = (function () {
         target: list,
         selector: "li",
         json: null,
+        paths: [],
         data: [],
         layout(li, value, key, index) {
             li.className = value.type;
@@ -619,6 +622,8 @@ const PuSetPlayer = (function () {
             li.querySelector("span.filename").textContent = value.name;
         },
         async getFileList(path) {
+            vm_list.paths.push(path);
+            console.log("getFileList", vm_list.paths);
             const a = await fetch("/api/directory_content_fetcher.php", {
                 method: "POST",
                 body: new URLSearchParams({ path })
@@ -642,6 +647,12 @@ const PuSetPlayer = (function () {
                 alert(vm_list.json.message);
             }
         }
+    });
+
+    document.querySelector(".file-list-title").addEventListener("click", function () {
+        if (vm_list.paths.length <= 1) return;
+        vm_list.paths.pop();
+        vm_list.getFileList(vm_list.paths.pop());
     });
 
     vm_list.delegation("click", "li", function (ev) {

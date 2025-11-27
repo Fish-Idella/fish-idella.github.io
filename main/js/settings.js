@@ -1,8 +1,8 @@
 
 storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).then(function (json) {
 
-    Interpreter.load("data/t-main.html").then(function (html) {
-        Interpreter.get("link-manager").init(true, function (root, options) {
+    PuSet.load("data/t-main.html").then(function (html) {
+        PuSet.get("link-manager").init(true, function (root, options) {
             document.body.appendChild(root.firstElementChild);
             options.exec(root, MainUI, options);
         });
@@ -22,92 +22,96 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     // 获取滚动容器元素
     const _scroll = document.getElementById("scroll");
 
-    // 为容器内的所有a.link-button元素添加拖放相关事件处理
-
-    // 拖动开始事件处理
-    _scroll.addEventListener("dragstart", Interpreter.delegation("a.link-button", function dragstart(event) {
+    // 为容器内的所有 a.link-button 元素添加拖放相关事件处理
+    PuSet(_scroll).on("contextmenu", "a.link-button", function click(event) {
+        event.preventDefault();
+        MainUI.openLinkManager(this.dataset.key);
+    }).on("dragstart", "a.link-button", function dragstart(event) {
+        // 拖动开始事件处理
         // 阻止事件冒泡
         event.stopPropagation();
         // 设置拖拽数据为当前元素的data-key属性值
+        _scroll._dragging = this;
         event.dataTransfer.setData('text/plain', this.dataset.key);
         // 设置允许的拖拽操作类型为移动
         event.dataTransfer.effectAllowed = 'move';
-    }), false);
 
-    // 拖拽经过事件处理
-    _scroll.addEventListener("dragover", Interpreter.delegation("a.link-button", function dragover(event) {
+        setTimeout(() => this.classList.add('dragging'));
+    }).on("dragover", "a.link-button", function dragover(event) {
+        // 拖拽经过事件处理
         // 阻止默认行为(允许放置)
         event.preventDefault();
         // 阻止事件冒泡
         event.stopPropagation();
-        // 设置允许的拖拽操作类型为移动
-        event.dataTransfer.effectAllowed = 'move';
-    }), false);
 
-    // 放置事件处理
-    _scroll.addEventListener("drop", Interpreter.delegation("a.link-button", function drop(event) {
-        // 阻止默认行为
+        if (!Object.is(this, _scroll._dragging)) requestAnimationFrame(() => {
+            const my_order = Number(this.style.order);
+            const isLeftMove = (Number(_scroll._dragging.dataset.key) < Number(this.dataset.key));
+
+            _scroll._dragging.style.order = (event.offsetX < this.offsetWidth / 2) ?
+                (isLeftMove ? my_order : (my_order - 1)) : (isLeftMove ? (my_order + 1) : my_order);
+        });
+    }).on("dragend", "a.link-button", function dragend() {
+        _scroll.querySelectorAll("a.dragging").forEach(a => a.classList.remove("dragging"));
+    }).on("drop", "a.link-button", function (event) {
+        // 放置事件处理
+        // 阻止默认行为（避免浏览器默认处理拖拽数据）和事件冒泡
         event.preventDefault();
-        // 阻止事件冒泡
         event.stopPropagation();
 
-        // 获取拖拽源元素的key值
-        let key = Number(event.dataTransfer.getData('text/plain'));
-        // 获取当前放置目标元素的key值
-        let index = Number(this.dataset.key);
+        const getTargetIndex = function (event, sourceKey, targetIndex, self, dragging) {
+            // 处理拖拽元素拖到自身的情况
+            if (self === dragging) {
+                // 根据源索引与目标索引的大小关系，调整目标索引为拖拽元素的 order 样式值（±1）
+                return (sourceKey > targetIndex ? 0 : 1) + Number(dragging.style.order);
+            } else {
+                // 非自身拖拽时：若鼠标在目标元素左半部分，且源索引小于目标索引，目标索引减1（调整插入位置）
+                if (event.offsetX < self.offsetWidth / 2 && sourceKey < targetIndex) {
+                    targetIndex--;
+                }
+                return targetIndex;
+            }
+        };
+        // 获取拖拽源元素的 data-key（原始索引）
+        const sourceKey = Number(event.dataTransfer.getData("text/plain"));
+        const targetIndex = getTargetIndex(event, sourceKey, Number(this.dataset.key), this, _scroll._dragging);
 
-        // 调整索引值(拖拽排序逻辑)
-        if (index > key) index--;
-        // 如果位置未变则退出
-        if (key === index) return console.log("拖动排序：位置不变");
-
-        // 从数据源中移除拖拽元素
-        const [obj] = MainUI.vm_links.data.splice(key, 1);
-        // 将元素插入到新位置
-        MainUI.vm_links.data.splice(index, 0, obj);
-
-        // 保存配置到本地存储
-        saveLocalConfigure()
-    }), false);
-
-    addUniversalEventListener(document.getElementById("add-link-button"), {
-        "click": function (event) {
-            event.preventDefault();
-            MainUI.openLinkManager('-1');
-        },
-        "dragenter dragover dragleave": function (event) {
-            event.preventDefault();
-        },
-        "drop": function (event) {
-            // 阻止默认行为
-            event.preventDefault();
-            // 阻止事件冒泡
-            event.stopPropagation();
-
-            // 获取拖拽源元素的key值
-            let key = Number(event.dataTransfer.getData('text/plain'));
-            MainUI.openLinkManager(key);
+        // 若源索引与调整后的目标索引相同，无需排序
+        if (sourceKey === targetIndex) {
+            console.log("拖动排序：位置不变");
+            return;
         }
+
+        // 从数据源中移除拖拽元素（源位置）
+        const [movedItem] = MainUI.vm_links.data.splice(sourceKey, 1);
+        // 将元素插入到新位置（调整后的目标索引）
+        MainUI.vm_links.data.splice(targetIndex, 0, movedItem);
+
+        // 保存排序后的配置到本地存储
+        saveLocalConfigure();
+    });
+
+    PuSet(document.getElementById("add-link-button")).on("click", function (event) {
+        event.preventDefault();
+        MainUI.openLinkManager('-1');
     });
 
     const getPsId = (function () {
-        // 使用箭头函数简化实现
-        const modernImplementation = (target) => {
-            return target.closest('[data-psid]')?.dataset.psid || '';
-        };
-
-        // 兼容旧浏览器的实现
-        const legacyImplementation = (target) => {
-            if (!target || target === document.body) {
-                return '';
-            }
-
-            const psid = target.dataset.psid;
-            return psid || legacyImplementation(target.parentElement);
-        };
-
         // 根据浏览器支持情况选择实现方式
-        return typeof Element.prototype.closest === 'function' ? modernImplementation : legacyImplementation;
+        return typeof Element.prototype.closest === 'function' ?
+
+            function modernImplementation(target) {
+                return target.closest('[data-psid]')?.dataset.psid || '';
+            } :
+
+            function legacyImplementation(target) {
+                if (!target || target === document.body) {
+                    return '';
+                }
+
+                const psid = target.dataset.psid;
+                return psid || legacyImplementation(target.parentElement);
+            };
     }());
 
     /**
@@ -143,7 +147,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     /** @type {Map<String, Set<>>} */
     const map = MainUI.map = new Map();
     MainUI.autoShow = function autoShow(node, obj) {
-        Interpreter.show(node, (allSame(this.GS, obj.hide, false) && allSame(this.GS, obj.show, true)));
+        PuSet.show(node, (allSame(this.GS, obj.hide, false) && allSame(this.GS, obj.show, true)));
     };
 
     function putItem(node, obj) {
@@ -159,7 +163,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     }
 
 
-    Interpreter.populateContent = function populateContent(target, settings, options) {
+    PuSet.populateContent = function populateContent(target, settings, options) {
         try {
             // 缓存DOM查询结果
             const templateEl = target.querySelector(".template");
@@ -185,9 +189,9 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     };
 
     function renderSettings(node, settings, options) {
-        const view = Interpreter.get(options.type);
+        const view = PuSet.get(options.type);
         const root = view.init(false);
-        Interpreter.populateContent(root, settings, options);
+        PuSet.populateContent(root, settings, options);
         view.exec(root, settings, options);
         if (Array.isArray(options.inner)) {
             const content = root.querySelector(".content");
@@ -201,7 +205,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
         return { host, root };
     }
 
-    const vm_menu_list = Interpreter({
+    const vm_menu_list = PuSet.ViewManager({
         target: _left_ul,
         selector: "li",
         data: [],
@@ -220,7 +224,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
         }
     });
 
-    _left_ul.addEventListener("click", Interpreter.delegation("li", function (event) {
+    PuSet(_left_ul).on("click", "li", function (event) {
         const psid = this.dataset.psid;
         const children = _right_scroll_content.children;
         for (const child of children) {
@@ -229,7 +233,7 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
                 return false;
             }
         }
-    }), false);
+    });
 
     _right_scroll_content.addEventListener("scroll", function scroll() {
         cancelAnimationFrame(scroll.frame);
@@ -250,13 +254,13 @@ storage.promise.then(() => fetch("./data/configure.json")).then(a => a.json()).t
     });
 
     // Main Menu Button 点击事件
-    const _menu = Interpreter.show(document.getElementById("menu"), true);
+    const _menu = PuSet.show(document.getElementById("menu"), true);
     _menu.addEventListener("click", function updateUI() {
         // 首次点击更新 UI
-        vm_menu_list.update(json), Interpreter.show(_settings, true);
+        vm_menu_list.update(json), PuSet.show(_settings, true);
         _menu.removeEventListener("click", updateUI);
         // 后续不再更新 UI
-        _menu.addEventListener("click", () => Interpreter.show(_settings, true));
+        _menu.addEventListener("click", () => PuSet.show(_settings, true));
     });
 
 });

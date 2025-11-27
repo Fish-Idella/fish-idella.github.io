@@ -4,121 +4,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>仿微信手机端聊天界面的大语言模型聊天窗口</title>
-    <link rel="stylesheet" href="index.css"></link>
+    <title>Ollama API 聊天</title>
     <link rel="stylesheet" href="/mediae/fonts/font-awesome/v6.1.1/css/all.min.css">
-    <style>
-    </style>
+    <link rel="stylesheet" href="index.css">
 </head>
 
-<body class="view flex-vertical">
+<body class="view flex-horizontal">
+
+    <div class="view flex-horizontal">
+
+        <!-- 主聊天界面 -->
+        <div class="flex-vertical" id="mainChat">
+            <div>
+                <div class="chat-header">
+                    <div class="chat-header-title">Ollama API 聊天</div>
+                    <div class="chat-header-icon">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </div>
+                </div>
+            </div>
+            <section class="fill chat-container">
+                <div class="message-container assistant">
+                    <div class="message">
+                        <div class="message-content">
+                            <div class="message-icon"></div>
+                            <div class="message-text">
+                                <div class="message-text-think">
+                                    <div class="title">已完成思考</div>
+                                    <div class="think"></div>
+                                </div>
+                                <div class="message-text-content">欢迎来到 Ollama API 聊天！</div>
+                            </div>
+                        </div>
+                        <div class="message-actions">
+                            <button title="刷新" class="message-actions-button">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                            <button title="修改" class="message-actions-button">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button title="复制" class="message-actions-button">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                            <button title="删除" class="message-actions-button">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="chat-input-container">
+                <div class="buttons">
+                    <select name="" id="models">
+                        <option value="ollama/llama:7b">llama:7b</option>
+                    </select>
+                    <button class="button" id="fileInput">文件</button>
+                    <button class="button" id="clearButton">清除</button>
+                    <button class="button" id="exportButton">导出</button>
+                    <button class="button" id="importButton">导入</button>
+                </div>
+                <label for="chatInput" class="flex-horizontal">
+                    <textarea class="fill chat-input" id="chatInput" placeholder="请输入..."></textarea>
+                    <button class="chat-send-button" id="sendButton">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </label>
+            </div>
+        </div>
+        <div class="fill flex-vertical" id="settings">
+
+        </div>
+    </div>
     <!-- 遮罩层 -->
     <div class="overlay" id="overlay"></div>
 
-    <!-- 主聊天界面 -->
-    <div class="view flex-vertical" id="mainChat">
-        <header class="flex-horizontal">
-            <button class="unify unselect" id="memberListBtn">
-                <i class="fas fa-users"></i>
-            </button>
-            <select class="unify unselect">
-                <option value="huihui_ai/qwen3-abliterated:8b">huihui_ai/qwen3-abliterated:8b</option>
-                <option value="qwen3:8b">qwen3:8b</option>
-                <option value="deepseek-r1:latest">deepseek-r1:latest</option>
-            </select>
-            <button class="unify unselect" id="settingsBtn">
-                <i class="fas fa-cog"></i>
-            </button>
-        </header>
-
-        <section class="flex-vertical" id="chatContent"></section>
-
-        <footer class="flex-vertical">
-            <div class="input-tools flex-horizontal">
-                <div class="tool-button">
-                    <i class="fas fa-image"></i>
-                </div>
-                <div class="tool-button">
-                    <i class="fas fa-smile"></i>
-                </div>
-                <div class="tool-button">
-                    <i class="fas fa-microphone"></i>
-                </div>
-                <div class="tool-button">
-                    <i class="fas fa-plus"></i>
-                </div>
-            </div>
-
-            <div class="input-area flex-horizontal">
-                <textarea class="unify" id="messageInput" placeholder="输入消息..."></textarea>
-                <button class="unify send-button" id="sendBtn" disabled>发送</button>
-            </div>
-        </footer>
-    </div>
-
-    <!-- 聊天成员列表 -->
-    <div class="view member-list flex-vertical" id="memberList">
-        <div class="settings-title">聊天成员 (3)</div>
-        <div class="flex-vertical fc overflow-y-auto">
-            <div class="member-item flex-horizontal">
-                <div class="avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="member-info">
-                    <div class="member-name">张三</div>
-                    <div class="member-status">在线</div>
-                </div>
-            </div>
-            <div class="member-item flex-horizontal">
-                <div class="avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="member-info">
-                    <div class="member-name">李四</div>
-                    <div class="member-status">正在输入...</div>
-                </div>
-            </div>
-            <div class="member-item flex-horizontal">
-                <div class="avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="member-info">
-                    <div class="member-name">王五</div>
-                    <div class="member-status">10分钟前在线</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 全局设置UI -->
-    <div class="view settings-panel flex-vertical" id="settingsPanel">
-        <div class="settings-title">设置</div>
-        <div class="flex-vertical fc overflow-y-auto">
-            <div class="settings-item flex-horizontal">
-                <span>消息通知</span>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-            </div>
-            <div class="settings-item flex-horizontal">
-                <span>隐私设置</span>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-            </div>
-            <div class="settings-item flex-horizontal">
-                <span>通用设置</span>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-            </div>
-            <div class="settings-item flex-horizontal">
-                <span>存储空间</span>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-            </div>
-            <div class="settings-item flex-horizontal">
-                <span>关于</span>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-            </div>
-        </div>
-    </div>
-
+    <script src="/js/puset/interpreter.js"></script>
     <script src="index.js"></script>
 </body>
 
 </html>
-

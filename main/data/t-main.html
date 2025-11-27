@@ -158,30 +158,28 @@
                 _link_manager.classList.add("hide");
             });
 
-            addUniversalEventListener([
-                [_link_manager_input.title.e, "input", function () {
-                    _preview_title.textContent = _link_manager_input.title.e.value;
-                }],
-                [_link_manager_input.icon.e, "change", function () {
-                    // TODO
-                }],
-                [_preview_background, "click", function () {
-                    ImageSelector(function (blob) {
-                        MainUI.loadImage(URL.createObjectURL(blob))
-                            .then(image => MainUI.compressImage(image, 128, 128))
-                            .then(function (dataURL) {
-                                _link_manager_input.icon.e.value = "";
-                                _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value = dataURL})`);
-                            });
-                    });
-                }],
-                [_link_manager_input.selector.e, "change", function () {
-                    _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value = _link_manager_input.selector.e.value);
-                }],
-                [_link_manager_input.background_color.e, "change", function () {
-                    _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value);
-                }]
-            ]);
+            _link_manager_input.title.e.addEventListener("input", function () {
+                _preview_title.textContent = _link_manager_input.title.e.value;
+            });
+            _link_manager_input.icon.e.addEventListener("change", function () {
+                // TODO
+            });
+            _preview_background.addEventListener("click", function () {
+                ImageSelector(function (blob) {
+                    MainUI.loadImage(URL.createObjectURL(blob))
+                        .then(image => MainUI.compressImage(image, 128, 128))
+                        .then(function (dataURL) {
+                            _link_manager_input.icon.e.value = "";
+                            _preview_background.style.setProperty("background-image", `url(${_link_manager_input.local_icon.e.value = dataURL})`);
+                        });
+                });
+            });
+            _link_manager_input.selector.e.addEventListener("change", function () {
+                _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value = _link_manager_input.selector.e.value);
+            });
+            _link_manager_input.background_color.e.addEventListener("change", function () {
+                _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value);
+            });
 
             MainUI.openLinkManager = function openLinkManager(index = "-1") {
                 if ((_link_manager.dataset.id = index) >= 0) {

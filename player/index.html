@@ -15,6 +15,7 @@
             <div id="player" class="content">
                 <div id="player-video-layer" class="video-layer grid-vertical center">
                     <video class="video fill" poster="/mediae/icons/0x300a0a0.png" muted="muted" preload="metadata">
+                        <track src="" kind="subtitles" srclang="zh" label="中文" default>
                         <span>你的浏览器不支持 HTML5 视频。</span>
                     </video>
                     <canvas class="fill danmu">你的浏览器不支持弹幕功能，请关闭弹幕。</canvas>
@@ -123,7 +124,7 @@
                 </div>
             </div>
             <div class="box fc mt flex-vertical">
-                <div>文件列表</div>
+                <div class="file-list-title"><span>文件列表</span><span class="goback">↩</span></div>
                 <div class="fill">
                     <ul class="view flex-vertical scroll file-list">
                         <li class="directory"><span class="icon"></span><span class="filename"></span></li>

@@ -8,7 +8,7 @@ td,
 th {
     font-size: max(1.6vmin, 16px);
     font-weight: 300;
-    font-family: "HarmonyOS Sans", "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, Sans-Serif;
+    font-family: "MiSans", "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, Sans-Serif;
 }
 
 a,
@@ -108,4 +108,18 @@ ul.fc.scroll li:nth-child(even) {
 ::-webkit-scrollbar-thumb {
     background-color: #636363;
     border-radius: 0.5rem;
+}
+
+#web-loading {
+    position: fixed;
+    display: flex;
+    place-content: center;
+    place-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: white;
 }

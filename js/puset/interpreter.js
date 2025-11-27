@@ -17,17 +17,20 @@ const Interpreter = (function IIFE() {
      * @example
      * Types = { Boolean: "boolean", Number: "number", ... }
      */
-    const Types = Object.freeze("Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ").reduce(function reduce(e, t) {
-        const r = t.toLowerCase();
-        Object.defineProperty(e, t, { value: r, enumerable: true, writable: false });
-        return Object.defineProperty(e, `[object ${t}]`, { value: r, enumerable: false, writable: false }), e
+    const Types = Object.freeze("Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ").reduce(function reduce(previous, current) {
+        const r = current.toLowerCase();
+        Object.defineProperty(previous, current, { value: r, enumerable: true, writable: false });
+        Object.defineProperty(previous, `[object ${current}]`, { value: r, enumerable: false, writable: false });
+        return previous;
     }, Object.create({
-        type: function (e) {
-            if (null == e) return String(e);
-            const t = typeof e;
+        type: function (test) {
+            // null, undefined
+            if (null == test) return String(test);
+
+            const t = typeof test;
             if (t === this.Object || t === this.Function) {
-                const t = this.toString.call(e);
-                return this.hasOwnProperty(t) ? this[t] : this.Object
+                const key = this.toString.call(test);
+                return this.hasOwnProperty(key) ? this[key] : this.Object;
             }
             return t
         }
@@ -63,13 +66,16 @@ const Interpreter = (function IIFE() {
 
     /**
      * 创建链式类 - 将对象转换为类并添加额外属性
-     * @param {Object} obj - 原型对象
-     * @param {Function} [obj.constructor] - 原型对象
-     * @param {Object} props - 要添加到类的静态属性
-     * @returns {Function} - 返回构造函数
+     * @param {Object} prototype - 原型对象
+     * @param {Function} prototype.constructor - 构造函数
+     * @param {Object} statics - 要添加到类的静态属性
+     * @returns {Function & Object} 构造函数
      */
-    const blockChainClass = function blockChainClass(obj, props) {
-        return Object.assign((obj.constructor.prototype = obj).constructor, props);
+    const blockChainClass = function blockChainClass(prototype, statics) {
+        if (Types.Object === typeof prototype && Types.Function === typeof prototype?.constructor) {
+            return Object.assign((prototype.constructor.prototype = prototype)?.constructor, statics);
+        }
+        throw new Error("no constructor");
     };
 
     const host = document.createElement("div");
@@ -79,10 +85,10 @@ const Interpreter = (function IIFE() {
      * View类 - 表示一个视图模板
      * 管理模板的DOM结构、样式和初始化逻辑
      */
-    const View = blockChainClass({
-        name: "",                   // 视图名称
-        exec: function () { },      // 视图初始化执行函数
-        cachedElements: null,       // 缓存的DOM元素
+    class View {
+        name = "";                   // 视图名称
+        exec() {}      // 视图初始化执行函数
+        cachedElements = null;       // 缓存的DOM元素
 
         /**
          * View构造函数
@@ -91,11 +97,11 @@ const Interpreter = (function IIFE() {
          * @param {HTMLStyleElement} style - 视图样式
          * @param {Function} handler - 视图初始化处理函数
          */
-        constructor: function View(name, node, style, handler) {
+        constructor(name, node, style, handler) {
             this.name = name;
             this.exec = isFunction(handler) ? handler : empty;
             this.cachedElements = [style, node].filter(Boolean); // 过滤掉不存在的元素
-        },
+        }
 
         /**
          * 初始化视图
@@ -103,7 +109,7 @@ const Interpreter = (function IIFE() {
          * @param {Function} handler - 初始化回调函数，接收root和view参数
          * @returns {ShadowRoot} - 返回Shadow DOM根节点
          */
-        init: function init(is = false, handler) {
+        init(is = false, handler) {
             const clone = host.cloneNode();
             const root = is ? clone : clone.attachShadow({ mode: 'open' });
             // 克隆缓存的元素并添加到Shadow DOM
@@ -115,7 +121,7 @@ const Interpreter = (function IIFE() {
                 return root;
             }
         }
-    });
+    }
 
     /**
      * 合并数组 - 将源数组与目标数组合并
@@ -135,15 +141,15 @@ const Interpreter = (function IIFE() {
      * ViewManager类 - 管理视图与数据的绑定
      * 处理数据变化时的视图更新逻辑
      */
-    const ViewManager = blockChainClass({
-        selector: "",               // 子元素选择器
-        children: null,             // 子元素集合
-        insert: null,               // 新元素插入位置
-        isInsert: false,            // 是否设置了插入位置
-        isFunction: false,          // 模板是否为函数类型
-        hidden: false,              // 初始化后是否隐藏元素
-        hasLayout: false,           // 是否有自定义布局函数
-        source: null,               // 原始数据源
+    class ViewManager {
+        selector = "";               // 子元素选择器
+        children = null;             // 子元素集合
+        insert = null;               // 新元素插入位置
+        isInsert = false;            // 是否设置了插入位置
+        isFunction = false;          // 模板是否为函数类型
+        hidden = false;              // 初始化后是否隐藏元素
+        hasLayout = false;           // 是否有自定义布局函数
+        source = null;               // 原始数据源
 
         /**
          * ViewManager构造函数
@@ -158,22 +164,24 @@ const Interpreter = (function IIFE() {
          * @param {Function} [options.layout] - 布局函数
          * @param {Function} [options.onresize] - 数组长度变化回调
          */
-        constructor: function ViewManager(options) {
-            const vm = Object.assign(this, options);
+        constructor(options) {
+            const instance = Object.assign(this, options);
 
             // 初始化子元素集
-            this.children = merge([], vm.selector ? vm.target.querySelectorAll(vm.selector) : vm.children);
+            instance.children = merge([], instance.selector
+                ? instance.target.querySelectorAll(instance.selector)
+                : instance.children);
 
             // 设置插入位置
-            if (vm.insert && Types.String === typeof vm.insert) {
-                this.insert = vm.target.querySelector(vm.insert);
+            if (instance.insert && Types.String === typeof instance.insert) {
+                instance.insert = instance.target.querySelector(instance.insert);
             }
-            this.isInsert = vm.insert instanceof HTMLElement;
-            this.hasLayout = isFunction(vm.layout);
+            instance.isInsert = instance.insert instanceof HTMLElement;
+            instance.hasLayout = isFunction(instance.layout);
 
             const isArray = Array.isArray(options.data);
-            const hasResize = isFunction(vm.onresize);
-            const hasTemplate = vm.initializeTemplate();
+            const hasResize = isFunction(instance.onresize);
+            const hasTemplate = instance.initializeTemplate();
 
             /**
              * 数据验证器 - 用于Proxy代理对象
@@ -188,19 +196,19 @@ const Interpreter = (function IIFE() {
                  * @returns {Object} - 包含node、index和isLengthProperty的对象
                  */
                 getNodeParams: function getNodeParams(target, property, value) {
-                    let node = vm.target, index = -1, isLengthProperty = false;
+                    let node = instance.target, index = -1, isLengthProperty = false;
                     if (hasTemplate) {
                         if (isArray) {
                             if (LENGTH_PROPERTY === property) {
                                 isLengthProperty = true;
                             } else {
                                 index = property;
-                                node = vm.getChild(property, value.type);
+                                node = instance.getChild(property, value.type);
                                 isLengthProperty = false;
                             }
                         } else {
                             index = Object.keys(target).indexOf(property);
-                            node = vm.getChild(index, value.type);
+                            node = instance.getChild(index, value.type);
                         }
                     }
                     return { node, index, isLengthProperty }
@@ -221,17 +229,17 @@ const Interpreter = (function IIFE() {
                         requestAnimationFrame(function layoutChange() {
                             if (params.isLengthProperty) {
                                 // 处理数组长度变化
-                                for (let length = vm.children.length, i = value; i < length; i++) {
-                                    Interpreter.show(vm.children[i], false); // 隐藏溢出的元素
+                                for (let length = instance.children.length, i = value; i < length; i++) {
+                                    Interpreter.show(instance.children[i], false); // 隐藏溢出的元素
                                 }
                                 if (hasResize) {
-                                    vm.onresize(vm.target, value, property); // 调用长度变化回调
+                                    instance.onresize(instance.target, value, property); // 调用长度变化回调
                                 }
                             } else {
                                 Interpreter.show(params.node, true); // 显示元素
-                                if (vm.hasLayout) {
+                                if (instance.hasLayout) {
                                     // 使用自定义布局函数更新视图
-                                    vm.layout(params.node, value, property, Number(params.index));
+                                    instance.layout(params.node, value, property, Number(params.index));
                                 }
                             }
                         });
@@ -250,33 +258,35 @@ const Interpreter = (function IIFE() {
                  */
                 deleteProperty: function (target, property) {
                     const index = isArray ? property : Object.keys(target).indexOf(property);
-                    Interpreter.show(vm.children[index], false); // 隐藏被删除的元素
+                    Interpreter.show(instance.children[index], false); // 隐藏被删除的元素
                     return Reflect.deleteProperty(target, property);
                 },
             };
 
-            this.source = options.data ?? {}; // 数据源
-            this.data = new Proxy(vm.source, validator); // 创建数据代理
+            instance.source = options.data ?? {}; // 数据源
+            instance.data = new Proxy(instance.source, validator); // 创建数据代理
 
-            if (!vm.hidden) {
-                vm.update(vm.source); // 初始化视图
+            if (!instance.hidden) {
+                instance.update(instance.source); // 初始化视图
             }
 
             if (isArray && hasResize) {
                 // 调用数组长度变化回调
-                vm.onresize(vm.target, vm.data[LENGTH_PROPERTY], LENGTH_PROPERTY);
+                instance.onresize(instance.target, instance.data[LENGTH_PROPERTY], LENGTH_PROPERTY);
             }
-        },
 
-        getChildAt: function (i) {
+            return instance;
+        }
+
+        getChildAt(i) {
             return this.children[i];
-        },
+        }
 
         /**
          * 初始化模板
          * @returns {boolean} - 模板是否有效
          */
-        initializeTemplate: function () {
+        initializeTemplate() {
             if (this.isFunction = isFunction(this.template)) {
                 return true; // 模板是函数类型
             } else {
@@ -297,7 +307,7 @@ const Interpreter = (function IIFE() {
                 }
             }
             return false;
-        },
+        }
 
         /**
          * 获取模板实例
@@ -305,9 +315,9 @@ const Interpreter = (function IIFE() {
          * @param {string} type - 类型
          * @returns {Element|ShadowRoot} - 模板实例
          */
-        getTemplateInstance: function (index, type) {
+        getTemplateInstance(index, type) {
             return this.isFunction ? this.template(index, type) : this.template.cloneNode(true);
-        },
+        }
 
         /**
          * 获取子元素，超出范围则创建新实例
@@ -315,7 +325,7 @@ const Interpreter = (function IIFE() {
          * @param {string} type - 类型9
          * @returns {Element} - 子元素
          */
-        getChild: function (index, type) {
+        getChild(index, type) {
             let child = this.getChildAt(index);
             if (index >= this.children.length || index < 0) {
                 // 创建新的子元素实例
@@ -327,24 +337,25 @@ const Interpreter = (function IIFE() {
                 }
             }
             return child;
-        },
+        }
 
-        delegation: function (event, selector, handler, options) {
+        delegation(event, selector, handler, options) {
             const callback = Interpreter.delegation(selector, handler);
             this.target.addEventListener(event, callback, options);
             return callback;
-        },
+        }
 
         /**
          * 更新数据
          * @param {Object|Array} data - 新数据
          */
-        update: function (data) {
+        update(data) {
             Object.assign(this.data, data); // 使用代理对象更新数据
         }
-    });
+    };
 
     /**
+     * Components
      * 模板实例管理器
      * 使用双层Map存储所有模板实例，外层为命名空间，内层为该命名空间下的模板
      */
@@ -360,7 +371,7 @@ const Interpreter = (function IIFE() {
      * @param {string} namespace - 命名空间
      * @returns {Map} - 模板Map
      */
-    const getNamespaceMap = function (namespace = DEFAULT_NAMESPACE) {
+    const getNamespaceMap = function getNamespaceMap(namespace = DEFAULT_NAMESPACE) {
         if (!TEMPLATE_INSTANCES.has(namespace)) {
             TEMPLATE_INSTANCES.set(namespace, new Map());
         }
@@ -390,18 +401,6 @@ const Interpreter = (function IIFE() {
             return new ViewManager(options);
         }
     }, {
-        /**
-         * 设置模板
-         * @param {string} name - 模板名称
-         * @param {Node} node - 模板节点
-         * @param {HTMLStyleElement} style - 模板样式
-         * @param {Function} handler - 模板初始化处理函数
-         * @param {string} [namespace] - 命名空间，可选
-         */
-        set(name, node, style, handler, namespace = DEFAULT_NAMESPACE) {
-            const namespaceMap = getNamespaceMap(namespace);
-            namespaceMap.set(name, new View(name, node, style, handler));
-        },
 
         /**
          * 获取模板
@@ -442,7 +441,9 @@ const Interpreter = (function IIFE() {
          * @returns {string[]} - 模板数组
          */
         getTemplates(namespace = DEFAULT_NAMESPACE) {
-            return TEMPLATE_INSTANCES.has(namespace) ? Array.from(TEMPLATE_INSTANCES.get(namespace).keys()) : null;
+            return TEMPLATE_INSTANCES.has(namespace)
+                ? Array.from(TEMPLATE_INSTANCES.get(namespace).keys())
+                : null;
         },
 
         /**
@@ -482,6 +483,7 @@ const Interpreter = (function IIFE() {
                 }
 
                 const funcName = Interpreter.name;
+                const namespaceMap = getNamespaceMap(namespace);
 
                 // 处理每个模板
                 for (const node of nodeList) {
@@ -517,7 +519,7 @@ const Interpreter = (function IIFE() {
                     }
 
                     // 注册模板到指定命名空间
-                    Interpreter.set(node.id, view, style, handler, namespace);
+                    namespaceMap.set(node.id, new View(node.id, view, style, handler));
                 }
 
                 return nodeList;
@@ -528,12 +530,58 @@ const Interpreter = (function IIFE() {
             }
         },
 
-        delegation: (function IIFE(getComposedPath) {
+        /**
+         * 创建防抖函数
+         * @param {number} wait - 延迟时间（毫秒）
+         * @param {Function} handler - 回调函数
+         * @returns {(event: Event) => void} - 事件处理函数
+         */
+        debounce(wait, handler) {
+            let timeout;
+            return function listener(event) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => handler.call(this, event, listener), wait);
+            }
+        },
+
+        /**
+         * 创建节流函数
+         * @param {number} delay 节流的间隔时间（毫秒）
+         * @param {Function} handler - 回调函数
+         * @returns {(event: Event) => void} - 事件处理函数
+         */
+        throttle(delay, handler) {
+            let lastTime = 0;
+            return function listener(event) {
+                const now = Date.now();
+                // 到达间隔时间
+                if (now - lastTime >= delay) {
+                    handler.call(this, event, listener);
+                    lastTime = now; // 更新上次执行时间
+                }
+            }
+        },
+
+        /**
+         * 创建事件委托
+         * @param {string} selector - 事件代理的子元素选择器
+         * @param {Function} handler - 回调函数
+         * @returns {(event: Event) => void} - 事件处理函数
+         */
+        delegation: (function IIFE() {
             // 检查浏览器是否支持Element.prototype.matches方法
             const hasMatches = "function" === typeof Element.prototype.matches;
 
             // 检查浏览器是否支持Element.prototype.closest方法
             const hasClosest = "function" === typeof Element.prototype.closest;
+
+            const getComposedPath = function getComposedPath(target, event) {
+                let path, node;
+                if (event.composedPath) { path = Array.from(event.composedPath()); }
+                else if (event.path) { path = Array.from(event.path); }
+                else for (node = event.target, path = []; node = node.parentNode;) { path.push(node); if (node === target) break; }
+                return path.slice(0, 1 + path.indexOf(target));
+            };
 
             // 创建自定义匹配函数，用于判断元素是否匹配选择器
             const customMatches = function customMatches(target, selector) {
@@ -551,23 +599,23 @@ const Interpreter = (function IIFE() {
 
             // 返回事件代理函数，接收选择器和事件处理函数
             return function delegation(selector, handler) {
+                if ("function" !== typeof handler) {
+                    throw new TypeError("事件处理函数必须是一个函数");
+                }
+
+                const stringSelector = String(selector);
+
                 // 返回实际的事件监听器
                 return function listener(event) {
                     // 获取事件传播路径
                     const path = getComposedPath(this, event);
                     // 从路径中筛选出匹配选择器的元素
-                    const inner = path.filter(customMatches(this, selector));
+                    const inner = path.filter(customMatches(this, stringSelector));
                     // 对每个匹配元素调用处理函数，并绑定this为当前元素
                     inner.forEach(child => handler.call(child, event, listener));
                 }
             }
-        }(function getComposedPath(target, event) {
-            let path, node;
-            if (event.composedPath) { path = Array.from(event.composedPath()); }
-            else if (event.path) { path = Array.from(event.path); }
-            else for (node = event.target, path = []; node = node.parentNode;) { path.push(node); if (node === target) break; }
-            return path.slice(0, 1 + path.indexOf(target));
-        })),
+        }()),
 
         /**
          * 显示/隐藏元素
