@@ -1,6 +1,5 @@
 // 持久化本地存储方案
 const StorageHelper = (function () {
-    // "use strict";
 
     // In the following line, you should include the prefixes of implementations you want to test.
     window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -45,7 +44,7 @@ const StorageHelper = (function () {
      * @param {String} version 版本号
      * @returns 
      */
-    const StorageHelper = function StorageHelper(type, name = DATABASE_NAME, version = 1) {
+    const StorageHelper = Object.assign(function StorageHelper(type, name = DATABASE_NAME, version = 1) {
         if (!(this instanceof StorageHelper)) {
             return new StorageHelper(type, name, version);
         }
@@ -62,352 +61,352 @@ const StorageHelper = (function () {
             }
         });
         return this;
-    };
+    }, {
+        indexedDB: {
+            api: window.indexedDB,
+            // 创建数据库和表
+            init: function (obj, resolve, reject) {
+                try {
+                    obj.request = this.api.open(obj.name, obj.version);
+                    obj.request.onupgradeneeded = function (ev) {
+                        let db = ev.target.result;
+                        let objectStore = db.createObjectStore(TABLE_NAME);
+                        objectStore.createIndex("key", "key", { unique: true });
+                    };
 
-    StorageHelper.indexedDB = {
-        api: window.indexedDB,
-        // 创建数据库和表
-        init: function (obj, resolve, reject) {
-            try {
-                obj.request = this.api.open(obj.name, obj.version);
-                obj.request.onupgradeneeded = function (ev) {
-                    let db = ev.target.result;
-                    let objectStore = db.createObjectStore(TABLE_NAME);
-                    objectStore.createIndex("key", "key", { unique: true });
-                };
+                    obj.request.onsuccess = ev => {
+                        obj.db = ev.target.result;
+                        resolve(ev);
+                    };
 
-                obj.request.onsuccess = ev => {
-                    obj.db = ev.target.result;
-                    resolve(ev);
-                };
+                    obj.request.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.init", "数据库初始化失败", ev.target.error));
+                    };
 
-                obj.request.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.init", "数据库初始化失败", ev.target.error));
-                };
-
-                obj.request.onblocked = ev => {
-                    reject(new StorageHelperError("indexedDB.init", "数据库被阻塞", ev.target.error));
-                };
-            } catch (error) {
-                reject(new StorageHelperError("indexedDB.init", "数据库初始化过程中发生异常", error));
-            }
-        },
-        setItem: function (obj, resolve, reject, key, value) {
-            try {
-
-                const transaction = obj.db.transaction(TABLE_NAME, "readwrite");
-
-                transaction.oncomplete = resolve;
-
-                transaction.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.setItem", "事务操作失败", ev.target.error));
-                };
-
-                const store = transaction.objectStore(TABLE_NAME);
-                const request = store.put(value, key);
-
-                request.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.setItem", "数据写入失败", ev.target.error));
-                };
-
-            } catch (error) {
-                reject(new StorageHelperError("indexedDB.setItem", "保存过程中发生异常", error));
-            }
-        },
-        getItem: function (obj, resolve, reject, key) {
-            try {
-
-                const transaction = obj.db.transaction(TABLE_NAME);
-                const store = transaction.objectStore(TABLE_NAME);
-                const request = store.get(key);
-
-                request.onsuccess = ev => {
-                    resolve(ev.target.result);
-                };
-
-                request.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.getItem", "数据读取失败", ev.target.error));
-                };
-
-                transaction.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.getItem", "事务操作失败", ev.target.error));
-                };
-
-            } catch (error) {
-                reject(new StorageHelperError("indexedDB.getItem", "读取过程中发生异常", error));
-            }
-        },
-        removeItem: function (obj, resolve, reject, key) {
-            try {
-
-                const transaction = obj.db.transaction(TABLE_NAME, "readwrite");
-
-                transaction.oncomplete = resolve;
-
-                transaction.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.removeItem", "事务操作失败", ev.target.error));
-                };
-
-                const store = transaction.objectStore(TABLE_NAME);
-                const request = store.delete(key);
-
-                request.onerror = ev => {
-                    reject(new StorageHelperError("indexedDB.removeItem", "数据删除失败", ev.target.error));
-                };
-
-            } catch (error) {
-                reject(new StorageHelperError("indexedDB.removeItem", "删除过程中发生异常", error));
-            }
-        }
-    };
-
-    StorageHelper.localStorage = {
-        api: window.localStorage,
-        init: function (obj, resolve, reject) {
-            try {
-                obj.db = this.api;
-                obj.db.setItem(DATABASE_NAME, TABLE_NAME);
-                if (obj.db.getItem(DATABASE_NAME) === TABLE_NAME) {
-                    resolve();
-                } else {
-                    throw new Error("无法写入localStorage");
+                    obj.request.onblocked = ev => {
+                        reject(new StorageHelperError("indexedDB.init", "数据库被阻塞", ev.target.error));
+                    };
+                } catch (error) {
+                    reject(new StorageHelperError("indexedDB.init", "数据库初始化过程中发生异常", error));
                 }
-            } catch (error) {
-                reject(new StorageHelperError("localStorage.init", "初始化失败，可能浏览器不支持或已禁用localStorage", error));
-            }
-        },
-        setItem: function (obj, resolve, reject, key, value) {
-            try {
-                if (typeof value !== 'string') {
-                    value = JSON.stringify(value);
+            },
+            setItem: function (obj, resolve, reject, key, value) {
+                try {
+
+                    const transaction = obj.db.transaction(TABLE_NAME, "readwrite");
+
+                    transaction.oncomplete = resolve;
+
+                    transaction.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.setItem", "事务操作失败", ev.target.error));
+                    };
+
+                    const store = transaction.objectStore(TABLE_NAME);
+                    const request = store.put(value, key);
+
+                    request.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.setItem", "数据写入失败", ev.target.error));
+                    };
+
+                } catch (error) {
+                    reject(new StorageHelperError("indexedDB.setItem", "保存过程中发生异常", error));
                 }
-                obj.db.setItem(key, value);
-                resolve("complete");
-            } catch (error) {
-                reject(new StorageHelperError("localStorage.setItem", "保存失败，可能超出存储限制", error));
-            }
-        },
-        getItem: function (obj, resolve, reject, key) {
-            try {
-                const value = obj.db.getItem(key);
-                resolve(value);
-            } catch (error) {
-                reject(new StorageHelperError("localStorage.getItem", "读取失败", error));
-            }
-        },
-        removeItem: function (obj, resolve, reject, key) {
-            try {
-                obj.db.removeItem(key);
-                resolve("complete");
-            } catch (error) {
-                reject(new StorageHelperError("localStorage.removeItem", "删除失败", error));
-            }
-        }
-    };
+            },
+            getItem: function (obj, resolve, reject, key) {
+                try {
 
-    StorageHelper.openDatabase = {
-        api: window.openDatabase,
-        init: function (obj, resolve, reject) {
-            try {
+                    const transaction = obj.db.transaction(TABLE_NAME);
+                    const store = transaction.objectStore(TABLE_NAME);
+                    const request = store.get(key);
 
-                obj.db = window.openDatabase(DATABASE_NAME, "1.0", "PUSET_DATABASE_DEFAULT", 10 * 1024 * 1024);
+                    request.onsuccess = ev => {
+                        resolve(ev.target.result);
+                    };
 
-                if (!obj.db) {
-                    throw new Error("无法创建或打开数据库");
+                    request.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.getItem", "数据读取失败", ev.target.error));
+                    };
+
+                    transaction.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.getItem", "事务操作失败", ev.target.error));
+                    };
+
+                } catch (error) {
+                    reject(new StorageHelperError("indexedDB.getItem", "读取过程中发生异常", error));
                 }
+            },
+            removeItem: function (obj, resolve, reject, key) {
+                try {
 
-                obj.db.transaction(
-                    tx => {
-                        const sql = `CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (key text unique, value text)`;
-                        tx.executeSql(
-                            sql,
-                            null,
-                            () => resolve(),
-                            (tx, error) => {
-                                reject(new StorageHelperError("openDatabase.init", "创建表失败", error));
-                                return false;
-                            }
-                        );
-                    },
-                    error => {
-                        reject(new StorageHelperError("openDatabase.init", "数据库事务失败", error));
+                    const transaction = obj.db.transaction(TABLE_NAME, "readwrite");
+
+                    transaction.oncomplete = resolve;
+
+                    transaction.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.removeItem", "事务操作失败", ev.target.error));
+                    };
+
+                    const store = transaction.objectStore(TABLE_NAME);
+                    const request = store.delete(key);
+
+                    request.onerror = ev => {
+                        reject(new StorageHelperError("indexedDB.removeItem", "数据删除失败", ev.target.error));
+                    };
+
+                } catch (error) {
+                    reject(new StorageHelperError("indexedDB.removeItem", "删除过程中发生异常", error));
+                }
+            }
+        },
+
+        localStorage: {
+            api: window.localStorage,
+            init: function (obj, resolve, reject) {
+                try {
+                    obj.db = this.api;
+                    obj.db.setItem(DATABASE_NAME, TABLE_NAME);
+                    if (obj.db.getItem(DATABASE_NAME) === TABLE_NAME) {
+                        resolve();
+                    } else {
+                        throw new Error("无法写入localStorage");
                     }
-                );
-            } catch (error) {
-                reject(new StorageHelperError("openDatabase.init", "初始化失败", error));
-            }
-        },
-        setItem: function (obj, resolve, reject, key, value) {
-            try {
-
-                obj.db.transaction(
-                    tx => {
-                        const insertSql = `INSERT INTO ${TABLE_NAME} (key, value) VALUES (? , ?)`;
-                        const updateSql = `UPDATE ${TABLE_NAME} SET value=? WHERE key=?`;
-
-                        tx.executeSql(
-                            insertSql,
-                            [key, JSON.stringify(value)],
-                            () => resolve(),
-                            (tx, error) => {
-                                // 插入失败，尝试更新
-                                tx.executeSql(
-                                    updateSql,
-                                    [JSON.stringify(value), key],
-                                    () => resolve(),
-                                    (tx, error) => {
-                                        reject(new StorageHelperError("openDatabase.setItem", "更新失败", error));
-                                        return false;
-                                    }
-                                );
-                                return false;
-                            }
-                        );
-                    },
-                    error => {
-                        reject(new StorageHelperError("openDatabase.setItem", "数据库事务失败", error));
+                } catch (error) {
+                    reject(new StorageHelperError("localStorage.init", "初始化失败，可能浏览器不支持或已禁用localStorage", error));
+                }
+            },
+            setItem: function (obj, resolve, reject, key, value) {
+                try {
+                    if (typeof value !== 'string') {
+                        value = JSON.stringify(value);
                     }
-                );
-            } catch (error) {
-                reject(new StorageHelperError("openDatabase.setItem", "保存失败", error));
+                    obj.db.setItem(key, value);
+                    resolve("complete");
+                } catch (error) {
+                    reject(new StorageHelperError("localStorage.setItem", "保存失败，可能超出存储限制", error));
+                }
+            },
+            getItem: function (obj, resolve, reject, key) {
+                try {
+                    const value = obj.db.getItem(key);
+                    resolve(value);
+                } catch (error) {
+                    reject(new StorageHelperError("localStorage.getItem", "读取失败", error));
+                }
+            },
+            removeItem: function (obj, resolve, reject, key) {
+                try {
+                    obj.db.removeItem(key);
+                    resolve("complete");
+                } catch (error) {
+                    reject(new StorageHelperError("localStorage.removeItem", "删除失败", error));
+                }
             }
         },
-        getItem: function (obj, resolve, reject, key) {
-            try {
 
-                obj.db.transaction(
-                    tx => {
-                        const sql = `SELECT value FROM ${TABLE_NAME} WHERE key = ?`;
-                        tx.executeSql(
-                            sql,
-                            [key],
-                            (tx, results) => {
-                                try {
-                                    if (results.rows.length > 0) {
-                                        resolve(JSON.parse(results.rows.item(0).value));
-                                    } else {
-                                        resolve(null);
-                                    }
-                                } catch (parseError) {
-                                    reject(new StorageHelperError("openDatabase.getItem", "解析数据失败", parseError));
+        openDatabase: {
+            api: window.openDatabase,
+            init: function (obj, resolve, reject) {
+                try {
+
+                    obj.db = window.openDatabase(DATABASE_NAME, "1.0", "PUSET_DATABASE_DEFAULT", 10 * 1024 * 1024);
+
+                    if (!obj.db) {
+                        throw new Error("无法创建或打开数据库");
+                    }
+
+                    obj.db.transaction(
+                        tx => {
+                            const sql = `CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (key text unique, value text)`;
+                            tx.executeSql(
+                                sql,
+                                null,
+                                () => resolve(),
+                                (tx, error) => {
+                                    reject(new StorageHelperError("openDatabase.init", "创建表失败", error));
+                                    return false;
                                 }
-                            },
-                            (tx, error) => {
-                                reject(new StorageHelperError("openDatabase.getItem", "查询失败", error));
-                                return false;
-                            }
-                        );
-                    },
-                    error => {
-                        reject(new StorageHelperError("openDatabase.getItem", "数据库事务失败", error));
-                    }
-                );
-            } catch (error) {
-                reject(new StorageHelperError("openDatabase.getItem", "读取失败", error));
+                            );
+                        },
+                        error => {
+                            reject(new StorageHelperError("openDatabase.init", "数据库事务失败", error));
+                        }
+                    );
+                } catch (error) {
+                    reject(new StorageHelperError("openDatabase.init", "初始化失败", error));
+                }
+            },
+            setItem: function (obj, resolve, reject, key, value) {
+                try {
+
+                    obj.db.transaction(
+                        tx => {
+                            const insertSql = `INSERT INTO ${TABLE_NAME} (key, value) VALUES (? , ?)`;
+                            const updateSql = `UPDATE ${TABLE_NAME} SET value=? WHERE key=?`;
+
+                            tx.executeSql(
+                                insertSql,
+                                [key, JSON.stringify(value)],
+                                () => resolve(),
+                                (tx, error) => {
+                                    // 插入失败，尝试更新
+                                    tx.executeSql(
+                                        updateSql,
+                                        [JSON.stringify(value), key],
+                                        () => resolve(),
+                                        (tx, error) => {
+                                            reject(new StorageHelperError("openDatabase.setItem", "更新失败", error));
+                                            return false;
+                                        }
+                                    );
+                                    return false;
+                                }
+                            );
+                        },
+                        error => {
+                            reject(new StorageHelperError("openDatabase.setItem", "数据库事务失败", error));
+                        }
+                    );
+                } catch (error) {
+                    reject(new StorageHelperError("openDatabase.setItem", "保存失败", error));
+                }
+            },
+            getItem: function (obj, resolve, reject, key) {
+                try {
+
+                    obj.db.transaction(
+                        tx => {
+                            const sql = `SELECT value FROM ${TABLE_NAME} WHERE key = ?`;
+                            tx.executeSql(
+                                sql,
+                                [key],
+                                (tx, results) => {
+                                    try {
+                                        if (results.rows.length > 0) {
+                                            resolve(JSON.parse(results.rows.item(0).value));
+                                        } else {
+                                            resolve(null);
+                                        }
+                                    } catch (parseError) {
+                                        reject(new StorageHelperError("openDatabase.getItem", "解析数据失败", parseError));
+                                    }
+                                },
+                                (tx, error) => {
+                                    reject(new StorageHelperError("openDatabase.getItem", "查询失败", error));
+                                    return false;
+                                }
+                            );
+                        },
+                        error => {
+                            reject(new StorageHelperError("openDatabase.getItem", "数据库事务失败", error));
+                        }
+                    );
+                } catch (error) {
+                    reject(new StorageHelperError("openDatabase.getItem", "读取失败", error));
+                }
+            },
+            removeItem: function (obj, resolve, reject, key) {
+                try {
+
+                    obj.db.transaction(
+                        tx => {
+                            const sql = `DELETE FROM ${TABLE_NAME} WHERE key = ?`;
+                            tx.executeSql(
+                                sql,
+                                [key],
+                                () => resolve(),
+                                (tx, error) => {
+                                    reject(new StorageHelperError("openDatabase.removeItem", "删除失败", error));
+                                    return false;
+                                }
+                            );
+                        },
+                        error => {
+                            reject(new StorageHelperError("openDatabase.removeItem", "数据库事务失败", error));
+                        }
+                    );
+                } catch (error) {
+                    reject(new StorageHelperError("openDatabase.removeItem", "删除失败", error));
+                }
             }
         },
-        removeItem: function (obj, resolve, reject, key) {
-            try {
 
-                obj.db.transaction(
-                    tx => {
-                        const sql = `DELETE FROM ${TABLE_NAME} WHERE key = ?`;
-                        tx.executeSql(
-                            sql,
-                            [key],
-                            () => resolve(),
-                            (tx, error) => {
-                                reject(new StorageHelperError("openDatabase.removeItem", "删除失败", error));
-                                return false;
-                            }
-                        );
-                    },
-                    error => {
-                        reject(new StorageHelperError("openDatabase.removeItem", "数据库事务失败", error));
+        cookie: {
+            api: document,
+            init: function (obj, resolve, reject) {
+                try {
+                    obj.db = document;
+                    document.cookie = "storage_test=true;max-age=25920000";
+
+                    if (this.getCookie().storage_test) {
+                        resolve();
+                    } else {
+                        throw new Error("无法设置cookie");
                     }
-                );
-            } catch (error) {
-                reject(new StorageHelperError("openDatabase.removeItem", "删除失败", error));
+                } catch (error) {
+                    reject(new StorageHelperError("cookie.init", "初始化失败，可能浏览器不支持或已禁用cookie", error));
+                }
+            },
+            getCookie: function () {
+                try {
+                    return Object.fromEntries(
+                        document.cookie
+                            .split('; ')
+                            .filter(part => part)
+                            .map(part => part.split('=').map(decodeURIComponent))
+                    );
+                } catch (error) {
+                    // 这里不使用reject，因为此方法不直接处理Promise
+                    console.error("解析cookie失败:", error);
+                    return {};
+                }
+            },
+            setItem: function (obj, resolve, reject, key, value) {
+                try {
+                    if (typeof value !== 'string') {
+                        value = JSON.stringify(value);
+                    }
+
+                    // 编码键和值
+                    const encodedKey = encodeURIComponent(key);
+                    const encodedValue = encodeURIComponent(value);
+
+                    document.cookie = `${encodedKey}=${encodedValue};max-age=25920000;path=/`;
+                    resolve("complete");
+                } catch (error) {
+                    reject(new StorageHelperError("cookie.setItem", "保存失败", error));
+                }
+            },
+            getItem: function (obj, resolve, reject, key) {
+                try {
+                    const cookies = this.getCookie();
+                    const encodedKey = encodeURIComponent(key);
+
+                    if (cookies[encodedKey]) {
+                        try {
+                            // 尝试解析为JSON
+                            resolve(JSON.parse(decodeURIComponent(cookies[encodedKey])));
+                        } catch {
+                            // 如果不是有效的JSON，直接返回原始值
+                            resolve(decodeURIComponent(cookies[encodedKey]));
+                        }
+                    } else {
+                        resolve(null);
+                    }
+                } catch (error) {
+                    reject(new StorageHelperError("cookie.getItem", "读取失败", error));
+                }
+            },
+            removeItem: function (obj, resolve, reject, key) {
+                try {
+                    const encodedKey = encodeURIComponent(key);
+                    document.cookie = `${encodedKey}=;max-age=0;path=/`;
+                    resolve("complete");
+                } catch (error) {
+                    reject(new StorageHelperError("cookie.removeItem", "删除失败", error));
+                }
             }
         }
-    };
-
-    StorageHelper.cookie = {
-        api: document,
-        init: function (obj, resolve, reject) {
-            try {
-                obj.db = document;
-                document.cookie = "storage_test=true;max-age=25920000";
-
-                if (this.getCookie().storage_test) {
-                    resolve();
-                } else {
-                    throw new Error("无法设置cookie");
-                }
-            } catch (error) {
-                reject(new StorageHelperError("cookie.init", "初始化失败，可能浏览器不支持或已禁用cookie", error));
-            }
-        },
-        getCookie: function () {
-            try {
-                return Object.fromEntries(
-                    document.cookie
-                        .split('; ')
-                        .filter(part => part)
-                        .map(part => part.split('=').map(decodeURIComponent))
-                );
-            } catch (error) {
-                // 这里不使用reject，因为此方法不直接处理Promise
-                console.error("解析cookie失败:", error);
-                return {};
-            }
-        },
-        setItem: function (obj, resolve, reject, key, value) {
-            try {
-                if (typeof value !== 'string') {
-                    value = JSON.stringify(value);
-                }
-
-                // 编码键和值
-                const encodedKey = encodeURIComponent(key);
-                const encodedValue = encodeURIComponent(value);
-
-                document.cookie = `${encodedKey}=${encodedValue};max-age=25920000;path=/`;
-                resolve("complete");
-            } catch (error) {
-                reject(new StorageHelperError("cookie.setItem", "保存失败", error));
-            }
-        },
-        getItem: function (obj, resolve, reject, key) {
-            try {
-                const cookies = this.getCookie();
-                const encodedKey = encodeURIComponent(key);
-
-                if (cookies[encodedKey]) {
-                    try {
-                        // 尝试解析为JSON
-                        resolve(JSON.parse(decodeURIComponent(cookies[encodedKey])));
-                    } catch {
-                        // 如果不是有效的JSON，直接返回原始值
-                        resolve(decodeURIComponent(cookies[encodedKey]));
-                    }
-                } else {
-                    resolve(null);
-                }
-            } catch (error) {
-                reject(new StorageHelperError("cookie.getItem", "读取失败", error));
-            }
-        },
-        removeItem: function (obj, resolve, reject, key) {
-            try {
-                const encodedKey = encodeURIComponent(key);
-                document.cookie = `${encodedKey}=;max-age=0;path=/`;
-                resolve("complete");
-            } catch (error) {
-                reject(new StorageHelperError("cookie.removeItem", "删除失败", error));
-            }
-        }
-    };
+    });
 
     StorageHelper.prototype.name = DATABASE_NAME;
     StorageHelper.prototype.request = null;

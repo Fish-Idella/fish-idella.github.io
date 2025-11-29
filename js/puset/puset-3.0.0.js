@@ -12,7 +12,7 @@ const PuSet = (function () {
      * 初始化隐藏元素的样式
      * 添加全局样式规则，使带有v-hide属性的元素隐藏
      */
-    if (document.querySelector('style.v-hide') === null) {
+    if (document.querySelector('head>style.v-hide') === null) {
         const styleElement = document.createElement("style");
         styleElement.className = HIDE_ATTRIBUTE;
         styleElement.innerHTML = `.hide, [${HIDE_ATTRIBUTE}] {display: none !important;}`;
@@ -20,6 +20,7 @@ const PuSet = (function () {
     }
 
     const indexOf = Array.prototype.indexOf;
+    const slice = Array.prototype.slice;
     const push = Array.prototype.push;
     const toString = Object.prototype.toString;
     const getProto = Object.getPrototypeOf;
@@ -38,7 +39,7 @@ const PuSet = (function () {
     };
 
     // 类型映射表 - 创建类型检测工具
-    const TYPES = new function TYPES() {
+    const TYPES = new function Types() {
         "Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set"
             .split(" ")
             .forEach((value) => {
@@ -98,10 +99,11 @@ const PuSet = (function () {
     const PuSetConstructor = class PuSet extends Array {
         constructor(...args) {
             super(...args);
+            this.prevObject = null;
         }
 
         // 创建空实例的静态方法
-        static emptyInstance() {
+        static newInstance() {
             return new PuSetConstructor();
         }
 
@@ -113,15 +115,10 @@ const PuSet = (function () {
 
         // 堆栈管理：保存当前选择集并返回新选择集
         pushStack(elems) {
-            const ret = PuSetFactory.merge(PuSetConstructor.emptyInstance(), elems);
+            const ret = PuSetFactory.merge(PuSetConstructor.newInstance(), elems);
             // 保存前一个对象引用，支持链式操作的回溯
             ret.prevObject = this;
             return ret;
-        }
-
-        item(num) {
-            // Return just the one element from the set
-            return num < 0 ? this[num + this.length] : this[num];
         }
 
         even() {
@@ -142,21 +139,27 @@ const PuSet = (function () {
             return this.pushStack(j >= 0 && j < len ? [this[j]] : []);
         }
 
+        add(selector, context) {
+            return this.pushStack(
+                PuSetFactory.uniqueSort(
+                    PuSetFactory.merge(this.slice(), PuSetFactory(selector, context))
+                )
+            );
+        }
+
         // 查找后代元素
         find(selector) {
-            let arr = [];
+            const arr = this.pushStack([]);
             if (selector && TYPES.String === typeof selector) {
-                this.forEach(function (target) {
-                    // 合并查询结果
-                    PuSetFactory.merge(arr, target.querySelectorAll(selector));
-                });
+                // 合并查询结果
+                this.forEach(target => arr.push(...target.querySelectorAll(selector)));
             }
-            return this.pushStack(arr);
+            return arr.length > 1 ? PuSetFactory.uniqueSort(arr) : arr;
         }
 
         // 返回到前一个选择集
         end() {
-            return this.prevObject || PuSetConstructor.emptyInstance();
+            return this.prevObject || PuSetConstructor.newInstance();
         }
 
         // 过滤当前选择集
@@ -213,20 +216,10 @@ const PuSet = (function () {
     };
 
     // 主函数定义
-    const PuSetFactory = Object.assign(function PuSet(selector) {
+    const PuSetFactory = Object.assign(function PuSet(selector, context) {
         // 处理空选择器
         if (!selector) {
-            return PuSetConstructor.emptyInstance();
-        }
-
-        // 函数选择器：DOM就绪回调
-        if (isFunction(selector)) {
-            return rootPuSet.ready(selector);
-        }
-
-        // 字符串选择器：查询DOM
-        if (TYPES.String === typeof selector) {
-            return rootPuSet.find(selector);
+            return PuSetConstructor.newInstance();
         }
 
         // 单个DOM元素：直接包装
@@ -234,14 +227,70 @@ const PuSet = (function () {
             return new PuSetConstructor(selector);
         }
 
+        // 字符串选择器：查询DOM
+        if (TYPES.String === typeof selector) {
+            if (context) {
+                if (context.constructor === PuSetConstructor) {
+                    return context.find(selector);
+                } else {
+                    return PuSetFactory(context).find(selector);
+                }
+            } else {
+                return rootPuSet.find(selector);
+            }
+        }
+
+        // 函数选择器：DOM就绪回调
+        if (isFunction(selector)) {
+            return rootPuSet.ready(selector);
+        }
+
         // 其他类型：转换为数组形式
-        return PuSetFactory.makeArray(selector, PuSetConstructor.emptyInstance());
+        return PuSetFactory.makeArray(selector, PuSetConstructor.newInstance());
     }, {
         // 静态属性：版本号
         version: version,
 
         // 就绪状态标志
         isReady: returnFalse,
+
+        uniqueSort(results) {
+            const duplicates = [];
+
+            let hasDuplicate = false;
+            let i = 0, j = 0;
+            let elem;
+
+            duplicates.sort.call(results, function (a, b) {
+
+                if (a === b) {
+                    hasDuplicate = true;
+                    return 0;
+                }
+
+                // Sort on method existence if only one input has compareDocumentPosition
+                const compare = !a.compareDocumentPosition - !b.compareDocumentPosition;
+                if (compare) {
+                    return compare;
+                }
+
+                return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_PRECEDING
+                    ? -1 : 1;
+            });
+
+            if (hasDuplicate) {
+                while ((elem = results[i++])) {
+                    if (elem === results[i]) {
+                        j = duplicates.push(i);
+                    }
+                }
+                while (j--) {
+                    duplicates.splice.call(results, duplicates[j], 1);
+                }
+            }
+
+            return results;
+        },
 
         /**
          * 显示/隐藏元素
@@ -387,6 +436,7 @@ const PuSet = (function () {
             }
             return ret;
         },
+
         /**
          * 下载单个文件
          * @param {string|blob} url 文件数据
@@ -456,6 +506,7 @@ const PuSet = (function () {
 
     // 创建自定义匹配函数，用于判断元素是否匹配选择器
     const customMatches = function customMatches(target, selector) {
+        if (!selector) return returnFalse;
 
         // 如果支持matches方法，则直接使用它
         if (hasMatches) return item => item !== target && item.matches && item.matches(selector);
@@ -467,12 +518,19 @@ const PuSet = (function () {
         const children = new Set(target.querySelectorAll(selector));
         return item => item && children.has(item);
     };
+
     const getComposedPath = function getComposedPath(target, event) {
-        let path, node;
-        if (event.composedPath) { path = Array.from(event.composedPath()); }
-        else if (event.path) { path = Array.from(event.path); }
-        else for (node = event.target, path = []; node = node.parentNode;) { path.push(node); if (node === target) break; }
-        return path.slice(0, 1 + path.indexOf(target));
+        const path = event.composedPath ? event.composedPath() : event.path;
+        if (path) {
+            return slice.call(path, 0, 1 + indexOf.call(path, target));
+        } else {
+            let node = event.target, path = [];
+            do {
+                path.push(node);
+                if (node === target) break;
+            } while (node = node.parentNode || node.host);
+            return path;
+        }
     };
 
     Object.assign(PuSetFactory, {
@@ -534,159 +592,154 @@ const PuSet = (function () {
         }
     });
 
-    const EventOptions = {
-        createListener: function createListener(type, handles) {
-            return handles.listener = function listener(event) {
-                EventOptions.dispatch(this, event, type, handles);
-            };
-        },
-        // 触发事件
-        dispatch: function dispatch(node, event, type, handles) {
-            const entrus = function entrus(node, obj, handler) {
+    function createListener(type, handles) {
+        return handles.listener = function listener(event) {
+            const path = getComposedPath(this, event);
+            const data = { type: type, target: this };
+            for (const handle of handles) {
                 // 验证命名空间
-                if (!obj.rnamespace || obj.namespace === false || obj.rnamespace.test(obj.namespace)) {
-                    handler.call(node, event, obj);
-                }
-            };
-            PuSetFactory.each(handles, function (handle) {
-                const obj = Object.assign({}, handle, { type: type, target: node });
-                const handler = handle.handler;
-                if ("string" === typeof handle.selector) {
-                    // 事件托管处理
-                    getComposedPath(node, event)
-                        .filter(customMatches(node, handle.selector))
-                        .forEach(chlid => entrus(chlid, obj, handler));
-                } else {
-                    // 默认事件处理
-                    entrus(node, obj, handler);
-                }
-            });
-        },
-        add: function add(node, types, selector, handler) {
-            const data = ensureObjectProperty(node, expando, Object);
-
-            // Only attach events to objects that accept data
-            if (data === null) return;
-
-            let t, type, tmp, namespaces;
-
-            // Handle multiple events separated by a space
-            types = (types || "").match(rnothtmlwhite) || [""];
-            t = types.length;
-            while (t--) {
-                tmp = rtypenamespace.exec(types[t]) || [];
-                type = tmp[1];
-                namespaces = (tmp[2] || "").split(".").sort();
-
-                // There *must* be a type, no attaching namespace-only handlers
-                if (!type) continue;
-
-                const handles = ensureObjectProperty(data, type, Array);
-
-                // TODO: 如果是新添加的事件，则添加到事件列表中
-                if (handles.length === 0) {
-                    const listener = EventOptions.createListener(type, handles);
-                    if (node.addEventListener) {
-                        node.addEventListener(type, listener);
+                if (!handle.rnamespace || !handle.namespace || handle.rnamespace.test(handle.namespace)) {
+                    const arr = ("string" === typeof handle.selector)
+                        ? path.filter(customMatches(this, handle.selector)) // 事件托管处理
+                        : [this];
+                    if (arr.length !== 0) {
+                        const handler = handle.handler;
+                        const options = Object.assign({}, handle, data);
+                        for (const child of arr) {
+                            handler.call(child, event, options);
+                        }
                     }
                 }
-
-                handles.push({
-                    selector,
-                    handler: handler,
-                    namespace: namespaces.join(".")
-                });
-
             }
-
-        },
-        remove: function remove(node, types, selector, handler) {
-            const data = ensureObjectProperty(node, expando, Object);
-
-            // Only attach events to objects that accept data
-            if (data === null) return;
-
-            let t, type, tmp, namespaces;
-
-            // Handle multiple events separated by a space
-            types = (types || "").match(rnothtmlwhite) || [""];
-            t = types.length;
-            while (t--) {
-                tmp = rtypenamespace.exec(types[t]) || [];
-                type = tmp[1];
-                namespaces = (tmp[2] || "").split(".").sort();
-
-                // Unbind all events (on this namespace, if provided) for the element
-                if (!type) {
-                    Object.keys(data).forEach(type => remove(node, type + types[t], selector, handler));
-                    continue;
-                }
-
-                tmp = tmp[2] && new RegExp("(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)");
-
-                const handles = ensureObjectProperty(data, type, Array);
-                let j = handles.length;
-                while (j--) {
-                    const handle = handles[j];
-                    if ((!tmp || tmp.test(handle.namespace)) &&
-                        (!selector || selector === handle.selector || selector === "**" && handle.selector) &&
-                        (!handler || handler === handle.handler)) {
-                        handles.splice(j, 1);
-                    }
-                }
-
-                if (handles.length == 0) {
-                    // 移除事件监听
-                    if (node.removeEventListener) {
-                        node.removeEventListener(type, handles.listener);
-                    }
-                    Reflect.deleteProperty(data, type);
-                }
-            }
-        },
-        action: function action(elements, types, selector, callback, method) {
-            if ("object" === typeof types) {
-                for (const type in types) {
-                    action(elements, type, selector, types[type], method);
-                }
-                return elements;
-            }
-
-            if ("function" === typeof selector) {
-                callback = selector;
-                selector = null;
-            }
-
-            if (false === callback) {
-                callback = returnFalse;
-            } else if (!callback) {
-                return elements;
-            }
-
-            const handler = (method === 1) ? function autoremove(event, options) {
-                EventOptions.remove(options.target, options.type, options.selector, options.handler);
-                return callback.call(this, event, options);
-            } : callback;
-
-            const operation = method >= 1 ? EventOptions.add : EventOptions.remove;
-            return PuSetFactory.each(elements, function (target) {
-                operation(target, types, selector, handler);
-            });
         }
-    };
+    }
+
+    function add(node, types, selector, handler) {
+        const data = ensureObjectProperty(node, expando, Object);
+
+        // Only attach events to objects that accept data
+        if (data === null) return;
+
+        let t, type, tmp, namespaces;
+
+        // Handle multiple events separated by a space
+        types = (types || "").match(rnothtmlwhite) || [""];
+        t = types.length;
+        while (t--) {
+            tmp = rtypenamespace.exec(types[t]) || [];
+            type = tmp[1];
+            namespaces = (tmp[2] || "").split(".").sort();
+
+            // There *must* be a type, no attaching namespace-only handlers
+            if (!type) continue;
+
+            const handles = ensureObjectProperty(data, type, Array);
+
+            // TODO: 如果是新添加的事件，则添加到事件列表中
+            if (handles.length === 0) {
+                const listener = createListener(type, handles);
+                if (node.addEventListener) {
+                    node.addEventListener(type, listener);
+                }
+            }
+
+            handles.push({
+                selector,
+                handler: handler,
+                namespace: namespaces.join(".")
+            });
+
+        }
+
+    }
+    function remove(node, types, selector, handler) {
+        const data = ensureObjectProperty(node, expando, Object);
+
+        // Only attach events to objects that accept data
+        if (data === null) return;
+
+        let t, type, tmp, namespaces;
+
+        // Handle multiple events separated by a space
+        types = (types || "").match(rnothtmlwhite) || [""];
+        t = types.length;
+        while (t--) {
+            tmp = rtypenamespace.exec(types[t]) || [];
+            type = tmp[1];
+            namespaces = (tmp[2] || "").split(".").sort();
+
+            // Unbind all events (on this namespace, if provided) for the element
+            if (!type) {
+                Object.keys(data).forEach(type => remove(node, type + types[t], selector, handler));
+                continue;
+            }
+
+            tmp = tmp[2] && new RegExp("(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)");
+
+            const handles = ensureObjectProperty(data, type, Array);
+            let j = handles.length;
+            while (j--) {
+                const handle = handles[j];
+                if ((!tmp || tmp.test(handle.namespace)) &&
+                    (!selector || selector === handle.selector || selector === "**" && handle.selector) &&
+                    (!handler || handler === handle.handler)) {
+                    handles.splice(j, 1);
+                }
+            }
+
+            if (handles.length == 0) {
+                // 移除事件监听
+                if (node.removeEventListener) {
+                    node.removeEventListener(type, handles.listener);
+                }
+                Reflect.deleteProperty(data, type);
+            }
+        }
+    }
+
+    function action(elements, types, selector, callback, method) {
+        if ("object" === typeof types) {
+            for (const type in types) {
+                action(elements, type, selector, types[type], method);
+            }
+            return elements;
+        }
+
+        if ("function" === typeof selector) {
+            callback = selector;
+            selector = null;
+        }
+
+        if (false === callback) {
+            callback = returnFalse;
+        } else if (!callback) {
+            return elements;
+        }
+
+        const handler = (method === 1) ? function autoremove(event, options) {
+            remove(options.target, options.type, options.selector, options.handler);
+            return callback.call(this, event, options);
+        } : callback;
+
+        const operation = method >= 1 ? add : remove;
+        return PuSetFactory.each(elements, function (target) {
+            operation(target, types, selector, handler);
+        });
+    }
 
     Object.assign(PuSetConstructor.prototype, {
         on: function (types, selector, callback) {
-            return EventOptions.action(this, types, selector, callback, 2);
+            return action(this, types, selector, callback, 2);
         },
         one: function (types, selector, callback) {
-            return EventOptions.action(this, types, selector, callback, 1);
+            return action(this, types, selector, callback, 1);
         },
         off: function (types, selector, callback) {
-            return EventOptions.action(this, types, selector, callback, 0);
+            return action(this, types, selector, callback, 0);
         }
     });
 
+    // 模板和组件化
 
     const LENGTH_PROPERTY = "length";            // 数组长度属性名
     const HOST_CLASS_NAME = "template-layer-host";
@@ -701,7 +754,7 @@ const PuSet = (function () {
      */
     class View {
         name = "";                   // 视图名称
-        exec = null;                 // 视图初始化执行函数
+        exec = returnFalse;                 // 视图初始化执行函数
         cachedElements = null;       // 缓存的DOM元素
 
         /**
@@ -726,8 +779,10 @@ const PuSet = (function () {
         init(is = false, handler) {
             const clone = host.cloneNode();
             const root = is ? clone : clone.attachShadow({ mode: 'open' });
-            // 克隆缓存的元素并添加到Shadow DOM
-            this.cachedElements.forEach(element => root.appendChild(element.cloneNode(true)));
+            for (const element of this.cachedElements) {
+                // 克隆缓存的元素并添加到 root
+                root.appendChild(element.cloneNode(true));
+            }
             try {
                 // 执行初始化回调
                 if (isFunction(handler)) handler(root, this);
