@@ -25,7 +25,7 @@
         </div>
         <div id="links" class="flex-vertical">
             <div id="scroll" class="grid-horizontal">
-                <a class="link-button unselect" v-hide="true" draggable="true"><span class="bg"></span><span
+                <a class="link-button unselect hide" href="#" draggable="true"><span class="bg"></span><span
                         class="title">模板</span></a>
                 <a id="add-link-button" class="unselect" href="javascript:;" draggable="false" v-hide="v-hide">
                     <span class="bg"
@@ -40,14 +40,11 @@
                     <span class="bg fill flex-horizontal">
                         <input class="fill unify" type="text" name="q" id="word" placeholder="开始探索" maxlength="512"
                             autocomplete="off">
-                        <a class="quickdelete hide" title="清空输入框" href="javascript:false;"></a>
+                        <a class="quickdelete hide" title="清空输入框" href="javascript:word.value = '';"></a>
                     </span>
-                    <span class="bg hide">
-                        <input type="hidden" name="scope" value="web"></span>
+                    <span class="bg hide"><input type="hidden" name="scope" value="web"></span>
                     <span class="bg button">
-                        <button type="submit" title="Bing 搜索" class="unify bg s_btn" id="engine_baidu" value="">
-                            <span class="s_btn_icon"></span>
-                        </button>
+                        <button type="submit" title="Bing 搜索" class="unify bg s_btn" data-id="bing"></button>
                     </span>
                 </div>
                 <ul class="search-list unify unselect hide"></ul>
@@ -55,7 +52,7 @@
         </form>
         <div id="about" class="flex-horizontal">
             <a href="https://beian.miit.gov.cn/" rel="noopener"
-                target="_blank">&#34560;&#73;&#67;&#80;&#22791;&#50;&#48;&#50;&#49;&#48;&#49;&#50;&#57;&#52;&#55;&#21495;-1</a>
+                target="_blank">&#34560;&#73;&#67;&#80;&#22791;&#50;&#48;&#50;&#49;&#48;&#49;&#50;&#57;&#52;&#55;&#21495;</a>
         </div>
     </div>
 

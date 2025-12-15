@@ -654,22 +654,11 @@ const PuSet = (function () {
      * 获取事件的传播路径（兼容不同浏览器）
      * @param {HTMLElement} target - 根元素
      * @param {Event} event - 事件对象
-     * @returns {Array} 事件传播路径数组
+     * @returns {EventTarget[]} 事件传播路径数组
      */
     const getComposedPath = function getComposedPath(target, event) {
-        // 原生composedPath/path
-        const path = event.composedPath ? event.composedPath() : event.path;
-        if (path) {
-            return slice.call(path, 0, 1 + indexOf.call(path, target));
-        } else {
-            // 降级：手动遍历父节点
-            let node = event.target, path = [];
-            do {
-                path.push(node);
-                if (node === target) break;
-            } while (node = node.parentNode || node.host);
-            return path;
-        }
+        const path = event.composedPath();
+        return path.slice(0, 1 + path.indexOf(target));
     };
 
     /**
@@ -792,6 +781,12 @@ const PuSet = (function () {
         };
     };
 
+    const addEventListener = function addEventListener(node, type, listener) {
+        if (node.addEventListener) {
+            node.addEventListener(type, listener);
+        }
+    };
+
     /**
      * 添加事件监听（底层）
      * @param {HTMLElement} node - 目标元素
@@ -819,10 +814,7 @@ const PuSet = (function () {
             const handles = ensureObjectProperty(data, type, Array);
             // 首次添加：创建统一监听器并绑定
             if (handles.length === 0) {
-                const listener = createListener(type, handles);
-                if (node.addEventListener) {
-                    node.addEventListener(type, listener);
-                }
+                addEventListener(node, type, createListener(type, handles));
             }
             // 添加处理函数配置
             handles.push({
@@ -1151,27 +1143,27 @@ const PuSet = (function () {
             PuSetFactory.show(this.#children.get(property), false);
         }
 
+        trigger(event, fn) {
+            // 遍历传播路径，找到匹配的子元素
+            for (const item of getComposedPath(this.target, event)) {
+                if (this.#childrenReverse.has(item)) {
+                    const key = this.#childrenReverse.get(item);
+                    // 执行委托函数（绑定到子元素，传事件、数据、键）
+                    fn.call(item, event, this.data[key], key);
+                }
+            }
+        }
+
         /**
          * 初始化事件委托
          */
         #initializeEventDelegation() {
             PuSetFactory.each(this.delegation, (fn, types) => {
                 // 解析事件类型（多个用空格分隔）
-                PuSetFactory.each((types || '').match(rnothtmlwhite) || [''], (type) => {
-                    if (!type) return;
+                for (const type of types.match(rnothtmlwhite)) {
                     // 绑定事件监听
-                    this.target.addEventListener(type, (event) => {
-                        const path = getComposedPath(this.target, event);
-                        // 遍历传播路径，找到匹配的子元素
-                        for (const item of path) {
-                            if (this.#childrenReverse.has(item)) {
-                                const key = this.#childrenReverse.get(item);
-                                // 执行委托函数（绑定到子元素，传事件、数据、键）
-                                fn.call(item, event, this.data[key], key);
-                            }
-                        }
-                    });
-                });
+                    addEventListener(this.target, type, (event) => this.trigger(event, fn));
+                }
             });
         }
 

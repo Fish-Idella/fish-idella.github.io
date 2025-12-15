@@ -157,11 +157,14 @@ label#search-box span.bg.button {
 }
 
 label#search-box span.bg.button>.s_btn {
+	display: inline-block;
+	place-content: center;
+	place-items: center;
 	width: 3rem;
 	height: 3rem;
-	line-height: 2rem;
+	line-height: 3rem;
 	font-size: 1.4rem;
-	color: #5a6b92;
+	padding: 0;
 	color: var(--color-search-button);
 }
 

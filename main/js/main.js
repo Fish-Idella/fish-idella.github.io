@@ -7,6 +7,7 @@ function saveLocalConfigure(cofig) {
 
 PuSet.load("data/t-main.html").then(async function () {
 
+    const _body = document.body;
     const _main = document.getElementById('main');
     const _search = _main.querySelector("#search");
     const _word = _search.querySelector("input#word");
@@ -19,9 +20,9 @@ PuSet.load("data/t-main.html").then(async function () {
             _word.value = "";
             _word.blur();
             MainUI(value);
-        } else if (ev.submitter) {
-            const [type, engine] = ev.submitter.id.split("_");
-            if ("engine" === type) {
+        } else {
+            const engine = ev?.submitter.dataset.id;
+            if (engine) {
                 storage.setItem("puset-search-history", window.op.update(value)).then(function () {
                     const url = (MainUI.GS.map_search_engine[engine].href + encodeURIComponent(value));
                     window.location.href = url;
@@ -34,7 +35,7 @@ PuSet.load("data/t-main.html").then(async function () {
     const settings = JSON.parse(result ? decodeURIComponent(atob(result)) : "null") ?? null;
 
     PuSet.get("reset").init(true, function (root, options) {
-        document.body.appendChild(root);
+        _body.appendChild(root);
         options.exec(root, MainUI, options);
     });
 
@@ -42,27 +43,25 @@ PuSet.load("data/t-main.html").then(async function () {
         return MainUI.default_configuration();
     }
 
-    const _add_link_button = _main.querySelector("#links>#scroll>a#add-link-button");
     const list = window.matchMedia("(prefers-color-scheme: dark)");
     function themeListener() {
         const hours = new Date().getHours();
-        document.body.setAttribute("theme", (list.matches || hours < 6 || hours > 20) ? "dark" : "default");
+        _body.setAttribute("theme", (list.matches || hours < 6 || hours > 20) ? "dark" : "default");
     }
 
-    defineAndCall('showAddLinkButton', bool => PuSet.show(_add_link_button, bool), settings.boolean_main_show_add_button);
     defineAndCall('showLink', bool => _main.classList.toggle("hide-links", !bool), settings.boolean_main_show_links);
     defineAndCall('showICP', bool => _main.classList.toggle("hide-icp", !bool), settings.boolean_show_icp);
     defineAndCall("setUiTheme", function setUiTheme(theme) {
         // 先移除现有的监听器，避免重复添加
         list.removeEventListener("change", themeListener);
-        document.body.classList.remove('hide');
+        _body.classList.remove('hide');
 
         if ("os" === theme) {
             // 仅在需要时添加监听器
             themeListener();
             list.addEventListener("change", themeListener);
         } else {
-            document.body.setAttribute("theme", theme);
+            _body.setAttribute("theme", theme);
         }
     }, settings.string_theme);
 
@@ -129,26 +128,24 @@ PuSet.load("data/t-main.html").then(async function () {
     PuSet(_word).on({
         focus() {
             if (_word.value) {
-                // _quickdelete.classList.remove("hide");
+                _quickdelete.classList.remove("hide");
             } else {
                 // 如果搜索框没有内容，显示搜索历史
                 window.op(window.op);
             }
             _search_list.classList.remove("hide");
-            document.body.classList.add("focus");
-            // MainUI.layer_background.classList.add("focus");
+            _body.classList.add("focus");
         },
         blur() {
             _quickdelete.classList.add("hide");
             _search_list.classList.add("hide");
-            document.body.classList.remove("focus");
-            // MainUI.layer_background.classList.remove("focus");
+            _body.classList.remove("focus");
         },
         input() {
             clearTimeout(window.op.t);
             const value = _word.value.trim();
             if (value) {
-                // _quickdelete.classList.remove("hide");
+                _quickdelete.classList.remove("hide");
                 window.op.t = setTimeout(function () {
                     if (value.startsWith(MainUI.q)) {
                         window.op(MainUI);
@@ -157,6 +154,7 @@ PuSet.load("data/t-main.html").then(async function () {
                     }
                 }, 500);
             } else {
+                _quickdelete.classList.add("hide");
                 // 如果搜索框没有内容，显示搜索历史
                 window.op(window.op);
             }
@@ -169,10 +167,10 @@ PuSet.load("data/t-main.html").then(async function () {
         target: document.getElementById("search-input"),
         selector: "span.bg.button",
         data: settings.map_search_engine_show,
-        layout: function (target, value, key) {
+        layout(target, value, key) {
             const button = target.querySelector("button");
             const list = settings.map_search_engine[value];
-            button.id = "engine_" + value;
+            button.dataset.id = value;
             button.title = list.title;
 
             const src = list.local_icon || list.icon || "/mediae/svg/search.svg";
@@ -191,39 +189,138 @@ PuSet.load("data/t-main.html").then(async function () {
         }
     });
 
-    MainUI.vm_links = PuSet.ViewManager({
-        target: _main.querySelector('#links>#scroll'),
-        selector: '#links>#scroll>a.link-button',
-        insert: _add_link_button,
-        data: settings.map_all_links,
-        onresize(target, value, key) {
-            // 火狐浏览器不会自动撑大grid布局
-            if ("length" === key) {
-                const max = _add_link_button.style.order = (+value + 10);
-                target.style.width = `${max * 80}px`;
-            }
-        },
-        layout(target, value, key) {
-            target.dataset.key = key;
-            target.style.order = Number(key) + 1;
-            target.href = value.href;
-            const background = target.querySelector("span.bg");
-            background.style.setProperty("background-color", value.background_color ?? "transparent");
-            background.style.setProperty("background-image", `url(${value.local_icon || value.icon || (new URL("/favicon.ico", value.href)).href})`);
-            target.querySelector("span.title").innerHTML = value.title;
-        }
-    });
-
     // 设置背景
     PuSet.get('background').init(true, function (root, options) {
         root.classList.add('view', 'unselect');
-        document.body.insertBefore(root, _main);
+        _body.insertBefore(root, _main);
         options.exec(root, MainUI, options);
     });
 
     PuSet.get("image-selector").init(true, function (root, options) {
-        document.body.appendChild(root);
+        _body.appendChild(root);
         options.exec(root, MainUI, options);
+    });
+
+    PuSet.get("link-manager").init(true, function (root, options) {
+        _body.appendChild(root);
+        options.exec(root, MainUI, options);
+
+        const _add_link_button = _main.querySelector("#links>#scroll>a#add-link-button");
+        _add_link_button.addEventListener("click", function (event) {
+            event.preventDefault();
+            MainUI.openLinkManager('-1');
+        });
+        defineAndCall('showAddLinkButton', bool => PuSet.show(_add_link_button, bool), settings.boolean_main_show_add_button);
+
+        // 获取滚动容器元素
+        const _scroll = _main.querySelector('#links>#scroll');
+
+        /**
+         * 
+         * @param {Event} event 
+         * @param {*} sourceKey 被拖拽元素初始索引
+         * @param {*} targetIndex 被放置元素初始索引
+         * @param {*} self 被放置元素
+         * @param {*} dragging 被拖拽元素
+         * @returns 
+         */
+        const getTargetIndex = function (event, sourceKey, targetIndex, self, dragging) {
+            // 处理拖拽元素拖到自身的情况
+            if (self === dragging) {
+                // 根据源索引与目标索引的大小关系，调整目标索引为拖拽元素的 order 样式值（±1）
+                return (sourceKey >= targetIndex ? 0 : 1) + Number(dragging.style.order);
+            } else {
+                // 非自身拖拽时：若鼠标在目标元素左半部分，且源索引小于目标索引，目标索引减1（调整插入位置）
+                if (event.offsetX < self.offsetWidth / 2 && sourceKey < targetIndex) {
+                    targetIndex--;
+                }
+                return targetIndex;
+            }
+        };
+
+        MainUI.vm_links = PuSet.ViewManager({
+            target: _scroll,
+            selector: '#links>#scroll>a.link-button',
+            insert: _add_link_button,
+            data: settings.map_all_links,
+            onresize(target, value, key) {
+                // 火狐浏览器不会自动撑大grid布局
+                if ("length" === key) {
+                    const max = _add_link_button.style.order = (+value + 10);
+                    target.style.width = `${max * 80}px`;
+                }
+            },
+            layout(target, value, key) {
+                target.dataset.key = key;
+                target.style.order = Number(key) + 1;
+                target.href = value.href;
+                const background = target.querySelector("span.bg");
+                background.style.setProperty("background-color", value.background_color ?? "transparent");
+                background.style.setProperty("background-image", `url(${value.local_icon || value.icon || (new URL("/favicon.ico", value.href)).href})`);
+                target.querySelector("span.title").innerHTML = value.title;
+            },
+            delegation: {
+                contextmenu(event) {
+                    event.preventDefault();
+                    MainUI.openLinkManager(this.dataset.key);
+                },
+                dragstart(event) {
+                    // 拖动开始事件处理
+                    // 阻止事件冒泡
+                    event.stopPropagation();
+                    // 设置拖拽数据为当前元素的data-key属性值
+                    _scroll._dragging = this;
+                    event.dataTransfer.setData('text/plain', this.dataset.key);
+                    // 设置允许的拖拽操作类型为移动
+                    event.dataTransfer.effectAllowed = 'move';
+
+                    setTimeout(() => this.classList.add('dragging'));
+                },
+                dragover(event) {
+                    // 拖拽经过事件处理
+                    // 阻止默认行为(允许放置)
+                    event.preventDefault();
+                    // 阻止事件冒泡
+                    event.stopPropagation();
+
+                    if (!Object.is(this, _scroll._dragging)) requestAnimationFrame(() => {
+                        const my_order = Number(this.style.order);
+                        const isLeftMove = (Number(_scroll._dragging.dataset.key) < Number(this.dataset.key));
+
+                        _scroll._dragging.style.order = (event.offsetX < this.offsetWidth / 2) ?
+                            (isLeftMove ? my_order : (my_order - 1)) : (isLeftMove ? (my_order + 1) : my_order);
+                    });
+                },
+                dragend() {
+                    _scroll.querySelectorAll("a.dragging").forEach(a => a.classList.remove("dragging"));
+                },
+                drop(event) {
+                    // 放置事件处理
+                    // 阻止默认行为（避免浏览器默认处理拖拽数据）和事件冒泡
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    // 获取拖拽源元素的 data-key（原始索引）
+                    const sourceKey = Number(event.dataTransfer.getData("text/plain"));
+                    const targetIndex = getTargetIndex(event, sourceKey, Number(this.dataset.key), this, _scroll._dragging);
+
+                    // 若源索引与调整后的目标索引相同，无需排序
+                    if (sourceKey === targetIndex) {
+                        console.log("拖动排序：位置不变");
+                        return;
+                    }
+
+                    // 从数据源中移除拖拽元素（源位置）
+                    const [movedItem] = MainUI.vm_links.data.splice(sourceKey, 1);
+                    // 将元素插入到新位置（调整后的目标索引）
+                    MainUI.vm_links.data.splice(targetIndex, 0, movedItem);
+
+                    // 保存排序后的配置到本地存储
+                    saveLocalConfigure();
+                }
+            }
+        });
+
     });
 
     queueMicrotask(console.log.bind(

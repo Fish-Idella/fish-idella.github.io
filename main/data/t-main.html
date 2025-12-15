@@ -831,7 +831,9 @@
                         return console.warn("IndexOutOfBoundsException");
                     }
                     const obj = MainUI.vm_links.data[index];
-                    for (let key in obj) _link_manager_input[key]?.set(obj[key]);
+                    needSaveKeys.forEach(key => {
+                        _link_manager_input[key]?.set(obj[key]);
+                    });
                 }
                 _link_manager.classList.remove("hide");
             };
