@@ -124,9 +124,7 @@ const MainUI = (function (attrs, list) {
         script.src = src;
     },
 
-    resetBackground() {
-        PuSet.get('background').loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-    },
+    loadBackground() { },
 
     boolean_show_weather(type, value) {
         MainUI.GS.boolean_show_weather = value
@@ -148,14 +146,14 @@ const MainUI = (function (attrs, list) {
         } else {
             MainUI.GS.string_background_type = "file";
         }
-        MainUI.resetBackground();
+        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
     },
 
     boolean_bing_wallpaper(type, value) {
         MainUI.GS.boolean_random_wallpaper = true;
         MainUI.GS.boolean_bing_wallpaper = value;
         MainUI.GS.string_background_type = value ? "bing" : "image";
-        MainUI.resetBackground();
+        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
     },
 
     boolean_image_wallpaper(type, value) {
@@ -166,7 +164,7 @@ const MainUI = (function (attrs, list) {
             MainUI.GS.boolean_image_wallpaper = true;
             MainUI.GS.string_background_type = type;
         }
-        MainUI.resetBackground();
+        MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
 
     },
     boolean_search_history(type, value) {
@@ -175,24 +173,36 @@ const MainUI = (function (attrs, list) {
             // 清空搜索历史记录
             storage.setItem("puset-search-history", []);
         }
-
     },
 
     string_theme(type, value) {
         MainUI.setUiTheme(MainUI.GS.string_theme = value);
-
     },
 
-    "default_configuration": function () {
-        window.location.href = "/main/reset.html";
-    },
-    "import_configuration": function (type, value) {
-        MainUI.SETTINGS.import_configuration.fn(value);
+    "default_configuration": function () { },
+    "import_configuration": function (type, url) {
+        fetch(url).then(a => a.json()).then(json => {
+            return storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(json))));
+        }).then(() => {
+            window.location.reload(true);
+        }).catch(function () {
+            alert("文件格式不正确或已损坏");
+        });
     },
     "export_configuration": function (type, value) {
         if (type === "button") {
-            MainUI.SETTINGS.export_configuration.fn();
+            storage.getItem("puset-local-configure").then(function (request) {
+                const date = new Date;
+                const save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
+                save_link.download = `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`;
+                save_link.href = URL.createObjectURL(new Blob([decodeURIComponent(atob(request))], { type: "text/plain" }));
+                save_link.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+            });
         }
+    },
+
+    boolean_show_icp(type, value) {
+        MainUI.showICP(MainUI.GS.boolean_show_icp = value);
     },
 
     onchange(psid, type, value) {
@@ -229,13 +239,13 @@ const MainUI = (function (attrs, list) {
         }
     }
 }, {
-    /**
-     * 设置背景图片
-     * @param {String} type 类型 [video: 视频, image: 图片, file: 本地文件, random: 随机网络图片, bing: Bing每日一图, color: 颜色代码]
-     * @param {String} value 值 [url:, color:,]
-     */
     "background": {
         fx: "[type], [value]",
+        /**
+         * 设置背景图片
+         * @param {String} type 类型 [video: 视频, image: 图片, file: 本地文件, random: 随机网络图片, bing: Bing每日一图, color: 颜色代码]
+         * @param {String} value 值 [url:, color:,]
+         */
         fn: function (type = "color", value = "red") {
             MainUI.GS.string_background_type = type;
             MainUI.GS.string_background_src = value;
@@ -254,7 +264,7 @@ const MainUI = (function (attrs, list) {
                 }
             }
             saveLocalConfigure(MainUI.GS);
-            PuSet.get('background').loadBackground(value, type);
+            MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
         }
     },
 
@@ -287,32 +297,21 @@ const MainUI = (function (attrs, list) {
     },
 
     "default_configuration": {
-        fn: function () {
-            window.location.href = "/main/reset.html"
+        fn() {
+            MainUI.default_configuration()
         }
     },
 
     "import_configuration": {
+        fx: "[url]",
         fn: function (url) {
-            fetch(url).then(a => a.json()).then(json => {
-                return storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(json))));
-            }).then(() => {
-                window.location.reload(true);
-            }).catch(function () {
-                alert("文件格式不正确或已损坏");
-            });
+            MainUI.import_configuration(null, url);
         }
     },
 
     "export_configuration": {
         fn: function () {
-            storage.getItem("puset-local-configure").then(function (request) {
-                const date = new Date;
-                const save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
-                save_link.download = `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`;
-                save_link.href = URL.createObjectURL(new Blob([decodeURIComponent(atob(request))], { type: "text/plain" }));
-                save_link.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
-            });
+            MainUI.export_configuration("button");
         }
     }
 }));

@@ -338,6 +338,14 @@ body.focus>#main>#links {
 #about {
 	position: relative;
 	grid-area: 4/1/5/3;
+
+	font-size: 0.8rem;
+	justify-content: space-evenly;
+	place-items: center;
+}
+
+#main.hide-icp>#about {
+	display: none !important;
 }
 
 

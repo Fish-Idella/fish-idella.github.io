@@ -1,60 +1,101 @@
 const storage = new PuSet.StorageHelper();
-
+// 辅助函数：定义并立即调用
+const defineAndCall = (methodName, func, param) => (MainUI[methodName] = func)(param);
 function saveLocalConfigure(cofig) {
     storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(cofig || MainUI.GS))));
 };
 
-PuSet.load('data/template.html').then(async function () {
-
-    const result = await storage.getItem("puset-local-configure");
-    const settings = JSON.parse(result ? decodeURIComponent(atob(result)) : "null") ?? null;
-
-    if ((MainUI.GS = settings) === null) {
-        return window.location.replace("/main/reset.html?" + Date.now());
-    } else {
-        MainUI.setUiTheme = (function () {
-            const list = window.matchMedia("(prefers-color-scheme: dark)");
-            function themeListener() {
-                const hours = new Date().getHours();
-                document.body.setAttribute("theme", (list.matches || hours < 6 || hours > 20) ? "dark" : "default");
-            }
-            return function setUiTheme(theme) {
-                // 先移除现有的监听器，避免重复添加
-                list.removeEventListener("change", themeListener);
-
-                if ("os" === theme) {
-                    // 仅在需要时添加监听器
-                    themeListener();
-                    list.addEventListener("change", themeListener);
-                } else {
-                    document.body.setAttribute("theme", theme);
-                }
-            };
-        }());
-        MainUI.setUiTheme(settings.string_theme);
-        document.body.classList.remove('hide');
-    }
+PuSet.load("data/t-main.html").then(async function () {
 
     const _main = document.getElementById('main');
     const _search = _main.querySelector("#search");
     const _word = _search.querySelector("input#word");
+
+    _search.addEventListener("submit", function (ev) {
+        // 发起搜索事件
+        ev.preventDefault();
+        const value = _word.value.trim();
+        if (value.startsWith("--set")) {
+            _word.value = "";
+            _word.blur();
+            MainUI(value);
+        } else if (ev.submitter) {
+            const [type, engine] = ev.submitter.id.split("_");
+            if ("engine" === type) {
+                storage.setItem("puset-search-history", window.op.update(value)).then(function () {
+                    const url = (MainUI.GS.map_search_engine[engine].href + encodeURIComponent(value));
+                    window.location.href = url;
+                });
+            }
+        }
+    });
+
+    const result = await storage.getItem("puset-local-configure");
+    const settings = JSON.parse(result ? decodeURIComponent(atob(result)) : "null") ?? null;
+
+    PuSet.get("reset").init(true, function (root, options) {
+        document.body.appendChild(root);
+        options.exec(root, MainUI, options);
+    });
+
+    if ((MainUI.GS = settings) === null) {
+        return MainUI.default_configuration();
+    }
+
+    const _add_link_button = _main.querySelector("#links>#scroll>a#add-link-button");
+    const list = window.matchMedia("(prefers-color-scheme: dark)");
+    function themeListener() {
+        const hours = new Date().getHours();
+        document.body.setAttribute("theme", (list.matches || hours < 6 || hours > 20) ? "dark" : "default");
+    }
+
+    defineAndCall('showAddLinkButton', bool => PuSet.show(_add_link_button, bool), settings.boolean_main_show_add_button);
+    defineAndCall('showLink', bool => _main.classList.toggle("hide-links", !bool), settings.boolean_main_show_links);
+    defineAndCall('showICP', bool => _main.classList.toggle("hide-icp", !bool), settings.boolean_show_icp);
+    defineAndCall("setUiTheme", function setUiTheme(theme) {
+        // 先移除现有的监听器，避免重复添加
+        list.removeEventListener("change", themeListener);
+        document.body.classList.remove('hide');
+
+        if ("os" === theme) {
+            // 仅在需要时添加监听器
+            themeListener();
+            list.addEventListener("change", themeListener);
+        } else {
+            document.body.setAttribute("theme", theme);
+        }
+    }, settings.string_theme);
+
     const _first_submit = _search.querySelector("[type=submit]"); // 默认的搜索引擎
     const _quickdelete = _search.querySelector("input#word+a.quickdelete");
     const _search_list = _search.querySelector("ul.search-list");
-    const _add_link_button = _main.querySelector("#links>#scroll>a#add-link-button");
-    
-    MainUI.showAddLinkButton = bool => PuSet.show(_add_link_button, bool);
-    MainUI.showAddLinkButton(settings.boolean_main_show_add_button);
-    MainUI.showLink = bool => _main.classList.toggle("hide-links", !bool);
-    MainUI.showLink(settings.boolean_main_show_links);
 
     // 搜索建议提示列表
     const vm_list = PuSet.ViewManager({
         target: _search_list,
         data: [],
         template: "<li></li>",
+        delegation: {
+            contextmenu(ev) {
+                return ev.preventDefault(), false;
+            },
+            pointerdown(ev, text) {
+                ev.preventDefault();
+                _word.value = text;
+                // 如果是 --set 开头的命令行，不直接搜索
+                if (_word.value.startsWith(MainUI.q)) return;
+
+                // 如果是鼠标左键按下，直接搜索
+                if (ev.button === 0 || ev.buttons === 1) {
+                    // 不会触发事件监听，不好
+                    // _search.submit();
+
+                    // 采用模拟点击
+                    _first_submit.click();
+                }
+            }
+        },
         layout: function (target, value) {
-            target.dataset.text = value;
             target.textContent = value;
         }
     });
@@ -83,24 +124,6 @@ PuSet.load('data/template.html').then(async function () {
     // 异步读取搜索历史
     storage.getItem("puset-search-history").then(value => Array.isArray(value) && Object.assign(window.op.s, value));
 
-    // 发起搜索事件
-    PuSet(_search).on("submit", function (ev) {
-        ev.preventDefault();
-        const value = _word.value.trim();
-        if (value.startsWith("--set")) {
-            _word.value = "";
-            _word.blur();
-            MainUI(value);
-        } else if (ev.submitter) {
-            const [type, engine] = ev.submitter.id.split("_");
-            if ("engine" === type) {
-                storage.setItem("puset-search-history", window.op.update(value)).then(function () {
-                    const url = (MainUI.GS.map_search_engine[engine].href + encodeURIComponent(value));
-                    window.location.href = url;
-                });
-            }
-        }
-    });
 
     // 搜索框相关事件
     PuSet(_word).on({
@@ -140,27 +163,6 @@ PuSet.load('data/template.html').then(async function () {
         }
     });
 
-    // 搜索列表的点击事件
-    PuSet(_search_list).on("contextmenu", function (ev) {
-        return ev.preventDefault(), false;
-    }).on("pointerdown", "li", function pointerdown(ev) {
-        ev.preventDefault();
-        let text;
-        if (text = this.dataset.text) {
-            _word.value = text;
-            // 如果是 --set 开头的命令行，不直接搜索
-            if (_word.value.startsWith(MainUI.q)) return;
-
-            // 如果是鼠标左键按下，直接搜索
-            if (ev.button === 0 || ev.buttons === 1) {
-                // 不会触发事件监听，不好
-                // _search.submit();
-
-                // 采用模拟点击
-                _first_submit.click();
-            }
-        }
-    });
 
     // 搜索框内搜索引擎按钮
     MainUI.vm_search_engine = PuSet.ViewManager({
@@ -201,9 +203,9 @@ PuSet.load('data/template.html').then(async function () {
                 target.style.width = `${max * 80}px`;
             }
         },
-        layout(target, value, key, index) {
+        layout(target, value, key) {
             target.dataset.key = key;
-            target.style.order = index + 1;
+            target.style.order = Number(key) + 1;
             target.href = value.href;
             const background = target.querySelector("span.bg");
             background.style.setProperty("background-color", value.background_color ?? "transparent");
@@ -216,7 +218,12 @@ PuSet.load('data/template.html').then(async function () {
     PuSet.get('background').init(true, function (root, options) {
         root.classList.add('view', 'unselect');
         document.body.insertBefore(root, _main);
-        options.exec(root, settings, options);
+        options.exec(root, MainUI, options);
+    });
+
+    PuSet.get("image-selector").init(true, function (root, options) {
+        document.body.appendChild(root);
+        options.exec(root, MainUI, options);
     });
 
     queueMicrotask(console.log.bind(

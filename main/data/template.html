@@ -1,262 +1,27 @@
 <hr id="puset-interpreter-template" />
 
-
-<template id="background">
-    <div part="background" class="view wallpaper background">
-        <video class="view wallpaper" muted="muted" loop="loop" autoplay="autoplay"></video>
-        <canvas class="view wallpaper d2 hide"></canvas>
-        <canvas class="view wallpaper d3 hide"></canvas>
+<template id="settings">
+    <div id="settings" class="view dialog hide">
+        <div class="flex-horizontal dialog-box">
+            <ul class="menu-list">
+                <li v-hide class="flex-horizontal">
+                    <span class="selected"></span>
+                    <span class="icon"></span>
+                    <span class="text fill"></span>
+                </li>
+            </ul>
+            <div class="fill flex-vertical">
+                <div class="menu-title">
+                    <span class="title">常规设置</span>
+                    <a class="close" title="Close"><i class="fa-solid fa-xmark-large"></i></a>
+                </div>
+                <div class="fill">
+                    <div class="view content"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    <script>
-        "use strict";
-
-        // 设置隐藏属性和可见性变化事件的名称
-        const { hidden, visibilitychange } = (() => {
-            if (typeof document.hidden !== "undefined") {
-                return { hidden: "hidden", visibilitychange: "visibilitychange" };
-            } else if (typeof document.msHidden !== "undefined") {
-                return { hidden: "msHidden", visibilitychange: "msvisibilitychange" };
-            } else if (typeof document.webkitHidden !== "undefined") {
-                return { hidden: "webkitHidden", visibilitychange: "webkitvisibilitychange" };
-            }
-            return { hidden: "", visibilitychange: "" };
-        })();
-
-        // 重构为返回Promise的形式，便于使用async/await
-        function getResponseHeader(path) {
-            return new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.onerror = reject;
-                xhr.onreadystatechange = function () {
-                    if (this.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-                        xhr.abort();
-                        resolve(String(xhr.getResponseHeader("Content-Type") || "color"));
-                    }
-                };
-                xhr.open("GET", path);
-                xhr.responseType = "blob";
-                xhr.send();
-            });
-        }
-
-        /**
-         * 用户自定义的背景处理函数
-         * @param {Element} target 
-         * @param {*} settings 保存的设置
-         * @param {*} options 设置相关的属性
-         */
-        return function background(target, settings, options) {
-            "use strict";
-
-            // 获取DOM元素
-            const mBackground = target.querySelector('div.background');
-            const mVideo = mBackground.querySelector('video.wallpaper');
-            const mCanvas2D = mBackground.querySelector("canvas.d2");
-            const mCanvas3D = mBackground.querySelector("canvas.d3");
-
-            // 状态对象
-            const state = {
-                hide: false,
-                dx: 0,
-                dy: 0,
-                dw: mBackground.clientWidth,
-                dh: mBackground.clientHeight
-            };
-
-            // 初始化画布尺寸
-            mCanvas2D.width = mCanvas3D.width = state.dw;
-            mCanvas2D.height = mCanvas3D.height = state.dh;
-
-            // 画布上下文
-            const ctx = mCanvas2D.getContext("2d", { alpha: true });
-            const webgl = mCanvas3D.getContext("webgl", { alpha: true });
-            let isVideo = false;
-
-            // 视频初始化函数
-            const initVideo = () => {
-                mVideo.muted = true;
-                mVideo.loop = true;
-                mVideo.src = "";
-                mVideo.setAttribute("poster", MainUI.a);
-                mVideo.removeAttribute("style");
-            };
-
-            // 视频控制函数
-            const pauseVideo = () => mVideo.pause();
-            const playVideo = () => mVideo.play();
-
-            // 可见性变化处理
-            document.addEventListener(visibilitychange, () => {
-                state.hide = document[hidden];
-                if (isVideo) {
-                    state.hide ? pauseVideo() : playVideo();
-                }
-            });
-
-            // 窗口大小调整处理
-            window.addEventListener("resize", () => {
-                const w = mBackground.clientWidth;
-                const h = mBackground.clientHeight;
-
-                state.dx = 0;
-                state.dy = 0;
-                state.dw = w;
-                state.dh = h;
-
-                mCanvas2D.width = w;
-                mCanvas2D.height = h;
-                mCanvas3D.width = w;
-                mCanvas3D.height = h;
-            });
-
-            // 加载图片背景
-            const loadImageBackground = async (path) => {
-                await MainUI.loadImage(path);
-                initVideo();
-                mBackground?.setAttribute("style", `background-image:url(${path});`);
-                mBackground?.animate(
-                    [{ opacity: 0 }, { opacity: 1 }],
-                    { duration: 1000, iterations: 1 }
-                );
-            };
-
-            // 处理动画类型背景
-            const handleAnimation = async (path) => {
-                try {
-                    const response = await fetch(path);
-                    const script = await response.text();
-                    const fn = eval(script);
-                    if (typeof fn === "function") {
-                        fn(ctx, webgl, state);
-                    }
-                } catch (error) {
-                    console.error("Error loading animation:", path, error);
-                }
-            };
-
-            // 处理视频类型背景
-            const handleVideo = (path, type) => {
-                initVideo();
-                mVideo.type = type;
-                mVideo.src = path;
-                playVideo();
-                isVideo = true;
-            };
-
-            // 处理文件类型背景
-            const handleFile = async () => {
-                try {
-                    const file = await storage.getItem("puset-local-wallpaper");
-                    if (file) {
-                        options.loadBackground(URL.createObjectURL(file), file.type);
-                    } else {
-                        console.warn("本地壁纸丢失");
-                        loadImageBackground('/api/random_wallpaper_provider.php');
-                    }
-                } catch (error) {
-                    console.error("Error handling file background:", error);
-                }
-            };
-
-            // 处理Bing壁纸
-            const handleBing = async () => {
-                let localFile = null;
-                try {
-                    localFile = await storage.getItem("puset-local-wallpaper-bing");
-                    if (localFile && MainUI.isToday(localFile.lastModifiedDate)) {
-                        options.loadBackground(URL.createObjectURL(localFile), localFile.type);
-                        return;
-                    }
-                } catch (error) {
-                    console.log("Bing wallpaper is overdue or not found");
-                }
-
-                try {
-                    const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.background.bing)}`);
-                    const json = await response.json();
-                    const imageUrl = new URL(json?.images?.[0]?.url, MainUI.background.bing).href;
-                    const img = await MainUI.loadImage(imageUrl, true);
-
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    canvas.getContext("2d").drawImage(img, 0, 0);
-
-                    canvas.toBlob(blob => {
-                        localFile = new File([blob], "wallpaper", { type: blob.type });
-                        storage.setItem("puset-local-wallpaper-bing", localFile);
-                        options.loadBackground(URL.createObjectURL(localFile), localFile.type);
-                    });
-                } catch (error) {
-                    console.warn("无法获取最新 bing 壁纸", error);
-                    if (localFile) {
-                        options.loadBackground(URL.createObjectURL(localFile), localFile.type);
-                    } else {
-                        loadImageBackground('/api/random_wallpaper_provider.php');
-                    }
-                }
-            };
-
-            // 加载背景主函数
-            options.loadBackground = async (path, type) => {
-                try {
-                    // 确定背景类型
-                    const contentType = type || await getResponseHeader(path);
-
-                    // 暂停当前视频（如果有）
-                    pauseVideo();
-                    isVideo = false;
-
-                    // 根据类型处理不同的背景
-
-                    if (contentType.startsWith("image")) {
-                        await loadImageBackground(path);
-                        return;
-                    }
-
-                    if (contentType.startsWith("file")) {
-                        await handleFile();
-                        return;
-                    }
-
-                    if (contentType.startsWith("video")) {
-                        handleVideo(path, contentType);
-                        return;
-                    }
-
-                    if (contentType.startsWith("random")) {
-                        await loadImageBackground('/api/random_wallpaper_provider.php');
-                        return;
-                    }
-
-                    if (contentType.startsWith("bing")) {
-                        await handleBing();
-                        return;
-                    }
-
-                    if (contentType.startsWith("animation")) {
-                        await handleAnimation(path);
-                        return;
-                    }
-
-                    // 默认情况：纯色背景，如：background: #000;
-                    initVideo();
-                    mBackground.setAttribute("style", `background:${path}`);
-
-                } catch (error) {
-                    console.error("Error loading background:", error);
-                }
-            };
-
-            // 暴露目标元素
-            options.target = mBackground;
-
-            // 初始化背景
-            options.loadBackground(settings.string_background_src, settings.string_background_type);
-        };
-    </script>
 </template>
-
 
 <template id="layer">
     <style>
@@ -611,28 +376,34 @@
                 target: content,
                 selector: "li",
                 data: options.list,
-                pointerenter() {
-                    this.querySelector("video").play();
-                },
-                pointerleave() {
-                    this.querySelector("video").pause();
+                delegation: {
+                    "click": function backgroundImageListItemClick(event, value) {
+                        checkbox.checked = true;
+                        settings.string_background_src = value.s;
+                        MainUI.onchange(psid, value.t, value.s);
+                    },
+                    "pointerover": function pointerenter() {
+                        /** @type {HTMLVideoElement} */
+                        const video = this.querySelector("video");
+                        if (video.readyState > 2) {
+                            video.play();
+                        }
+                    },
+                    "pointerout": function pointerleave() {
+                        this.querySelector("video").pause();
+                    }
                 },
                 layout(li, value, key) {
                     li.title = value.t;
                     li.style.setProperty("background-image", `url(${value.p || value.s})`);
-                    li.addEventListener("click", function backgroundImageListItemClick() {
-                        checkbox.checked = true;
-                        settings.string_background_src = value.s;
-                        MainUI.onchange(psid, value.t, value.s);
-                    }, false);
                     if (value.t.startsWith("video")) {
                         li.querySelector("video").src = value.s;
-                        li.addEventListener("pointerenter", this.pointerenter);
-                        li.addEventListener("pointerleave", this.pointerleave);
+                        // li.addEventListener("pointerenter", this.pointerenter);
+                        // li.addEventListener("pointerleave", this.pointerleave);
                     } else {
                         li.querySelector("video").removeAttribute("src");
-                        li.removeEventListener("pointerenter", this.pointerenter);
-                        li.removeEventListener("pointerleave", this.pointerleave);
+                        // li.removeEventListener("pointerenter", this.pointerenter);
+                        // li.removeEventListener("pointerleave", this.pointerleave);
                     }
                 }
             });

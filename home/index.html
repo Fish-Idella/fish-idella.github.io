@@ -4,18 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="white" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black" />
+
     <title>起始页</title>
-    <link rel="stylesheet" href="/css/index.css">
+
+    <link rel="stylesheet" type="text/css" href="/mediae/fonts/font-awesome/v6.1.1/css/all.css">
+    <link rel="stylesheet" type="text/css" href="/css/index.css">
+
+    <link rel="stylesheet" type="text/css" href="css/main.css">
 </head>
 
-<body>
-    <div id="main" class="view">
-        <script src="/js/puset/puset-3.0.0.js"></script>
-        <script src="/js/puset/puset.storage.js"></script>
-
-        <script src="js/image-selector.js"></script>
-        <script src="js/global-settings.js"></script>
-        <script src="js/index.js"></script>
+<body class="view">
+    <div id="main" class="view grid-horizontal">
+        <div class="weather"></div>
+        <div class="menu hide">
+            <button title="Settings" class="round-button" type="button"><i class="fa-solid fa-list-ul"></i></button>
+        </div>
+        <div class="links flex-vertical"></div>
+        <div class="search"></div>
+        <div class="about">
+            <script type="text/javascript" src="/js/puset/puset-3.0.0.js"></script>
+            <script type="text/javascript" src="/js/puset/puset.storage.js"></script>
+            <script type="text/javascript" src="js/global-settings.js"></script>
+            <script type="text/javascript" src="js/index.js"></script>
+        </div>
     </div>
 </body>
 

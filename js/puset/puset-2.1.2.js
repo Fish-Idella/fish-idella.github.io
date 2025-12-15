@@ -518,12 +518,49 @@
             },
 
             /**
-             * 
-             * @param {String} base64 
+             * ES2017+
+             * @param {String} base64 data URL
              */
             base64ToBlob: function base64ToBlob(base64) {
-                const array = base64.match(/^data:([\w\/]+?);base64,(.+)$/);
-                return null == array ? null : new Blob([new Uint8Array(Array.from(atob(array[2])).map(s => s.charCodeAt(0)))], { 'type': array[1] });
+                // 1. 严格参数校验：确保输入是有效非空字符串
+                if (typeof base64 !== 'string' || base64.trim() === '') {
+                    console.warn('base64ToBlob: 输入必须是非空字符串');
+                    return null;
+                }
+
+                try {
+                    // 2. 提取正则表达式为常量，提升可维护性
+                    // 输出示例：data:text/plain;base64,aGVsbG8gd29ybGQ=
+                    const dataUrlPattern = /^data:([\w\/]+?);base64,(.+)$/;
+                    // 匹配base64数据URL格式（MIME类型 + 编码内容）
+                    const matchResult = base64.match(dataUrlPattern);
+
+                    // 3. 严谨校验匹配结果，确保格式完整
+                    if (matchResult === null || matchResult.length < 3) {
+                        console.warn('base64ToBlob: 输入不是有效的base64数据URL格式');
+                        return null;
+                    }
+
+                    // 4. 解构赋值，提升代码可读性
+                    const [, mimeType, base64Data] = matchResult;
+
+                    // 5. 性能优化：简化Uint8Array转换逻辑（减少冗余数组操作）
+                    const decodedStr = atob(base64Data); // 解码base64字符串
+                    const byteLength = decodedStr.length;
+                    const uint8Array = new Uint8Array(byteLength);
+
+                    // 直接遍历字符串赋值，替代 Array.from + map 的冗余转换
+                    for (let i = 0; i < byteLength; i++) {
+                        uint8Array[i] = decodedStr.charCodeAt(i);
+                    }
+
+                    // 6. 创建并返回Blob对象
+                    return new Blob([uint8Array], { type: mimeType });
+                } catch (error) {
+                    // 7. 全局异常捕获，避免程序崩溃
+                    console.error('base64ToBlob 转换失败:', error);
+                    return null;
+                }
             }
 
         });

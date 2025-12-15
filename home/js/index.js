@@ -1,6 +1,5 @@
 const storage = new PuSet.StorageHelper();
-
-PuSet.load('data/template.html').then(async function () {
+Promise.all([PuSet.load('data/template.html'), PuSet.load("data/t-main.html")]).then(async function () {
 
     const result = await storage.getItem("puset-local-configure");
     const settings = JSON.parse(result ? decodeURIComponent(atob(result)) : "null") ?? null;
@@ -30,9 +29,31 @@ PuSet.load('data/template.html').then(async function () {
 
     const _main = document.getElementById('main');
 
+    PuSet.get("search").init(true, function (root, options) {
+        options.exec(root, settings, options);
+    }, _main.querySelector(".search"));
+
+    PuSet.get("link-manager").init(true, function (root, options) {
+        document.body.appendChild(root);
+        options.exec(root, settings, options);
+    });
+
+    PuSet.get("link-list").init(true, function (root, options) {
+        options.exec(root, settings, options);
+    }, _main.querySelector(".links"));
+
     PuSet.get('background').init(true, function (root, options) {
         root.classList.add('view', 'unselect');
         document.body.insertBefore(root, _main);
         options.exec(root, settings, options);
     });
+
+    PuSet.get('image-selector').init(true, function (root, options) {
+        document.body.appendChild(root);
+        options.exec(root, settings, options);
+    });
+
+    // settings.openImageSelector(function(blob) {
+    //     console.log(blob)
+    // });
 });
