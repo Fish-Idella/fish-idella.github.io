@@ -8,26 +8,19 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="white" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black" />
 
-    <link rel="stylesheet" type="text/css" href="/mediae/fonts/font-awesome/v6.1.1/css/all.css">
     <link rel="stylesheet" type="text/css" href="/css/index.css">
-
     <link rel="stylesheet" type="text/css" href="css/main.css">
-    <link rel="stylesheet" type="text/css" href="css/settings.css">
 </head>
 
 <body theme="default" class="view hide">
     <div id="main" class="view grid-horizontal">
         <div id="weather"></div>
-        <div id="menu" class="hide">
-            <button title="Settings" class="round-button" type="button">
-                <i class="fa-solid fa-list-ul"></i>
-            </button>
-        </div>
+        <div id="menu" class="hide"></div>
         <div id="links" class="flex-vertical">
             <div id="scroll" class="grid-horizontal">
                 <a class="link-button unselect hide" href="#" draggable="true"><span class="bg"></span><span
                         class="title">模板</span></a>
-                <a id="add-link-button" class="unselect" href="javascript:;" draggable="false" v-hide="v-hide">
+                <a id="add-link-button" class="unselect hide" href="javascript:;" draggable="false">
                     <span class="bg"
                         style="background-image: url(/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);"></span>
                     <span class="title">添加</span>
@@ -40,7 +33,7 @@
                     <span class="bg fill flex-horizontal">
                         <input class="fill unify" type="text" name="q" id="word" placeholder="开始探索" maxlength="512"
                             autocomplete="off">
-                        <a class="quickdelete hide" title="清空输入框" href="javascript:word.value = '';"></a>
+                        <a class="quickdelete hide" title="清空输入框" href="javascript:;"></a>
                     </span>
                     <span class="bg hide"><input type="hidden" name="scope" value="web"></span>
                     <span class="bg button">
@@ -57,11 +50,10 @@
     </div>
 
     <script src="/js/puset/puset-3.0.0.js"></script>
-    <script src="/js/puset/puset.storage.js"></script>
+    <script src="/js/puset/puset.storage-1.0.1.js"></script>
 
     <script src="js/global-settings.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/settings.js"></script>
 </body>
 
 </html>

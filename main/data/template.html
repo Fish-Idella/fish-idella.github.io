@@ -1,7 +1,92 @@
 <hr id="puset-interpreter-template" />
 
 <template id="settings">
-    <div id="settings" class="view dialog hide">
+    <style>
+        dialog {
+            user-select: none;
+            border: none;
+            outline: none;
+            padding: 0;
+            border-radius: 0.5rem;
+            box-shadow: rgba(138, 122, 122, 0.8) 1px 1px 4px 0px;
+        }
+
+        .dialog-box {
+            width: 900px;
+            height: 600px;
+        }
+
+        .menu-list {
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
+            max-width: 50%;
+            min-width: 300px;
+            background-color: var(--background-menu-list);
+            font-weight: bolder;
+        }
+
+        .menu-list>li {
+            overflow: hidden;
+            width: 100%;
+            height: 3rem;
+            font-size: 1.2rem;
+            line-height: 3rem;
+            cursor: pointer;
+        }
+
+        .menu-list>li:hover {
+            background-color: var(--background-menu-list-hover);
+        }
+
+        .menu-list>li>.selected {
+            width: 4px;
+        }
+
+        .menu-list>li.light>.selected {
+            margin: .5rem 0;
+            background-color: var(--background-switch-select);
+        }
+
+        .menu-list>li>.icon {
+            width: 3rem;
+            text-align: center;
+        }
+
+        #settings>div>div>div.menu-title {
+            position: relative;
+            line-height: 4rem;
+            text-align: center;
+            font-size: larger;
+            font-weight: bolder;
+        }
+
+        #settings>div>div>div.menu-title>a.close {
+            position: absolute;
+            width: 4rem;
+            height: 4rem;
+            top: 0;
+            right: 0;
+        }
+
+        #settings>div>div>div.menu-title>a>i {
+            width: 2.6rem;
+            height: 2.6rem;
+            line-height: 2.6rem;
+            border-radius: 50%;
+            transition: transform 200ms ease-in-out;
+        }
+
+        #settings>div>div>div.menu-title>a:hover>i {
+            background-color: #ddd;
+            transform: rotate(90deg);
+        }
+
+        #settings>div>div>div.fill>div.content {
+            overflow: hidden scroll;
+        }
+    </style>
+    <dialog id="settings">
         <div class="flex-horizontal dialog-box">
             <ul class="menu-list">
                 <li v-hide class="flex-horizontal">
@@ -20,16 +105,57 @@
                 </div>
             </div>
         </div>
-    </div>
+    </dialog>
+    <script>
+        return function (target) {
+            const dialog = target.querySelector("dialog");
+            dialog.querySelector("a.close").addEventListener("click", function () {
+                dialog.close();
+            });
+        }
+    </script>
 </template>
 
 <template id="layer">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
+        .template-layer {
+            position: relative;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100%;
+            margin: 1rem 0;
+        }
+
+        .template-layer>div.text-primary {
+            padding: 0 0.4rem 0.4rem 0.4rem;
+
+            &>.text {
+                font-size: 1rem;
+                font-weight: 500;
+            }
+
+            &>.long_text {
+                font-size: 0.8rem;
+                color: var(--color-long-text);
+            }
+        }
+
+        .template-layer .content {
+            padding: 0 1rem;
+        }
+
+        label.switch,
+        .content>::part(template-widget) {
+            display: flex;
+            margin: 0.5rem 0;
+            place-content: space-between;
+        }
+
+        .content [v-hide] {
+            display: none !important;
+        }
     </style>
-    <div part="layer" class="template template-layer layer">
+    <div part="template-layer" class="template template-layer layer">
         <div class="text-primary">
             <div class="text"></div>
             <div class="long_text"></div>
@@ -46,11 +172,17 @@
 
 <template id="switch">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
+        div.text-primary>.text {
+            font-size: 1rem;
+            font-weight: 500;
+        }
 
-        .custom-button {
+        div.text-primary>.long_text {
+            font-size: 0.8rem;
+            color: var(--color-long-text);
+        }
+
+        .switch>.custom-button {
             position: relative;
             width: 44px;
             height: 24px;
@@ -93,16 +225,18 @@
             left: 22px;
         }
     </style>
-    <label class="template template-widget switch">
-        <div class="text-primary">
-            <div class="text"></div>
-            <div class="long_text"></div>
-        </div>
-        <div class="custom-button">
-            <input type="checkbox">
-            <div class="peer"></div>
-        </div>
-    </label>
+    <div class="template template-widget">
+        <label part="template-widget" class="switch">
+            <div class="text-primary">
+                <div class="text"></div>
+                <div class="long_text"></div>
+            </div>
+            <div class="custom-button">
+                <input type="checkbox">
+                <div class="peer"></div>
+            </div>
+        </label>
+    </div>
     <script>
         return function renderSwitch(target, settings, options) {
             const psid = options.psid;
@@ -123,15 +257,11 @@
 
 <template id="input">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
-
         .template-widget.input {
             flex-direction: column;
         }
     </style>
-    <div class="template template-widget input">
+    <div part="template-widget" class="template template-widget input">
         <!-- import template button -->
         <div class="custom-input">
             <input type="txet">
@@ -159,11 +289,11 @@
 
 <template id="button">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
+
+
+
     </style>
-    <label class="template template-widget button">
+    <label part="template-widget" class="template template-widget button">
         <div class="text-primary">
             <div class="text"></div>
             <div class="long_text"></div>
@@ -187,15 +317,11 @@
 
 <template id="file">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
-
         .template-widget.file {
             flex-direction: column;
         }
     </style>
-    <div class="template template-widget file">
+    <div part="template-widget" class="template template-widget file">
         <div class="text-primary">
             <div class="text"></div>
             <div class="long_text"></div>
@@ -243,10 +369,6 @@
 
 <template id="object-list">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
-
         .template-widget {
             flex-direction: column;
         }
@@ -255,7 +377,7 @@
             padding: 0;
         }
     </style>
-    <div class="template template-widget object-list">
+    <div part="template-widget" class="template template-widget object-list">
         <!-- import template button -->
         <ul class="content flex-vertical">
             <li class="flex-horizontal">
@@ -292,10 +414,6 @@
 
 <template id="image-list">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
-
         div.image-list {
             flex-direction: column;
         }
@@ -325,30 +443,27 @@
             touch-action: none;
         }
     </style>
-    <div class="template template-widget image-list">
-        <!-- import template switch -->
-        <ul class="content grid-horizontal unify">
-            <div>
-                <video class="view" muted preload="metadata"
-                    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
-                <label class="custom-button file">
-                    <input type="file" value="OK">
-                    <div class="view">
-                        <img src="/mediae/icons/update.png" alt="select">
-                        <p class="mb-1 text-sm text-neutral-600">
-                            <span class="font-semibold">点击选择文件</span>
-                            <span>或</span>
-                            <span class="font-semibold">拖入文件</span>
-                        </p>
-                    </div>
-                </label>
-            </div>
-            <li>
-                <video class="view" muted preload="metadata"
-                    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
-            </li>
-        </ul>
-    </div>
+    <ul class="content grid-horizontal unify">
+        <div>
+            <video class="view" muted preload="metadata"
+                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+            <label class="view custom-button file">
+                <input type="file" value="OK">
+                <div class="view">
+                    <img src="/mediae/icons/update.png" alt="select">
+                    <p class="mb-1 text-sm text-neutral-600">
+                        <span class="font-semibold">点击选择文件</span>
+                        <span>或</span>
+                        <span class="font-semibold">拖入文件</span>
+                    </p>
+                </div>
+            </label>
+        </div>
+        <li>
+            <video class="view" muted preload="metadata"
+                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+        </li>
+    </ul>
     <script>
         function readAsDataURL(psid, list) {
             if (list && list.length > 0) {
@@ -360,67 +475,59 @@
         }
         return function renderImageList(target, settings, options) {
             "use strict";
-            const psid = options.psid;
-            const content = target.querySelector("ul.content");
-            let checkbox;
-            PuSet.show(content, settings[psid]);
-            PuSet.get("switch").init(false, function (root, view) {
+            return PuSet.get("switch").init(true, function (root, view) {
+                root.querySelector("div.template").appendChild(target);
                 PuSet.populateContent(root, settings, options);
                 view.exec(root, settings, options);
-                checkbox = root.querySelector("input");
+                const checkbox = root.querySelector("input");
+                const content = root.querySelector("ul.content");
                 checkbox.addEventListener("change", () => PuSet.show(content, checkbox.checked));
-                const a = target.querySelector(".template-widget.image-list");
-                a.insertBefore(root.host, a.firstElementChild);
-            });
-            PuSet.ViewManager({
-                target: content,
-                selector: "li",
-                data: options.list,
-                delegation: {
-                    "click": function backgroundImageListItemClick(event, value) {
-                        checkbox.checked = true;
-                        settings.string_background_src = value.s;
-                        MainUI.onchange(psid, value.t, value.s);
-                    },
-                    "pointerover": function pointerenter() {
-                        /** @type {HTMLVideoElement} */
-                        const video = this.querySelector("video");
-                        if (video.readyState > 2) {
-                            video.play();
+                PuSet.ViewManager({
+                    target: content,
+                    selector: "li",
+                    data: options.list,
+                    delegation: {
+                        "click": function backgroundImageListItemClick(event, value) {
+                            checkbox.checked = true;
+                            settings.string_background_src = value.s;
+                            MainUI.onchange(psid, value.t, value.s);
+                        },
+                        "pointerover": function pointerenter() {
+                            /** @type {HTMLVideoElement} */
+                            const video = this.querySelector("video");
+                            if (video.readyState > 2) {
+                                video.play();
+                            }
+                        },
+                        "pointerout": function pointerleave() {
+                            this.querySelector("video").pause();
                         }
                     },
-                    "pointerout": function pointerleave() {
-                        this.querySelector("video").pause();
+                    layout(li, value, key) {
+                        li.title = value.t;
+                        li.style.setProperty("background-image", `url(${value.p || value.s})`);
+                        if (value.t.startsWith("video")) {
+                            li.querySelector("video").src = value.s;
+                        } else {
+                            li.querySelector("video").removeAttribute("src");
+                        }
                     }
-                },
-                layout(li, value, key) {
-                    li.title = value.t;
-                    li.style.setProperty("background-image", `url(${value.p || value.s})`);
-                    if (value.t.startsWith("video")) {
-                        li.querySelector("video").src = value.s;
-                        // li.addEventListener("pointerenter", this.pointerenter);
-                        // li.addEventListener("pointerleave", this.pointerleave);
-                    } else {
-                        li.querySelector("video").removeAttribute("src");
-                        // li.removeEventListener("pointerenter", this.pointerenter);
-                        // li.removeEventListener("pointerleave", this.pointerleave);
+                });
+                PuSet(".custom-button.file").on({
+                    "change": function (event) {
+                        checkbox.checked = true;
+                        readAsDataURL(psid, event.target.files);
+                    },
+                    "dragenter dragover dragleave": function (event) {
+                        event.preventDefault();
+                    },
+                    "drop": function (event) {
+                        event.preventDefault();
+                        checkbox.checked = true;
+                        readAsDataURL(psid, event.dataTransfer.files);
                     }
-                }
-            });
-            const fileBox = target.querySelector(".custom-button.file");
-            PuSet(fileBox).on({
-                "change": function (event) {
-                    checkbox.checked = true;
-                    readAsDataURL(psid, event.target.files);
-                },
-                "dragenter dragover dragleave": function (event) {
-                    event.preventDefault();
-                },
-                "drop": function (event) {
-                    event.preventDefault();
-                    checkbox.checked = true;
-                    readAsDataURL(psid, event.dataTransfer.files);
-                }
+                });
+                return root;
             });
         }
     </script>
@@ -429,10 +536,6 @@
 
 <template id="radio-list">
     <style>
-        @import url(/css/index.css);
-        @import url(css/main.css);
-        @import url(css/settings.css);
-
         .template-widget {
             flex-direction: column;
         }
@@ -466,7 +569,7 @@
             color: var(--background-switch-select);
         }
     </style>
-    <div part="radio-list" class="template template-widget">
+    <div part="template-widget" class="template template-widget">
         <div class="text-primary">
             <div class="text"></div>
             <div class="long_text"></div>

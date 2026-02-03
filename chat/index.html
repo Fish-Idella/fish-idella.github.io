@@ -4,82 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ollama API 聊天</title>
-    <link rel="stylesheet" href="/mediae/fonts/font-awesome/v6.1.1/css/all.min.css">
+    <title>Open AI Game</title>
+    <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="index.css">
 </head>
 
 <body class="view flex-horizontal">
+    <div class="game-container">
 
-    <div class="view flex-horizontal">
-
-        <!-- 主聊天界面 -->
-        <div class="flex-vertical" id="mainChat">
-            <div>
-                <div class="chat-header">
-                    <div class="chat-header-title">Ollama API 聊天</div>
-                    <div class="chat-header-icon">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </div>
-                </div>
-            </div>
-            <section class="fill chat-container">
-                <div class="message-container assistant">
-                    <div class="message">
-                        <div class="message-content">
-                            <div class="message-icon"></div>
-                            <div class="message-text">
-                                <div class="message-text-think">
-                                    <div class="title">已完成思考</div>
-                                    <div class="think"></div>
-                                </div>
-                                <div class="message-text-content">欢迎来到 Ollama API 聊天！</div>
-                            </div>
-                        </div>
-                        <div class="message-actions">
-                            <button title="刷新" class="message-actions-button">
-                                <i class="fa-solid fa-rotate"></i>
-                            </button>
-                            <button title="修改" class="message-actions-button">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button title="复制" class="message-actions-button">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                            <button title="删除" class="message-actions-button">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <div class="chat-input-container">
-                <div class="buttons">
-                    <select name="" id="models">
-                        <option value="ollama/llama:7b">llama:7b</option>
-                    </select>
-                    <button class="button" id="fileInput">文件</button>
-                    <button class="button" id="clearButton">清除</button>
-                    <button class="button" id="exportButton">导出</button>
-                    <button class="button" id="importButton">导入</button>
-                </div>
-                <label for="chatInput" class="flex-horizontal">
-                    <textarea class="fill chat-input" id="chatInput" placeholder="请输入..."></textarea>
-                    <button class="chat-send-button" id="sendButton">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </label>
-            </div>
-        </div>
-        <div class="fill flex-vertical" id="settings">
-
-        </div>
     </div>
-    <!-- 遮罩层 -->
-    <div class="overlay" id="overlay"></div>
-
-    <script src="/js/puset/interpreter.js"></script>
-    <script src="index.js"></script>
 </body>
 
 </html>

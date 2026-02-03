@@ -4,13 +4,26 @@
 
 <template id="reset">
     <style>
+        dialog {
+            user-select: none;
+            border: none;
+            outline: none;
+            border-radius: 0.5rem;
+            box-shadow: rgba(138, 122, 122, 0.8) 1px 1px 4px 0px;
+        }
+
+        .dialog-box {
+            width: 500px;
+            height: 300px;
+        }
+
         .crimson {
             color: crimson;
         }
     </style>
     <dialog class="reset">
         <div class="flex-vertical dialog-box">
-            <div class="top">重置用户数据</div>
+            <h2 class="top">重置用户数据</h2>
             <div class="tips">⚠ 即将重置用户在本网站的本地数据。</div>
             <div><span class="crimson">继续重置操作</span><span>请点击</span><button type="button"
                     class="ok">确认</button><span>。</span>
@@ -26,8 +39,10 @@
                     .then(() => window.location.reload(true));
             };
             MainUI.default_configuration = function () {
-                root.querySelector("button").addEventListener("click", init, { once: true });
-                return (MainUI.GS === null) ? init() : root.querySelector("dialog").showModal();
+                const dialog = root.querySelector("dialog");
+                root.querySelector("button.ok").addEventListener("click", init, { once: true });
+                root.querySelector("button.esc").addEventListener("click", () => dialog.close(), { once: true });
+                return (MainUI.GS === null) ? init() : dialog.showModal();
             }
         }
     </script>
@@ -204,9 +219,9 @@
                 }
 
                 try {
-                    const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.background.bing)}`);
+                    const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.bing_background)}`);
                     const json = await response.json();
-                    const imageUrl = new URL(json?.images?.[0]?.url, MainUI.background.bing).href;
+                    const imageUrl = new URL(json?.images?.[0]?.url, MainUI.bing_background).href;
                     const img = await MainUI.loadImage(imageUrl, true);
 
                     const canvas = document.createElement("canvas");
@@ -297,7 +312,7 @@
             user-select: none;
             border: none;
             outline: none;
-            border-radius: 1rem;
+            border-radius: 0.5rem;
             box-shadow: rgba(138, 122, 122, 0.8) 1px 1px 4px 0px;
         }
 
@@ -647,10 +662,88 @@
 
 
 <template id="link-manager">
-    <div id="link-manager" class="view dialog hide">
+    <style>
+        dialog {
+            color: var(--color-text);
+            user-select: none;
+            border: none;
+            outline: none;
+            padding: 0;
+            background-color: var(--background-search);
+            border-radius: 0.5rem;
+            box-shadow: var(--value-box-shadow);
+        }
+
+        dialog>.dialog-box {
+            position: relative;
+            overflow: hidden;
+        }
+
+        dialog>.dialog-box>.top {
+            width: 100%;
+            line-height: 3rem;
+            font-weight: 500;
+        }
+
+        dialog>.dialog-box>.top>.title {
+            padding-left: 1rem;
+            user-select: none;
+        }
+
+        dialog>.dialog-box>.top>.title>.help-hover {
+            margin-left: 1rem;
+        }
+
+        dialog>.dialog-box>.top>.button-box {
+            padding: 0 1rem;
+        }
+
+        dialog>.dialog-box>.dialog-content {
+            position: relative;
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            color: var(--color-link);
+            background-color: var(--background-view)
+        }
+
+        .link-manager>.dialog-box {
+            width: 40rem;
+            height: 18rem;
+        }
+
+
+        .link-manager .preview {
+            width: 7rem;
+            height: 100%;
+            place-content: center;
+            place-items: center;
+        }
+
+        .preview>a>span.bg {
+            background-image: url(/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);
+        }
+
+        .input-box>.subtitle {
+            font-size: 0.8rem;
+            line-height: 1.6rem;
+        }
+
+        .input-box>.input {
+            position: relative;
+        }
+
+        .input-box>.input>input[type=text],
+        .input-box>.input>input[type=url] {
+            color: var(--color-link);
+            border-bottom: 1px solid var(--color-link);
+            font-family: monospace;
+        }
+    </style>
+    <dialog class="link-manager">
         <div class="flex-vertical dialog-box">
             <div class="flex-horizontal top">
-                <div class="fill title">链接管理器<span class="help-hover" title="">ⓘ</span></div>
+                <div class="fill title">链接管理器</div>
                 <div class="button-box">
                     <button class="delete">删除</button>
                     <button class="save">保存</button>
@@ -684,10 +777,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </dialog>
     <script>
         return function (root, MainUI, options) {
-            const _link_manager = document.getElementById("link-manager");
+            const _link_manager = root.querySelector(".link-manager");
 
             const _preview = _link_manager.querySelector(".preview");
             const _preview_background = _preview.querySelector(".preview>.link-button>span.bg");
@@ -767,7 +860,7 @@
 
             const needSaveKeys = ["title", "href", "icon", "local_icon", "always", "background_color"];
             _link_manager.querySelector(".close").addEventListener("click", function () {
-                _link_manager.classList.add("hide");
+                _link_manager.close();
             }, false);
             _link_manager.querySelector(".delete").addEventListener("click", function () {
                 const id = Number(_link_manager.dataset.id);
@@ -777,7 +870,7 @@
                 if (confirm("确定要删除吗？")) {
                     MainUI.vm_links.data.splice(id, 1);
                     saveLocalConfigure();
-                    _link_manager.classList.add("hide");
+                    _link_manager.close();
                 }
             }, false);
             _link_manager.querySelector(".save").addEventListener("click", function () {
@@ -799,7 +892,7 @@
                 }
 
                 saveLocalConfigure();
-                _link_manager.classList.add("hide");
+                _link_manager.close();
             });
 
             _link_manager_input.title.e.addEventListener("input", function () {
@@ -835,7 +928,7 @@
                         _link_manager_input[key]?.set(obj[key]);
                     });
                 }
-                _link_manager.classList.remove("hide");
+                _link_manager.showModal();
             };
         }
     </script>

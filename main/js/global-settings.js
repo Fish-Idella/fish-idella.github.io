@@ -1,23 +1,23 @@
 const MainUI = (function (attrs, list) {
-    const rs = /\s+/g;
+    const rs = /[\n\s]+/g;
     const settings = Object.assign(function settings(code) {
-        const [a, b, ...args] = String(code).split(rs);
-        if (settings.q === a && list[b]) {
-            return list[b].fn.apply(settings, args);
+        const [totem, command, ...args] = String(code).split(rs);
+        if (settings.totem === totem) {
+            return list[command]?.fn.apply(settings, args);
         }
         return false;
-    }, { SETTINGS: list }, attrs);
+    }, { command: list }, attrs);
 
     for (const key in list) {
-        settings.s.push(`--set ${key} ${list[key].fx || ""}`);
+        const fx = list[key].fx;
+        for (const value in fx) {
+            settings.s.push(`--set ${key} ${fx[value]}`);
+        }
     }
 
     return settings;
 
 }({
-    ADD: "add",
-
-    REMOVE: "remove",
 
     // 透明图片
     a: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
@@ -28,68 +28,61 @@ const MainUI = (function (attrs, list) {
     // 白色图片
     w: "data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAUAAAEALAAAAAABAAEAAAICRAEAOw==",
 
-    isFirst: true,
-
+    // 全局设置的参数
     GS: null,
 
-    p: false,
+    // 命令行起始标志
+    totem: "--set",
 
-    q: "--set",
-
-    /**
-     * 不能改名
-     * @type {string[]}
-     */
+    /*! 不能改名，‘suggest queries’的缩写 */
     s: [],
 
-    background: {
-        // 每次刷新都是随机图片
-        random: {
-            landscape: "https://bing.ioliu.cn/v1/rand",
-            portrait: "https://source.unsplash.com/random",
-            cartoon: "http://img.xjh.me/random_img.php", // HTML
-            0: 'https://www.dmoe.cc/random.php',
-            1: 'https://cdn.seovx.com/?mom=302',
-        },
-        // Bing 官方每日一图
-        bing: "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1" // JSON
-    },
+    // Bing 官方每日一图
+    bing_background: "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1", // JSON
 
     /**
-     * 
+     * bing每日壁纸会用到
      * @param {Date} date 
      * @returns 
      */
     isToday: function (date) {
-        return (new Date()).toDateString() === date.toDateString();
+        const today = new Date;
+        if (today?.constructor === date?.constructor) {
+            const keys = ['getFullYear', 'getMonth', 'getDate'];
+            return keys.every(fx => date[fx]() === today[fx]());
+        }
+        return false;
     },
 
     /**
      * 从本地选择一张图片，并获取图片的 Base64 Data URL
      */
-    async localImageDataURL() {
+    async chooseFile(accept) {
         return new Promise((resolve, reject) => {
             const selector = document.createElement("input");
             selector.type = "file";
-            selector.accept = "image/*";
-            selector.addEventListener("change", function () {
+            selector.accept = accept || "image/*";
+            selector.addEventListener("input", function () {
                 if (selector.files.length == 0) {
-                    reject(new Error("用户未选择文件"));
+                    reject("用户未选择文件");
                     return;
                 }
-                const fr = new FileReader();
-                fr.onload = () => resolve(fr.result);
-                fr.onerror = () => reject(fr.error);
-                fr.readAsDataURL(selector.files.item(0));
+                resolve(selector.files.item(0));
             }, { once: true });
-            selector.addEventListener("cancel", () => reject(new Error("用户取消选择")), { once: true });
+            selector.addEventListener("cancel", () => reject("用户取消选择"), { once: true });
             selector.click();
         });
     },
 
+    /**
+     * 加载图片，设置壁纸会用到
+     * @param {string|File} src 
+     * @param {boolean} origin 
+     * @returns 
+     */
     async loadImage(src, origin) {
         return new Promise((resolve, reject) => {
-            let img = new Image;
+            const img = new Image;
             if (origin) {
                 img.crossOrigin = 'anonymous';
             }
@@ -105,23 +98,19 @@ const MainUI = (function (attrs, list) {
         });
     },
 
+    /**
+     * 缩放图片，设置图标会用到
+     * @param {Image} image 
+     * @param {Number} [width] 
+     * @param {Number} [height] 
+     * @returns 
+     */
     async compressImage(image, width = 128, height = 128) {
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         canvas.getContext("2d").drawImage(image, 0, 0, width, height);
         return canvas.toDataURL("image/png");
-    },
-
-    jsonp(src) {
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.addEventListener("loadend", function loadend() {
-            script.removeEventListener("loadend", loadend);
-            script.remove();
-        });
-        document.head.appendChild(script);
-        script.src = src;
     },
 
     loadBackground() { },
@@ -165,13 +154,13 @@ const MainUI = (function (attrs, list) {
             MainUI.GS.string_background_type = type;
         }
         MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-
     },
+
     boolean_search_history(type, value) {
         MainUI.GS.boolean_search_history = value;
         if (!MainUI.GS.boolean_search_history) {
-            // 清空搜索历史记录
-            storage.setItem("puset-search-history", []);
+            window.op.s.length = 0;
+            storage.setItem("puset-search-history", window.op(window.op).s);
         }
     },
 
@@ -180,23 +169,30 @@ const MainUI = (function (attrs, list) {
     },
 
     "default_configuration": function () { },
-    "import_configuration": function (type, url) {
-        fetch(url).then(a => a.json()).then(json => {
-            return storage.setItem("puset-local-configure", btoa(encodeURIComponent(JSON.stringify(json))));
-        }).then(() => {
-            window.location.reload(true);
-        }).catch(function () {
-            alert("文件格式不正确或已损坏");
-        });
+    "import_configuration": function (type, file) {
+        if (type === "file") {
+            const fr = new FileReader();
+            fr.onloadend = function (ev) {
+                try {
+                    const json = JSON.parse(ev.target.result);
+                    if (confirm("即将覆盖当前配置，确定要导入吗？")) {
+                        saveLocalConfigure(json);
+                        setTimeout(() => window.location.reload(true), 500);
+                    }
+                } catch (e) {
+                    alert("文件格式不正确或已损坏");
+                }
+            };
+            fr.readAsText(file);
+        }
     },
     "export_configuration": function (type, value) {
         if (type === "button") {
             storage.getItem("puset-local-configure").then(function (request) {
+                return URL.createObjectURL(new Blob([decodeURIComponent(atob(request))], { type: "text/plain" }));
+            }).then(function (url) {
                 const date = new Date;
-                const save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
-                save_link.download = `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`;
-                save_link.href = URL.createObjectURL(new Blob([decodeURIComponent(atob(request))], { type: "text/plain" }));
-                save_link.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+                PuSet.download(url, `网页配置 ${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.json`);
             });
         }
     },
@@ -206,112 +202,119 @@ const MainUI = (function (attrs, list) {
     },
 
     onchange(psid, type, value) {
-        if ((this[psid] || (() => console.log("未定义的配置项：", psid, type, value)))(type, value) === false) {
+        const fn = this[psid] || function not() {
+            console.log("未定义的配置项：", psid, type, value);
+            return false;
+        };
+        if (fn(type, value) === false) {
             return;
         }
         saveLocalConfigure();
-    },
-
-    updataWeather() {
-        const vm_weather = this.vm_weather;
-        if (MainUI.GS.boolean_show_weather) {
-            PuSet.show(vm_weather.target, true);
-            const today = new Date;
-            ParseWeather.getWeatherInfo(MainUI.GS.boolean_auto_ip ? ParseWeather.AUTO : MainUI.GS.string_local_city, today, function (info) {
-                if (!(info instanceof ParseWeather)) {
-                    vm_weather.data.city = "无法获取天气";
-                    return;
-                }
-                const hours = today.getHours();
-                const isNight = (hours < 7 || hours > 18);
-                vm_weather.data.location = MainUI.GS.boolean_auto_ip;
-                vm_weather.data.city = info.name;
-                vm_weather.data.temperature = {
-                    temperature: ParseWeather.ifDefault(info.temperature, (info.low + "&#126;" + info.high), info.temperature),
-                    title: info.title || "",
-                    color: info.severity
-                };
-                vm_weather.data.text = isNight ? info.nightText : info.dayText;
-                vm_weather.data.windScale = ParseWeather.ifDefault(info.windScale, (isNight ? info.nightWindScale : info.dayWindScale), info.windScale);
-            });
-        } else {
-            PuSet.show(vm_weather.target, false);
-        }
     }
+
 }, {
-    "background": {
-        fx: "[type], [value]",
-        /**
-         * 设置背景图片
-         * @param {String} type 类型 [video: 视频, image: 图片, file: 本地文件, random: 随机网络图片, bing: Bing每日一图, color: 颜色代码]
-         * @param {String} value 值 [url:, color:,]
-         */
-        fn: function (type = "color", value = "red") {
-            MainUI.GS.string_background_type = type;
-            MainUI.GS.string_background_src = value;
+
+    "toggle": {
+        fx: [
+            "links",           // 链接
+            "search_history",  // 搜索历史
+            "icp",             // ICP
+            "add_button"       // 添加按钮
+        ],
+        fn: function (type) {
             switch ("" + type) {
-                case "bing": {
-                    MainUI.GS.boolean_random_wallpaper = true;
-                    MainUI.GS.string_background_src = 0;
-                    break;
+                case "links": {
+                    return MainUI.onchange("boolean_main_show_links", "checkbox", !MainUI.GS.boolean_main_show_links);
                 }
-                case "random": {
-                    MainUI.GS.boolean_random_wallpaper = true;
-                    break;
+                case "search_history": {
+                    return MainUI.onchange("boolean_search_history", "checkbox", !MainUI.GS.boolean_search_history);
                 }
-                default: {
-                    MainUI.GS.boolean_random_wallpaper = false;
+                case "icp": {
+                    return MainUI.onchange("boolean_show_icp", "checkbox", !MainUI.GS.boolean_show_icp);
+                }
+                case "add_button": {
+                    return MainUI.onchange("boolean_main_show_add_button", "checkbox", !MainUI.GS.boolean_main_show_add_button);
                 }
             }
-            saveLocalConfigure(MainUI.GS);
-            MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
-        }
-    },
-
-    "links": {
-        fx: "[type], [json]",
-        add(type, json) {
-            MainUI.GS.map_all_links.push(obj);
-            saveLocalConfigure();
-        },
-        fn: function (type, json) {
-            if (json === undefined) return;
-            const obj = ("string" === typeof json) ? JSON.parse(json) : Object.create(json);
-            if (type === MainUI.ADD) {
-                this.add(MainUI.ADD, obj);
-            }
-        }
-    },
-
-    "city": {
-        fx: "[cityName]",
-        fn: function (city) {
-            MainUI.GS.string_local_city = city;
-            MainUI.GS.boolean_auto_ip = false;
-            MainUI.GS.boolean_show_weather = true;
-
-            setLocalConfig("puset-local-configure", MainUI.GS);
-
-            MainUI.updataWeather(window.vm_weather);
         }
     },
 
     "default_configuration": {
+        fx: [''],
         fn() {
             MainUI.default_configuration()
         }
     },
 
     "import_configuration": {
-        fx: "[url]",
-        fn: function (url) {
-            MainUI.import_configuration(null, url);
+        fx: [''],
+        fn: function () {
+            MainUI.chooseFile("application/json").then((file) => {
+                MainUI.import_configuration("file", file);
+            }).catch(error => console.log(error));
         }
     },
 
     "export_configuration": {
+        fx: [''],
         fn: function () {
             MainUI.export_configuration("button");
+        }
+    },
+
+    "background": {
+        fx: [
+            'save bing wallpaper',   // 保存
+            'choosefile image/png',  // 选择本地文件
+            'random',                // 随机网络图片
+            'bing',                  // Bing每日一图
+            'video [url]',           // 视频
+            'image [url]',           // 图片
+            'color [color code]'     // 颜色代码
+        ],
+        /**
+         * 设置背景图片
+         * @param {String} type 类型
+         * @param {String} value 值
+         */
+        fn: function (type, value) {
+            switch ("" + type) {
+                case "save": {
+                    return void storage.getItem("puset-local-wallpaper-bing").then(file => {
+                        const date = file.lastModifiedDate;
+                        PuSet.download(URL.createObjectURL(file), `bing-wallpaper-${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.png`);
+                    });
+                }
+                case "":
+                case "choosefile": {
+                    return MainUI.chooseFile(value || "image/*,video/*")
+                        .then((file) => storage.setItem("puset-local-wallpaper", file))
+                        .then(function () {
+                            MainUI.onchange("boolean_image_wallpaper", "checkbox", true);
+                        }).catch(error => {
+                            console.log(error);
+                        });
+                }
+                case "bing": {
+                    return MainUI.onchange("boolean_bing_wallpaper", "checkbox", true);
+                }
+                case "random": {
+                    MainUI.GS.boolean_bing_wallpaper = false;
+                    return MainUI.onchange("boolean_random_wallpaper", "checkbox", true);
+                }
+                default: {
+                    if (!value) return console.log("跳过空背景");
+                    MainUI.GS.string_background_src = value;
+                    return MainUI.onchange("boolean_image_wallpaper", type, true);
+                }
+            }
+        }
+    },
+
+    "city": {
+        fx: ['[city name]'],
+        fn: function (city) {
+            // TODO
         }
     }
 }));

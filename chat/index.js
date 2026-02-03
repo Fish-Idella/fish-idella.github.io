@@ -1,18 +1,25 @@
+const storage = StorageHelper.open("ai-chat", 1, "LocalStorageHelper");
 
 const chat_params = {
     "model": "qwen3:4b-thinking-2507-q8_0",
     "options": {
-        "stream": false,
+        "stream": true,
         "temperature": 1,
         "top_p": 1
     },
     "messages": null
 };
+
+storage.setItem("model", "qwen3:4b-thinking-2507-q8_0");
+storage.getItem("model").then(function (model) {
+    chat_params.model = model ?? "qwen3:4b-thinking-2507-q8_0";
+});
+
 const system_message = {
-    role: "system", 
+    role: "system",
     content: `当前时间：${new Date().toString()}。
 你是女忍者——彩儿，今年16岁的女孩，你早年以走投无路的孤儿身份被用户收留，潜伏在用户的身边窃取情报，最近被用户发现囚禁在地下室。以此背景与用户进行对话。
-` 
+`
 };
 
 
@@ -32,12 +39,12 @@ fetch("http://localhost:11434/api/tags").then(a => a.json()).then(function (json
     }
 }).catch(console.error);
 
-const vm_chat = new Interpreter({
+const vm_chat = PuSet.ViewManager({
     target: document.querySelector(".chat-container"),
     selector: "div.message-container",
     data: [],
-    layout(container, value, key, index) {
-        container.dataset.index = index;
+    layout(container, value, key) {
+        container.dataset.index = key;
         container.className = "message-container " + value.role;
         const think = container.querySelector(".message-text-think .think");
         think.classList.toggle("hide", value.done);
@@ -46,9 +53,6 @@ const vm_chat = new Interpreter({
     }
 });
 
-vm_chat.delegation("click", ".message-text-think .title", function (event) {
-    this.nextElementSibling.classList.toggle("hide");
-});
 
 const chatInput = document.getElementById("chatInput");
 
@@ -85,7 +89,7 @@ function send(obj) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify(obj)
-    }).then(response => {
+    }).then(async response => {
         if (!response.body) {
             throw new Error("不支持流式响应");
         }
@@ -95,7 +99,7 @@ function send(obj) {
         let fullContent = "";
 
         // 处理流式数据的函数
-        function processStream({ done, value }) {
+        async function processStream({ done, value }) {
             if (done) {
                 // 流结束，更新最终内容
                 update(lastIndex, fullContent, true);
@@ -121,11 +125,11 @@ function send(obj) {
             });
 
             // 继续读取下一个数据块
-            return reader.read().then(processStream);
+            return await processStream(await reader.read());
         }
 
         // 开始读取流
-        return reader.read().then(processStream);
+        return await processStream(await reader.read());
     }).catch(error => {
         console.error("发送请求错误:", error);
         // 显示错误信息
@@ -149,13 +153,13 @@ document.getElementById("sendButton").addEventListener("click", function () {
 
 // 持久化存储相关函数
 function saveMessagesToLocalStorage() {
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
+    storage.setItem("messages", messages);
 }
 
-function loadMessagesFromLocalStorage() {
-    const saved = localStorage.getItem('chatMessages');
+async function loadMessagesFromLocalStorage() {
+    const saved = await storage.getItem('messages');
     if (saved) {
-        return JSON.parse(saved);
+        return saved;
     }
     return [
         { role: "assistant", done: true, think: "", content: "主人，你终于来啦，请开始你的对话吧" }
@@ -163,8 +167,12 @@ function loadMessagesFromLocalStorage() {
 }
 
 // 初始化时加载保存的消息
-const messages = loadMessagesFromLocalStorage();
-vm_chat.update(messages);
+const messages = [];
+
+loadMessagesFromLocalStorage().then(savedMessages => {
+    messages.push(...savedMessages);
+    vm_chat.update(messages);
+});
 
 // 清除按钮事件
 document.getElementById("clearButton").addEventListener("click", function () {
@@ -256,7 +264,9 @@ document.getElementById("fileInput").addEventListener("click", function () {
 });
 
 // 消息操作按钮事件处理
-vm_chat.delegation("click", ".message-actions-button", function (event) {
+PuSet(vm_chat.target).on("click", ".message-text-think .title", function (event) {
+    this.nextElementSibling.classList.toggle("hide");
+}).on("click", ".message-actions-button", function (event) {
     const index = parseInt(this.closest('.message-container').dataset.index);
     const action = this.title;
 

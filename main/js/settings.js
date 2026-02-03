@@ -29,10 +29,6 @@ PuSet.load("data/template.html").then(function () {
             root: _right_scroll_content
         });
 
-        _settings.querySelector("a.close").addEventListener("click", function () {
-            _settings.classList.add("hide");
-        });
-
 
         const getPsId = (function () {
             // 根据浏览器支持情况选择实现方式
@@ -115,38 +111,26 @@ PuSet.load("data/template.html").then(function () {
         };
 
         function renderSettings(node, settings, options) {
-            const view = PuSet.get(options.type);
-            const root = view.init(false);
-            PuSet.populateContent(root, settings, options);
-            view.exec(root, settings, options);
-            if (Array.isArray(options.inner)) {
-                const content = root.querySelector(".content");
-                options.inner.forEach(item => renderSettings(content, settings, item));
-            }
-            const host = root.host;
-            putItem(host, options);
-            MainUI.autoShow(host, options);
-            host.dataset.psid = options.psid;
-            node.appendChild(host);
-            return { host, root };
+            return PuSet.get(options.type).init(true, function (a, view) {
+                const root = view.exec(a, settings, options) || a;
+                PuSet.populateContent(root, settings, options);
+                if (Array.isArray(options.inner)) {
+                    const content = root.querySelector(".content");
+                    options.inner.forEach(item => renderSettings(content, settings, item));
+                }
+                console.log(root)
+                putItem(root, options);
+                MainUI.autoShow(root, options);
+                root.dataset.psid = options.psid;
+                node.appendChild(root);
+                return { host: root, root };
+            });
         }
 
         const vm_menu_list = PuSet.ViewManager({
             target: _left_ul,
-            selector: "li",
+            selector: ":scope>li",
             data: [],
-            delegation: {
-                click() {
-                    const psid = this.dataset.psid;
-                    const children = _right_scroll_content.children;
-                    for (const child of children) {
-                        if (child.dataset.psid === psid) {
-                            _right_scroll_content.scrollTo({ top: child.offsetTop, left: 0, behavior: 'smooth' });
-                            return false;
-                        }
-                    }
-                }
-            },
             layout: function (target, obj, key) {
                 target.dataset.psid = obj.psid;
                 target.dataset.title = obj.text;
@@ -160,6 +144,9 @@ PuSet.load("data/template.html").then(function () {
                 }
                 observer.observe(renderSettings(_right_scroll_content, MainUI.GS, obj).host);
             }
+        }).on("click", function () {
+            const child = _right_scroll_content.querySelector(`:scope>[data-psid=${this.dataset.psid}]`);
+            child && _right_scroll_content.scrollTo({ top: child.offsetTop, left: 0, behavior: 'smooth' });
         });
 
         fetch("./data/configure.json").then(r => r.json()).then(function (json) {
@@ -167,10 +154,10 @@ PuSet.load("data/template.html").then(function () {
             const _menu = PuSet.show(document.getElementById("menu"), true);
             _menu.addEventListener("click", function updateUI() {
                 // 首次点击更新 UI
-                vm_menu_list.update(json), PuSet.show(_settings, true);
+                vm_menu_list.update(json), _settings.showModal();
                 _menu.removeEventListener("click", updateUI);
                 // 后续不再更新 UI
-                _menu.addEventListener("click", () => PuSet.show(_settings, true));
+                _menu.addEventListener("click", () => _settings.showModal());
             });
         });
     });
