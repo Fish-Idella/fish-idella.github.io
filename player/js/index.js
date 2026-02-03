@@ -80,9 +80,7 @@ const PuSetPlayer = (function () {
         }
 
         if (Array.isArray(target)) {
-            target.forEach(arr => {
-                allEventsAdded = allEventsAdded && addUniversalEventListener(...arr);
-            });
+            target.forEach(arr => void (allEventsAdded = allEventsAdded && addUniversalEventListener(...arr)));
             return allEventsAdded;
         }
 
@@ -261,9 +259,7 @@ const PuSetPlayer = (function () {
             // self.pointerLeave(self);
             self.loader.stop();
             // 隐藏相关UI元素
-            self.progressPreview.classList.add(HIDE);
-            self.volumeBox.classList.add(HIDE);
-            self.playbackrateMenu.classList.add(HIDE);
+            self.controlsContainer.querySelectorAll(".inner").forEach(item => item.classList.add(HIDE));
         },
 
         // 视频播放/暂停切换
@@ -295,6 +291,7 @@ const PuSetPlayer = (function () {
                         // self.video.play();
                     },
                     "loadeddata": function () {
+                        document.getElementById("d").classList.toggle("portrait", this.videoWidth < this.videoHeight);
                         const duration = this.duration;
                         self.durationTimeDisplay.innerHTML = parseDuration(duration, (self.isShortVideo = duration < 3600));
                     },
@@ -440,6 +437,11 @@ const PuSetPlayer = (function () {
                     self.playbackrateMenu.classList.add(HIDE);
                 }],
 
+                [self.fileInfo, "click", function (ev) {
+                    ev.preventDefault();
+                    self.dashboard.classList.remove(HIDE);
+                }],
+
                 // 快捷键
                 [document, "keydown", function onKeyboardDownEventListener(ev) {
                     const activeElement = document.activeElement || document.fullscreenElement;
@@ -555,6 +557,12 @@ const PuSetPlayer = (function () {
             self.playbackrateResult = self.playbackrate.querySelector(".bpx-player-ctrl-playbackrate-result");
             self.playbackrateMenu = self.playbackrate.querySelector(".bpx-player-ctrl-playbackrate-menu");
 
+            // 文件
+            self.fileInfo = self.bottomControls.querySelector(".bpx-player-ctrl-file-result");
+            self.dashboard = self.bottomControls.querySelector(".dashboard");
+
+
+
             return self.initEvent(self);
         },
 
@@ -603,67 +611,8 @@ const PuSetPlayer = (function () {
     dashboard.querySelector("#stop").addEventListener("click", function () {
         player.stop();
     });
-}());
 
-
-(function 加载列表() {
-    const player = new PuSetPlayer(document.getElementById("player-video-layer"));
-
-    const list = document.querySelector("ul.file-list");
-    const vm_list = new Interpreter({
-        target: list,
-        selector: "li",
-        json: null,
-        paths: [],
-        data: [],
-        layout(li, value, key, index) {
-            li.className = value.type;
-            li.dataset.index = index;
-            li.querySelector("span.filename").textContent = value.name;
-        },
-        async getFileList(path) {
-            vm_list.paths.push(path);
-            console.log("getFileList", vm_list.paths);
-            const a = await fetch("/api/directory_content_fetcher.php", {
-                method: "POST",
-                body: new URLSearchParams({ path })
-            });
-            vm_list.json = await a.json();
-            if (vm_list.json.success) {
-                vm_list.json.data.sort((a_1, b) => {
-                    // 文件夹排在文件前
-                    if (a_1.type === 'directory' && b.type !== 'directory') {
-                        return -1;
-                    }
-                    if (a_1.type !== 'directory' && b.type === 'directory') {
-                        return 1;
-                    }
-                    // 同类项目按名称排序（使用localeCompare进行本地化排序）
-                    return a_1.name.localeCompare(b.name, 'zh-CN', { sensitivity: 'base' });
-                });
-                vm_list.update(vm_list.json.data);
-                vm_list.data.length = vm_list.json.data.length;
-            } else {
-                alert(vm_list.json.message);
-            }
-        }
+    dashboard.querySelector("#close").addEventListener("click", function () {
+        dashboard.classList.add("hide");
     });
-
-    document.querySelector(".file-list-title").addEventListener("click", function () {
-        if (vm_list.paths.length <= 1) return;
-        vm_list.paths.pop();
-        vm_list.getFileList(vm_list.paths.pop());
-    });
-
-    vm_list.delegation("click", "li", function (ev) {
-        ev.preventDefault();
-        const path = vm_list.json.path + "/" + vm_list.json.data[this.dataset.index].name;
-        if (this.className === "directory") {
-            vm_list.getFileList(path);
-        } else if (this.className === "file") {
-            player.play("/av/" + path);
-        }
-    }, false);
-
-    vm_list.getFileList(`Videos`);
 }());

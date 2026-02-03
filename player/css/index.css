@@ -15,44 +15,6 @@ body {
     font-style: normal;
 }
 
-/* 横屏设备 */
-@media screen and ((orientation: landscape) and (width >=1200px)) {
-    div.rsvp {
-        display: flex;
-        flex-direction: row
-    }
-
-    .out-box {
-        width: 70%
-    }
-
-    .in-box {
-        width: 30%;
-        padding: 10px 10px 10px 0
-    }
-}
-
-/* 竖屏设备 */
-@media screen and ((orientation: portrait) or (width <=1200px)) {
-    div.rsvp {
-        display: flex;
-        flex-direction: column
-    }
-
-    .out-box {
-        width: 100%
-    }
-
-    .out-box>.dashboard>.info {
-        display: none !important
-    }
-
-    .in-box {
-        width: 100%;
-        padding: 0 10px 10px;
-        flex-grow: 1
-    }
-}
 
 .out-box {
     display: flex;
@@ -83,11 +45,12 @@ table.info {
     position: relative;
     width: 100%;
     height: 100%;
+    max-height: 100vh;
 }
 
 video.video {
     background-color: #000000;
-    aspect-ratio: 16 / 9;
+    /* aspect-ratio: 16 / 9; */
 }
 
 video::cue {
@@ -279,6 +242,7 @@ video::cue {
     min-width: 3rem;
 }
 
+.bpx-player-ctrl-file-result,
 .bpx-player-ctrl-playbackrate-result {
     width: 60px;
 }
@@ -306,6 +270,15 @@ video::cue {
 
 .bpx-player-ctrl-playbackrate-menu-item.bpx-state-active {
     color: cornflowerblue;
+}
+
+.dashboard {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    bottom: 50px;
+    transform: translateX(-50%);
+    left: 50%;
 }
 
 .volume-box {
@@ -368,7 +341,8 @@ video::cue {
 
 .video-layer {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    height: 100%;
+    /* aspect-ratio: 16 / 9; */
     background-color: rgb(0 0 0);
     border: 1px solid #000;
 }
@@ -393,7 +367,7 @@ label[type=file] {
     display: inline-block;
     position: relative;
     overflow: hidden;
-    width: 5rem;
+    min-width: 5rem;
     height: 2rem;
     text-align: center;
     line-height: 2rem;

@@ -9,10 +9,8 @@
     <link rel="stylesheet" href="css/index.css">
     <style>
         body {
-            background-color: #101010;
-            color: #efefef;
+            background-color: #efefef;
         }
-
         #app {
             position: absolute;
             top: 0;
@@ -22,13 +20,6 @@
             overflow: hidden;
         }
 
-        #a,
-        #b,
-        #c,
-        #d {
-            position: relative;
-        }
-
         #a {
             background-color: rgb(0, 0, 0);
             color: #fff;
@@ -36,7 +27,7 @@
 
         #b {
             /* background-color: rgb(22, 48, 48); */
-            padding: 10px 0;
+            /* padding: 10px; */
         }
 
         #c {
@@ -45,8 +36,6 @@
 
         #d {
             /* background-color: rgb(76, 103, 51); */
-            max-width: 100vh;
-            max-height: 100vh;
         }
 
 
@@ -236,7 +225,7 @@
                             </div>
                             <div class="bottom min">
                                 <div class="progress-bar">
-                                    <div class="inner progress-preview hide">
+                                    <div class="progress-preview hide">
                                         <span class="progress-preview-time">00:00</span>
                                     </div>
                                     <div class="progress"></div>
@@ -254,7 +243,7 @@
                                         </div>
                                         <div class="bt bt-playback-rate" title="倍速">
                                             <div class="bpx-player-ctrl-playbackrate-result">倍速</div>
-                                            <ul class="inner bpx-player-ctrl-playbackrate-menu hide">
+                                            <ul class="bpx-player-ctrl-playbackrate-menu hide">
                                                 <li class="bpx-player-ctrl-playbackrate-menu-item" data-value="3">3x
                                                 </li>
                                                 <li class="bpx-player-ctrl-playbackrate-menu-item" data-value="2">2.0x
@@ -276,40 +265,12 @@
                                                 </li>
                                             </ul>
                                         </div>
-                                        <div class="bt bt-local-file" title="文件">
-                                            <div class="bpx-player-ctrl-file-result">文件</div>
-                                            <div class="inner dashboard flex-vertical hide">
-                                                <div class="url-box flex-horizontal">
-                                                    <input type="url" name="video"
-                                                        value="https://localhost/av/Videos/Carib-052218-672-FHD/052218-672-carib-1080p.mp4"
-                                                        class="unify fc" placeholder="请输入视频地址">
-                                                </div>
-                                                <div>
-                                                    <label for="play" type="button" class="bt-play">
-                                                        <input type="button" name="video" id="play" value="播放">
-                                                        <span>播放</span>
-                                                    </label>
-                                                    <label for="file" type="file">
-                                                        <input type="file" name="video" id="file" accept="video/*">
-                                                        <span>本地视频</span>
-                                                    </label>
-                                                    <label for="stop" type="button">
-                                                        <input type="button" name="video" id="stop" value="退出播放">
-                                                        <span>退出播放</span>
-                                                    </label>
-                                                    <label for="close" type="button">
-                                                        <input type="button" name="video" id="close" value="关闭">
-                                                        <span>关闭</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                     <div class="right">
                                         <div class="bt bt-volume" title="音量">
-                                            <div class="inner volume-box flex-vertical hide">
+                                            <div class="volume-box flex-vertical hide">
                                                 <div class="volume-value">0</div>
-                                                <div class=" flex-vertical fc volume-bar" data-value="0" data-max="100">
+                                                <div class="flex-vertical fc volume-bar" data-value="0" data-max="100">
                                                     <div class="view thumb">
                                                         <div class="thumb-dot" title="音量滑块"></div>
                                                     </div>
@@ -328,7 +289,31 @@
                         </div>
                     </div>
                 </div>
-                <div id="b">
+                <div id="b" class="dashboard flex-vertical">
+                    <div class="box">
+                        <div class="flex-horizontal">
+                            <div class="url-box fc flex-horizontal">
+                                <input type="url" name="video"
+                                    value="https://localhost/av/Videos/Carib-052218-672-FHD/052218-672-carib-1080p.mp4"
+                                    class="unify fc" placeholder="请输入视频地址">
+                                <label for="play" type="button" class="bt-play">
+                                    <input type="button" name="video" id="play" value="播放">
+                                    <span>播放</span>
+                                </label>
+                            </div>
+                            <label for="file" type="file">
+                                <input type="file" name="video" id="file" accept="video/*">
+                                <span>本地视频</span>
+                            </label>
+                            <label for="stop" type="button">
+                                <input type="button" name="video" id="stop" value="退出播放">
+                                <span>退出播放</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="box fc mt info">
+                        <ul class="fc scroll"></ul>
+                    </div>
                 </div>
             </div>
             <div id="c">网页其他展示容器C</div>

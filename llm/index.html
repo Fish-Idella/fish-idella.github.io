@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LM Studio Chat</title>
+  <link rel="stylesheet" href="/mediae/fonts/font-awesome/v6.1.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Markdown rendering library -->
+  <script src="js/marked.min.js"></script>
+  <!-- Highlight.js -->
+  <script src="js/highlight.min.js"></script>
+  <script>
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      smartypants: true,
+      headerIds: false,
+      highlight: function (code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return code;
+      }
+    });
+  </script>
+  <!-- MathJax configuration for LaTeX support -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        packages: { '[+]': ['noerrors', 'noundefined'] }
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        ignoreHtmlClass: 'tex2jax_ignore',
+        processHtmlClass: 'tex2jax_process'
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="js/tex-mml-chtml.js" async></script>
+</head>
+
+<body>
+  <div id="app">
+    <div id="server-url-container">
+      <input type="text" id="server-url" placeholder="Enter LM Studio server address" value="http://localhost:11434" />
+      <select id="model-select" disabled>
+        <option value="">Select a model</option>
+      </select>
+      <button id="connect-button"><i class="fas fa-plug"></i> Connect</button>
+    </div>
+    <div id="connection-status">Disconnected</div>
+    <div id="main-content">
+      <!-- Chat Sidebar -->
+      <div id="chat-sidebar">
+        <button id="toggle-sidebar"><i class="fas fa-bars"></i></button>
+        <div class="sidebar-content">
+          <div id="chat-sidebar-header"><span>Chats</span></div>
+          <button id="new-chat-button"><i class="fas fa-plus"></i> New Chat</button>
+          <ul id="chat-list"></ul>
+        </div>
+      </div>
+      <!-- Chat Section -->
+      <div id="chat-section">
+        <div id="chat-container"></div>
+        <div id="input-container">
+          <button id="upload-button"><i class="fas fa-image"></i></button>
+          <input type="file" id="image-upload" accept="image/*" style="display:none;" />
+          <div id="image-preview"></div>
+          <input type="text" id="user-input" placeholder="Type a message..." disabled />
+          <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Custom context menu for deleting chats -->
+  <div id="context-menu">Delete Chat</div>
+
+  <script src="js/load.js"></script>
+</body>
+
+</html>

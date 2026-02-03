@@ -1,84 +1,245 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ollama API 聊天</title>
-    <link rel="stylesheet" href="/mediae/fonts/font-awesome/v6.1.1/css/all.min.css">
-    <link rel="stylesheet" href="index.css">
+    <title>Document</title>
+    <style>
+        :root {
+            background-color: black;
+        }
+
+        body,
+        textarea {
+            background-color: transparent;
+            font-size: 16px;
+            color: #ffffff;
+            text-shadow: 0px 0px 4px rgb(0 0 0);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: bold;
+        }
+
+        .view {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        }
+
+        .grid-horizontal {
+            display: grid !important;
+            padding: 0;
+            grid-auto-flow: row;
+        }
+
+        .grid-vertical {
+            display: grid !important;
+            padding: 0;
+            grid-auto-flow: column;
+        }
+
+        .flex-horizontal {
+            display: flex !important;
+            flex-direction: row;
+        }
+
+        .flex-vertical {
+            display: flex !important;
+            flex-direction: column;
+        }
+
+        .fill {
+            flex-grow: 1;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .unselect {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(156, 163, 175, 0.8);
+        }
+
+        .center {
+            place-content: center;
+            place-items: center;
+        }
+
+        .relative {
+            position: relative;
+        }
+
+
+        video {
+            object-fit: cover;
+            aspect-ratio: 16 / 10;
+            max-width: 960px;
+            max-height: 600px;
+            vertical-align: top;
+        }
+
+        #chat-dialog {
+            position: absolute;
+            width: 80%;
+            max-height: 50%;
+            height: fit-content;
+            left: 10%;
+            bottom: 4%;
+            background-color: #80808030;
+            padding: 10px;
+        }
+
+        #chat-messages-output {
+            flex-grow: 1;
+            position: relative;
+            /* text-align: end; */
+            max-height: 10%;
+            height: auto;
+            overflow: hidden scroll;
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            &>span.dd {
+                /* color: #c4c4c4; */
+                font-weight: 300;
+            }
+        }
+
+        .chat-input-container {
+            /* height: 22px; */
+            /* padding: 5px; */
+            background-color: #80808030;
+            margin: 10px 0 0 0;
+        }
+
+        #chat-message-input {
+            resize: none;
+            width: 80%;
+            height: 50px;
+        }
+
+        #chat-message-submit {
+            width: 80px;
+        }
+
+
+        #settings-dialog {
+            position: absolute;
+            width: 55%;
+            height: 100%;
+            left: 45%;
+            top: 0%;
+            user-select: none;
+            background-color: #80808030;
+        }
+
+        .lines {
+            /* width: 80%; */
+            /* height: 20%; */
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+
+
+
+
+            &>.subtitle {
+                font-size: 20px;
+                margin: 5px 0;
+            }
+        }
+    </style>
 </head>
 
-<body class="view flex-horizontal">
-
-    <div class="view flex-horizontal">
-
-        <!-- 主聊天界面 -->
-        <div class="flex-vertical" id="mainChat">
-            <div>
-                <div class="chat-header">
-                    <div class="chat-header-title">Ollama API 聊天</div>
-                    <div class="chat-header-icon">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
+<body>
+    <div class="view grid-horizontal center">
+        <div class="relative">
+            <video id="video" muted="muted" preload="auto" autoplay="autoplay" src="video/title_a.webm"></video>
+            <div id="chat-container" class="view hide">
+                <div id="chat-dialog" class="flex-vertical">
+                    <div id="chat-messages-output" class="fill"></div>
+                    <div class="chat-input-container flex-horizontal">
+                        <textarea class="fill" id="chat-message-input" type="text"
+                            placeholder="message...">今天想玩什么？</textarea>
+                        <button id="chat-message-submit" width="80">Send</button>
                     </div>
                 </div>
             </div>
-            <section class="fill chat-container">
-                <div class="message-container assistant">
-                    <div class="message">
-                        <div class="message-content">
-                            <div class="message-icon"></div>
-                            <div class="message-text">
-                                <div class="message-text-think">
-                                    <div class="title">已完成思考</div>
-                                    <div class="think"></div>
-                                </div>
-                                <div class="message-text-content">欢迎来到 Ollama API 聊天！</div>
-                            </div>
+            <div id="start-settings" class="view">
+                <div id="settings-dialog">
+                    <div class="lines">
+                        <div class="subtitle">Open AI 通用 API 地址</div>
+                        <div class="flex-horizontal">
+                            <input class="fill" type="url" name="" id="api-path" value="http://localhost:11434/v1">
+                            <button type="button" id="api-test">连接测试</button>
                         </div>
-                        <div class="message-actions">
-                            <button title="刷新" class="message-actions-button">
-                                <i class="fa-solid fa-rotate"></i>
-                            </button>
-                            <button title="修改" class="message-actions-button">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button title="复制" class="message-actions-button">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                            <button title="删除" class="message-actions-button">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
+                        <div class="flex-horizontal">
+                            <input class="fill" type="url" name="" id="api-key" value="sk-xxxxxxxxxxxx">
+                        </div>
+                        <div id="tips">未连接</div>
+                    </div>
+                    <div class="lines">
+                        <div class="subtitle">模型选择</div>
+                        <div class="flex-horizontal">
+                            <select class="fill" name="" id="models" disabled="disabled">
+                                <option value="">请先连接 API</option>
+                            </select>
+                            <button type="button">刷新列表</button>
                         </div>
                     </div>
+                    <div class="lines">
+                        <div class="subtitle">自动推进剧情</div>
+                        <div class="flex-horizontal">
+                            <input class="fill" type="number" name="" id="auto-advance" value="0">
+                            <button type="button">无效按钮</button>
+                        </div>
+                        <div>剧情模式，不需要操作视频也会轮换，如果是付费 API 则会增加花销；根据输入的数字 n 分钟后刷新剧情， n ≤ 0 时不自动推进。</div>
+                    </div>
+                    <div class="lines">
+                        <button type="button" id="start-game">开始</button>
+                    </div>
                 </div>
-            </section>
-            <div class="chat-input-container">
-                <div class="buttons">
-                    <select name="" id="models">
-                        <option value="ollama/llama:7b">llama:7b</option>
-                    </select>
-                    <button class="button" id="fileInput">文件</button>
-                    <button class="button" id="clearButton">清除</button>
-                    <button class="button" id="exportButton">导出</button>
-                    <button class="button" id="importButton">导入</button>
-                </div>
-                <label for="chatInput" class="flex-horizontal">
-                    <textarea class="fill chat-input" id="chatInput" placeholder="请输入..."></textarea>
-                    <button class="chat-send-button" id="sendButton">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </label>
             </div>
-        </div>
-        <div class="fill flex-vertical" id="settings">
-
         </div>
     </div>
-    <!-- 遮罩层 -->
-    <div class="overlay" id="overlay"></div>
 
-    <script src="/js/puset/interpreter.js"></script>
+    <script src="posture.js"></script>
     <script src="index.js"></script>
 </body>
 

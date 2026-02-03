@@ -232,6 +232,8 @@ a.quickdelete::after {
 	--stroke-color: #434343;
 	list-style: none;
 	padding: 0;
+	max-height: 30rem;
+	overflow: hidden auto;
 	text-shadow: -1px -1px 1px var(--stroke-color), 1px -1px 1px var(--stroke-color),
 		-1px 1px 1px var(--stroke-color), 1px 1px 1px var(--stroke-color),
 		-1px 0px 1px var(--stroke-color), 1px 0px 1px var(--stroke-color),
@@ -304,7 +306,7 @@ body.focus>#main>#links {
 	text-align: center;
 	text-decoration: none;
 	font-weight: 400;
-	/* aspect-ratio: 1; */
+	cursor: pointer;
 	text-shadow: 0 0 5px var(--text-shadow);
 	transition: transform 100ms ease-in-out;
 }
@@ -351,92 +353,6 @@ body.focus>#main>#links {
 	display: none !important;
 }
 
-
-.dialog {
-	display: flex;
-	color: var(--color-text);
-	padding: 0;
-	place-content: center;
-	place-items: center;
-}
-
-.dialog>.dialog-box {
-	position: relative;
-	min-width: 10rem;
-	max-width: 90%;
-	min-height: 10rem;
-	max-height: 90%;
-	overflow: hidden;
-	background-color: var(--background-search);
-	border-radius: 1rem;
-	box-shadow: var(--value-box-shadow);
-}
-
-.dialog>.dialog-box>.top {
-	width: 100%;
-	line-height: 3rem;
-	font-weight: 500;
-}
-
-.dialog>.dialog-box>.top>.title {
-	padding-left: 1rem;
-	user-select: none;
-}
-
-.dialog>.dialog-box>.top>.title>.help-hover {
-	margin-left: 1rem;
-}
-
-.dialog>.dialog-box>.top>.button-box {
-	padding: 0 1rem;
-}
-
-.dialog>.dialog-box>.dialog-content {
-	position: relative;
-	flex-grow: 1;
-	width: 100%;
-	height: 100%;
-	color: var(--color-link);
-	background-color: var(--background-view)
-}
-
-#link-manager>.dialog-box {
-	width: 40rem;
-	height: 18rem;
-}
-
-
-#link-manager .preview {
-	width: 7rem;
-	height: 100%;
-	place-content: center;
-	place-items: center;
-}
-
-.preview>a>span.bg {
-	background-image: url(/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);
-}
-
-.input-box {
-	/* padding: 0 1rem 0 0; */
-}
-
-.input-box>.subtitle {
-	font-size: 0.8rem;
-	line-height: 1.6rem;
-}
-
-.input-box>.input {
-	position: relative;
-}
-
-.input-box>.input>input[type=text],
-.input-box>.input>input[type=url] {
-	color: var(--color-link);
-	border-bottom: 1px solid var(--color-link);
-	font-family: monospace;
-}
-
-.input-box>.input>input[type=text]:read-only {
-	/* border-bottom: 1px solid #cecece; */
+.waa-title {
+	font-size: 1.2rem;
 }
