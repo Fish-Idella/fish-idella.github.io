@@ -372,6 +372,7 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
     ));
 });
 
+<<<<<<< HEAD
 /**
  * 等比缩放
  */
@@ -383,6 +384,17 @@ const proportional = Object.assign(function proportional(options, epsilon = 1e-9
     if (uncertains.length === 1) {
         proportional[uncertains[0]](options);
     } else if (uncertains.length > 1 || (uncertains.length < 1 && Math.abs((options.cw * options.oh) - (options.ow * options.ch)) > epsilon)) {
+=======
+
+const proportional = Object.assign(function proportional(options, epsilon = 1e-9) {
+    const arr = proportional.keys.filter(key => {
+        const value = options[key];
+        return "number" !== typeof value || value <= 0;
+    });
+    if (arr.length === 1) {
+        proportional[arr[0]](options);
+    } else if (arr.length > 1 || (arr.length < 1 && Math.abs((options.cw * options.oh) - (options.ow * options.ch)) > epsilon)) {
+>>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
         return null;
     }
     return options;
