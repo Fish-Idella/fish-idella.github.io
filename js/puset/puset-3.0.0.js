@@ -470,7 +470,7 @@ const PuSet = (function () {
          * @param {boolean} value - true=显示，false=隐藏
          * @returns {HTMLElement} 目标元素（链式调用）
          */
-        show(element, value) {
+        show(element, value = false) {
             if (value) {
                 element.removeAttribute(HIDE_ATTRIBUTE);
                 element.classList.remove("hide");
@@ -793,33 +793,21 @@ const PuSet = (function () {
                     const data = { type: type, target: node, path: path };
                     const not = !event.bubbles;
 
-<<<<<<< HEAD
                     let len = 0, bool = true;
-=======
-                    let len = 0;
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
 
                     for (const handle of handles) {
                         const options = Object.assign({}, handle, data);
                         const { selector, handler } = options;
 
                         if (selector === null) {
-<<<<<<< HEAD
                             bool = handler.call(node, event, options) && bool;
-=======
-                            handler.call(node, event, options);
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
                         } else if (not) {
                             len++;
                         } else {
                             for (const child of path) {
                                 // 获取匹配的元素
                                 if (child !== node && matches.call(child, selector)) {
-<<<<<<< HEAD
                                     bool = handler.call(child, event, options) && bool;
-=======
-                                    handler.call(child, event, options);
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
                                 }
                             }
                         }
@@ -828,11 +816,8 @@ const PuSet = (function () {
                     if (len !== 0) {
                         notBubbles(len, type);
                     }
-<<<<<<< HEAD
 
                     return bool;
-=======
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
                 });
             }
         }
@@ -987,10 +972,7 @@ const PuSet = (function () {
      */
     class ViewManager {
         static guid = 0;
-<<<<<<< HEAD
         static index = Symbol("index");
-=======
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
 
         #children = new Map(); // 子元素映射（key → HTMLElement）
         #isInsert = false; // 是否指定了插入位置
@@ -1021,10 +1003,7 @@ const PuSet = (function () {
             this.source = this.data ?? this.source ?? {}; // 原始数据兜底
             // 映射子元素到数据键
             if (this.selector) {
-<<<<<<< HEAD
                 this.selector = String(this.selector).replace(/\&/g, ":scope");
-=======
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
                 PuSetFactory.each(this.target.querySelectorAll(this.selector), (element, index, keys) => {
                     this.#setChild(keys[index] || String(index), element);
                 }, Object.keys(this.source));
@@ -1171,10 +1150,6 @@ const PuSet = (function () {
         #setChild(key, element) {
             element[ViewManager.index] = key;
             this.#children.set(key, element);
-<<<<<<< HEAD
-=======
-            this.#childrenReverse.set(element, key);
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
         }
 
         /**
@@ -1211,7 +1186,6 @@ const PuSet = (function () {
          */
         on(types, fn) {
             add(this.target, types, null, (event, options) => {
-<<<<<<< HEAD
                 let bool = true;
                 // 遍历传播路径，找到匹配的子元素
                 for (const item of options.path) {
@@ -1224,16 +1198,6 @@ const PuSet = (function () {
                     }
                 }
                 return bool;
-=======
-                // 遍历传播路径，找到匹配的子元素
-                for (const item of options.path) {
-                    if (this.#childrenReverse.has(item)) {
-                        const key = this.#childrenReverse.get(item);
-                        // 执行委托函数（绑定到子元素，传事件、数据、键）
-                        fn.call(item, event, this.data[key], key, options);
-                    }
-                }
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
             }, ("." + this.instanceId));
             return this;
         }
@@ -1252,11 +1216,7 @@ const PuSet = (function () {
         dismiss() {
             this.#children.forEach((child, key) => {
                 if (HIDE_ATTRIBUTE === child.getAttribute(HIDE_ATTRIBUTE)) {
-<<<<<<< HEAD
                     if (this.#children.delete(key)) {
-=======
-                    if (this.#childrenReverse.delete(child) && this.#children.delete(key)) {
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
                         child.remove();
                     } else {
                         console.warn("无法删除子元素：" + key);

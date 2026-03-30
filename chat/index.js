@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // 从文件获取系统提示词，并初始化应用
 fetch("system.txt").then(response => response.text()).then(function (systemPromptText) {
     // 从本地存储获取API配置，若不存在则使用默认值
@@ -14,31 +13,6 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
         "behavior_and_chat": "（默认以乳交开场，女仆邀约男主人，脱掉内衣 …… 屏幕一闪，男主人已坐在沙发上，女仆跪在主人身前，乳房夹着男主人的阴茎，手指把玩着主人龟头）主人，人家的奶子是不是超软超舒服呢？", // AI生成的对话和行为描述文本
         "index": 1 // 当前播放的视频在列表中的索引
     };
-=======
-const storage = StorageHelper.open("ai-chat", 1, "LocalStorageHelper");
-
-const chat_params = {
-    "model": "qwen3:4b-thinking-2507-q8_0",
-    "options": {
-        "stream": true,
-        "temperature": 1,
-        "top_p": 1
-    },
-    "messages": null
-};
-
-storage.setItem("model", "qwen3:4b-thinking-2507-q8_0");
-storage.getItem("model").then(function (model) {
-    chat_params.model = model ?? "qwen3:4b-thinking-2507-q8_0";
-});
-
-const system_message = {
-    role: "system",
-    content: `当前时间：${new Date().toString()}。
-你是女忍者——彩儿，今年16岁的女孩，你早年以走投无路的孤儿身份被用户收留，潜伏在用户的身边窃取情报，最近被用户发现囚禁在地下室。以此背景与用户进行对话。
-`
-};
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
 
     // 构造发送给AI模型的请求体
     const aiRequestBody = {
@@ -80,58 +54,14 @@ const system_message = {
             .replace(/(\uff08[^\uff09]*\uff09)|(\([^\)]*\))/g, "<span class='dd'>$1</span>");
     }
 
-<<<<<<< HEAD
     // 点击设置界面的“开始”按钮，重置游戏并播放第一个视频
     document.getElementById("start-settings").addEventListener("click", function (ev) {
         if (this === ev.target) {
             gameState.index = 0;
             getPlayableVideoPath(gameState, 0).then(path => videoElement.src = path);
         }
-=======
-const vm_chat = PuSet.ViewManager({
-    target: document.querySelector(".chat-container"),
-    selector: "div.message-container",
-    data: [],
-    layout(container, value, key) {
-        container.dataset.index = key;
-        container.className = "message-container " + value.role;
-        const think = container.querySelector(".message-text-think .think");
-        think.classList.toggle("hide", value.done);
-        think.textContent = value.think;
-        container.querySelector(".message-text-content").textContent = value.content;
-    }
-});
-
-
-const chatInput = document.getElementById("chatInput");
-
-function update(index, content, done) {
-    if (content.includes("<think>")) {
-        const array = content.split(/\n*(\<think\>|\<\/think\>)\n*/);
-        messages[index].think = array[2] ?? "";
-        messages[index].content = array[4] ?? "";
-    } else {
-        messages[index].content = content;
-    }
-    messages[index].done = done;
-    vm_chat.update(messages);
-
-    // 滚动到底部
-    vm_chat.target.scrollTop = vm_chat.target.scrollHeight;
-}
-
-function send(obj) {
-    // 添加加载状态提示
-    messages.push({
-        role: "assistant",
-        model: chat_params.model,
-        done: false,
-        think: "",
-        content: ""
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
     });
 
-<<<<<<< HEAD
     // 测试API连接并获取可用模型列表
     document.getElementById("api-test").addEventListener("click", function () {
         const baseUrl = apiPathInput.value.trim().replace(/\/*$/, "/");
@@ -189,24 +119,12 @@ function send(obj) {
         autoAdvanceInterval = Math.ceil(document.getElementById("auto-advance").value);
         if (isNaN(autoAdvanceInterval)) {
             autoAdvanceInterval = 0;
-=======
-    fetch("http://localhost:11434/api/chat", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(obj)
-    }).then(async response => {
-        if (!response.body) {
-            throw new Error("不支持流式响应");
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
         }
 
         // 切换界面：隐藏设置页，显示聊天/游戏主界面
         document.getElementById("start-settings").classList.add("hide");
         document.getElementById("chat-container").classList.remove("hide");
 
-<<<<<<< HEAD
         // 启动空闲状态计时器（用于自动推进）
         startIdleTimer();
     });
@@ -252,13 +170,6 @@ function send(obj) {
         return new Promise((resolve, reject) => {
             if (targetIndex >= state.videos.length) {
                 reject(); // 索引超出范围
-=======
-        // 处理流式数据的函数
-        async function processStream({ done, value }) {
-            if (done) {
-                // 流结束，更新最终内容
-                update(lastIndex, fullContent, true);
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
                 return;
             }
 
@@ -282,7 +193,6 @@ function send(obj) {
         });
     }
 
-<<<<<<< HEAD
     /**
      * 处理AI模型的流式响应
      * @param {Response} response - fetch API的响应对象
@@ -369,19 +279,6 @@ function send(obj) {
     // 用户输入时，重置空闲计时器
     chatInput.addEventListener("input", function () {
         startIdleTimer();
-=======
-            // 继续读取下一个数据块
-            return await processStream(await reader.read());
-        }
-
-        // 开始读取流
-        return await processStream(await reader.read());
-    }).catch(error => {
-        console.error("发送请求错误:", error);
-        // 显示错误信息
-        messages[lastIndex].content = `发生错误: ${error.message}`;
-        vm_chat.update(messages);
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
     });
 
     // 当前视频播放结束时，尝试播放下一个视频
@@ -413,7 +310,6 @@ function send(obj) {
         videoElement.play();
     });
 
-<<<<<<< HEAD
     /**
      * 单次AI请求结束后的清理与重置工作
      */
@@ -422,23 +318,8 @@ function send(obj) {
         submitButton.textContent = "Send";
         autoHideDialog(); // 启动对话框自动隐藏
         startIdleTimer(); // 重新启动空闲计时器
-=======
-
-// 在原有代码基础上添加以下内容
-
-// 持久化存储相关函数
-function saveMessagesToLocalStorage() {
-    storage.setItem("messages", messages);
-}
-
-async function loadMessagesFromLocalStorage() {
-    const saved = await storage.getItem('messages');
-    if (saved) {
-        return saved;
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
     }
 
-<<<<<<< HEAD
     // 鼠标在视频区域移动时，显示并延时隐藏对话框
     videoElement.parentElement.addEventListener("pointermove", function () {
         if (submitButton.thinking) return; // 如果AI正在思考，则不干扰
@@ -446,15 +327,6 @@ async function loadMessagesFromLocalStorage() {
         chatDialog.classList.remove("hide");
         autoHideDialog(); // 重新设置自动隐藏计时
     });
-=======
-// 初始化时加载保存的消息
-const messages = [];
-
-loadMessagesFromLocalStorage().then(savedMessages => {
-    messages.push(...savedMessages);
-    vm_chat.update(messages);
-});
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
 
     // 鼠标悬停在对话框上时，取消自动隐藏
     chatDialog.addEventListener("pointerover", function (ev) {
@@ -480,20 +352,11 @@ loadMessagesFromLocalStorage().then(savedMessages => {
         const userMessage = chatInput.value.trim();
         if (userMessage === "") return;
 
-<<<<<<< HEAD
         submitButton.thinking = true;
         sendMessage.controller = new AbortController();
         submitButton.textContent = "Thinking...";
         autoHideDialog.cancelLast(); // 发送时取消自动隐藏
         clearTimeout(startIdleTimer.timer); // 发送时重置空闲计时
-=======
-// 消息操作按钮事件处理
-PuSet(vm_chat.target).on("click", ".message-text-think .title", function (event) {
-    this.nextElementSibling.classList.toggle("hide");
-}).on("click", ".message-actions-button", function (event) {
-    const index = parseInt(this.closest('.message-container').dataset.index);
-    const action = this.title;
->>>>>>> 542f70fcda0e2e6e762764b32d5b0a24ab326042
 
         // 将用户消息添加到请求历史中
         aiRequestBody.messages.push({ "role": "user", "content": userMessage });
