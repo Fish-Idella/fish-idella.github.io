@@ -109,7 +109,7 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             script.addEventListener("loadend", function loadend() {
                 script.removeEventListener("loadend", loadend);
                 script.remove();
-            });
+            }, { once: true });
             document.head.appendChild(script);
             script.src = src;
         },
@@ -156,10 +156,22 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
 
     // 搜索框相关事件
     PuSet(_word).on({
+        keydown(ev) {
+            if (ev.key === "Tab" || ev.code === "Tab" || ev.keyCode === 9) {
+                ev.preventDefault();
+                // 填入第一个预测候选
+                _word.value = window.op.vm_list.data[0] ?? '';
+                return false;
+            }
+
+            if (ev.key === "Escape" || ev.code === "Escape" || ev.keyCode === 27) {
+                // 清空内容
+                return _word.value = '';
+            }
+            // console.log(ev)
+        },
         focus() {
-            if (_word.value) {
-                // _quickdelete.classList.remove("hide");
-            } else {
+            if (!_word.value) {
                 // 如果搜索框没有内容，显示搜索历史
                 window.op(window.op);
             }
@@ -167,7 +179,6 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             _body.classList.add("focus");
         },
         blur() {
-            // _quickdelete.classList.add("hide");
             _search_list.classList.add("hide");
             _body.classList.remove("focus");
         },
@@ -175,7 +186,6 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             clearTimeout(window.op.t);
             const value = _word.value.trim();
             if (value) {
-                // _quickdelete.classList.remove("hide");
                 window.op.t = setTimeout(function () {
                     if (value.startsWith(MainUI.totem)) {
                         const index = value.lastIndexOf(" ");
@@ -186,7 +196,6 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
                     }
                 }, 500);
             } else {
-                // _quickdelete.classList.add("hide");
                 // 如果搜索框没有内容，显示搜索历史
                 window.op(window.op);
             }

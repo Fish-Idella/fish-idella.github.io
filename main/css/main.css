@@ -205,27 +205,10 @@ label#search-box:hover span.bg.button {
 	color: var(--color-text);
 }
 
-#word+a.quickdelete {
-	position: relative;
-	width: 2rem;
-	height: 3rem;
-}
-
-a.quickdelete::before,
-a.quickdelete::after {
-	content: "";
-	position: absolute;
-	width: 70%;
-	height: 6%;
-	top: 47%;
-	left: 15%;
-	border-radius: 1rem;
-	transform: rotate(45deg);
-	background-color: var(--color-quickdelete);
-}
-
-a.quickdelete::after {
-	transform: rotate(-45deg);
+#word::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
 }
 
 #search ul.search-list {
