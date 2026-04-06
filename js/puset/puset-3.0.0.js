@@ -1101,11 +1101,11 @@ const PuSet = (function () {
                     if (property === 'length') {
                         return void this.#handleLengthChange(value);
                     } else {
-                        node = this.#getChild(property, value?.type);
+                        node = this.#getChild(node, property, value);
                     }
                 } else {
                     // 对象：处理属性
-                    node = this.#getChild(property, value?.type);
+                    node = this.#getChild(node, property, value);
                 }
             }
             // 普通属性变更
@@ -1154,19 +1154,19 @@ const PuSet = (function () {
 
         /**
          * 获取/创建子元素（不存在则从模板创建）
-         * @param {string|number} index - 索引/键
-         * @param {*} type - 类型（传给函数模板）
+         * @param {string|number} key - 索引/键
+         * @param {*} value - 最新值
          * @returns {HTMLElement} 子元素
          */
-        #getChild(index, type) {
-            let child = this.#children.get(index);
+        #getChild(node, key, value) {
+            let child = this.#children.get(key);
             // 不存在则创建
             if (!child) {
                 child = this.#isFunctionTemplate
-                    ? this.template(index, type)
+                    ? this.template(node, key, value)
                     : this.template.cloneNode(true);
 
-                this.#setChild(index, child);
+                this.#setChild(key, child);
                 if (this.#isInsert) {
                     // 插入到指定位置前
                     this.target.insertBefore(child, this.insert);
@@ -1198,7 +1198,7 @@ const PuSet = (function () {
                     }
                 }
                 return bool;
-            }, ("." + this.instanceId));
+            }, `.${this.instanceId}`);
             return this;
         }
 
@@ -1416,8 +1416,8 @@ const PuSet = (function () {
             const text = await response.text();
 
             // 解析模板（查找hr#puset-interpreter-template后的template元素）
-            const nodeList = PuSetFactory("hr#puset-interpreter-template~template", PuSetFactory.parseHTML(text));
-            if (nodeList.length === 0) {
+            const templateList = PuSetFactory("hr#puset-interpreter-template~template", PuSetFactory.parseHTML(text));
+            if (templateList.length === 0) {
                 throw new Error("未找到有效的模板元素");
             }
 
@@ -1425,7 +1425,7 @@ const PuSet = (function () {
             const namespaceMap = getNamespaceMap(namespace);
 
             // 处理每个模板
-            for (const node of nodeList) {
+            for (const node of templateList) {
                 const id = node.id;
                 if (!id) {
                     console.warn("已跳过未命名模板", node);
@@ -1470,7 +1470,7 @@ const PuSet = (function () {
                 namespaceMap.set(id, new ViewComponent(namespace, id, $elements, style, handler));
             }
 
-            return nodeList;
+            return templateList;
         }
     });
 
