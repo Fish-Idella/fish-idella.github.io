@@ -1,7 +1,7 @@
 body,
 body[theme=default] {
 	--value-text-shadow: 0 0 .1rem #000;
-	--value-box-shadow: 1px 1px 3px rgb(158, 158, 158);
+	--value-box-shadow: 1px 1px 3px rgb(128 128 128 / 50%);
 	--text-shadow: #3d0505c9;
 	--color-transparent: transparent;
 	--color-text: #000;

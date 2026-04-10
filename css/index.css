@@ -103,6 +103,7 @@ ul.fc.scroll li:nth-child(even) {
 ::-webkit-scrollbar {
     background-color: #00000000;
     width: 0.2rem;
+    height:0.2rem;
 }
 
 ::-webkit-scrollbar-thumb {

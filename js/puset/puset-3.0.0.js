@@ -1,7 +1,3 @@
-/**
- * PuSet 核心模块 - 轻量级DOM操作/视图管理/组件化工具库（模仿jQuery核心设计）
- * 整体采用立即执行函数表达式(IIFE)封装，避免全局变量污染，最终暴露PuSetFactory作为核心对象
- */
 const PuSet = (function () {
     "use strict"; // 启用严格模式，避免隐式错误
 
@@ -10,6 +6,8 @@ const PuSet = (function () {
     }
 
     // ===================== 基础常量定义 =====================
+    const NS_HTML = "http://www.w3.org/1999/xhtml";
+
     const version = "3.0.0"; // 库版本号
     const main_document = window.document; // 缓存document对象，减少全局查找
     const HIDE_ATTRIBUTE = "v-hide"; // 隐藏元素的自定义属性名
@@ -17,7 +15,7 @@ const PuSet = (function () {
 
     // 注入隐藏元素的全局样式（确保只注入一次）
     if (main_document.querySelector("head>style.v-hide") === null) {
-        const styleElement = main_document.createElement("style");
+        const styleElement = main_document.createElementNS(NS_HTML, "style");
         styleElement.className = HIDE_ATTRIBUTE;
         // 隐藏规则：.hide类 或 带v-hide属性的元素强制隐藏
         styleElement.innerHTML = `.hide,[${HIDE_ATTRIBUTE}]{display:none!important}`;
@@ -58,12 +56,8 @@ const PuSet = (function () {
      * - TYPES.Function → "function"
      * - TYPES["[object Function]"] → "function"
      */
-    const TYPES = new function Types() {
-        const s = "Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ");
-        for (const value of s) {
-            this[`[object ${value}]`] = this[value] = value.toLowerCase()
-        }
-    };
+    const TYPES = "Boolean Number String Function Array Date RegExp Object Error Symbol BigInt Map Promise Set".split(" ")
+        .reduce((obj, value) => (obj[`[object ${value}]`] = obj[value] = value.toLowerCase(), obj), {});
 
     // ===================== 核心类型判断工具函数 =====================
     /**
@@ -92,7 +86,9 @@ const PuSet = (function () {
      * @returns {string} 小写的类型名（如"array"/"function"/"object"）
      */
     const toType = function toType(test) {
+        // 不能使用 !test , 避免 !false 返回 'false'
         if (null == test) return String(test); // null/undefined直接返回字符串
+
         const type = typeof test;
         // 对于对象/函数类型，使用OBJECT_PROTO.toString做精准判断
         if (type === TYPES.Object || type === TYPES.Function) {
@@ -112,18 +108,18 @@ const PuSet = (function () {
         if (PuSetFactory.isArray(obj)) {
             return true;
         }
+
         // 存在length属性且不为空
         const length = !!obj && LENGTH_PROPERTY in obj && obj.length;
-        const type = toType(obj);
-        // 排除函数和window对象
+
+        // 排除函数和window对象，函数的length是参数的数量
         if (isFunction(obj) || isWindow(obj)) {
             return false;
         }
+
         // 判定规则：
-        // 1. 类型是数组 | 2. length为0 | 3. length是正数且length-1存在于对象中
-        return type === "array" ||
-            length === 0 ||
-            (TYPES.Number === typeof length && length > 0 && (length - 1) in obj);
+        // 1. length为0 | 2. length是正数且 length-1 存在于对象中
+        return length === 0 || (TYPES.Number === typeof length && length > 0 && (length - 1) in obj);
     };
 
     // ===================== PuSet核心构造类（继承Array） =====================
@@ -132,6 +128,7 @@ const PuSet = (function () {
      * 类似jQuery的$对象，封装DOM集合的常用操作
      */
     const PuSetConstructor = class PuSet extends Array {
+
         prevObject = null; // 链式操作的上一个对象（用于end()方法）
 
         /**
@@ -156,7 +153,22 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 自身（链式调用）
          */
         ready(fn) {
-            readyPromise.then(() => void fn(PuSetFactory)).catch(console.error);
+            readyPromise.then(() => fn(PuSetFactory)).catch(console.error);
+            return this;
+        }
+
+        /**
+         * 设置对象属性
+         * @param {string} property 属性名
+         * @param {*} value 要设置的属性值
+         * @param {boolean} [priority=false] 原值优先模式。为true时，如果属性已存在则不覆盖
+         * @returns {this} 返回对象本身，支持链式调用
+         */
+        setProperty(property, value, priority = false) {
+            // 只有当 priority 为 true 且属性已存在时，才不设置值
+            if (!(priority === true && this.hasOwnProperty(property))) {
+                this[property] = value;
+            }
             return this;
         }
 
@@ -166,9 +178,8 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 新的PuSet实例
          */
         pushStack(elems) {
-            const ret = PuSetFactory.merge(PuSetConstructor.newInstance(), elems);
-            ret.prevObject = this; // 关联上一个实例
-            return ret;
+            return PuSetFactory.merge(PuSetConstructor.newInstance(), elems)
+                .setProperty('prevObject', this);
         }
 
         /**
@@ -515,7 +526,6 @@ const PuSet = (function () {
          * 合并两个数组（修改第一个数组）
          * @param {Array} first - 目标数组
          * @param {Array} second - 待合并数组
-         * @returns {Array} 合并后的目标数组
          */
         merge: function merge(first, second) {
             const len = +second.length;
@@ -572,7 +582,7 @@ const PuSet = (function () {
             return obj;
         },
         /**
-         * 转为数组（类jQuery.makeArray）
+         * 转为数组
          * @param {*} arr - 待转换的对象（数组/类数组/单个值）
          * @param {Array} [results] - 目标数组（可选）
          * @returns {Array} 转换后的数组
@@ -596,7 +606,7 @@ const PuSet = (function () {
          * @param {string} [filename="filename"] - 文件名
          */
         download: function (url, filename = "filename") {
-            const save_link = main_document.createElementNS("http://www.w3.org/1999/xhtml", "a");
+            const save_link = main_document.createElementNS(NS_HTML, "a");
             save_link.href = url;
             save_link.download = filename;
             save_link.dispatchEvent(new MouseEvent("click", { "view": window, "bubbles": true, "cancelable": true }));
@@ -1036,7 +1046,7 @@ const PuSet = (function () {
                 this.#hasTemplate = true;
                 return;
             }
-            const div = main_document.createElement('div');
+            const div = main_document.createElementNS(NS_HTML, 'div');
 
             if (typeof this.template === 'string') {
                 // 模板为字符串：转为元素
@@ -1294,7 +1304,7 @@ const PuSet = (function () {
                 if (HEAD_STYLE.has(className)) {
                     return void console.warn("重复添加样式：", className);
                 }
-                const style2 = main_document.createElement("style");
+                const style2 = main_document.createElementNS(NS_HTML, "style");
                 HEAD_STYLE.add(style2.id = className); // 标记已注入
                 style2.textContent = `.${className}{${style.textContent}}`; // 包装样式
                 main_document.head.appendChild(style2);
@@ -1315,7 +1325,7 @@ const PuSet = (function () {
             } = Object.fromEntries(args.map(arg => [typeof arg, arg]));
 
             // 创建容器（默认div）
-            const clone = container ? container : main_document.createElement("div");
+            const clone = container ? container : main_document.createElementNS(NS_HTML, "div");
             if (clone.nodeType !== Node.ELEMENT_NODE) {
                 throw new TypeError("Invalid container");
             }
@@ -1342,7 +1352,7 @@ const PuSet = (function () {
     // 组件实例缓存（命名空间 → 组件名 → ViewComponent）
     const COMPONENT_REGISTRY = new Map();
     // 默认组件（兜底）
-    const DEFAULT_COMPONENT = new ViewComponent(DEFAULT_NAME, DEFAULT_NAME, PuSetFactory(main_document.createElement("div")));
+    const DEFAULT_COMPONENT = new ViewComponent(DEFAULT_NAME, DEFAULT_NAME, PuSetFactory(main_document.createElementNS(NS_HTML, "div")));
 
     /**
      * 获取命名空间对应的组件映射

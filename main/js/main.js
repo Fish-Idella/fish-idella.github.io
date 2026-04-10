@@ -237,11 +237,6 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
         options.exec(root, MainUI, options);
     });
 
-    PuSet.get("image-selector").init(true, function (root, options) {
-        _body.appendChild(root);
-        options.exec(root, MainUI, options);
-    });
-
     PuSet.get("link-manager").init(true, function (root, options) {
         _body.appendChild(root);
         options.exec(root, MainUI, options);
@@ -370,6 +365,11 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             saveLocalConfigure();
         });
 
+    });
+
+    PuSet.get("image-selector").init(true, function (root, options) {
+        _body.appendChild(root);
+        options.exec(root, MainUI, options);
     });
 
     queueMicrotask(console.log.bind(
