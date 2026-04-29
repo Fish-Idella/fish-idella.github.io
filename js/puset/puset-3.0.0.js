@@ -8,7 +8,7 @@ const PuSet = (function () {
     // ===================== 基础常量定义 =====================
     const NS_HTML = "http://www.w3.org/1999/xhtml";
 
-    const version = "3.0.0"; // 库版本号
+    const version = "2026.04.15.20";
     const main_document = window.document; // 缓存document对象，减少全局查找
     const HIDE_ATTRIBUTE = "v-hide"; // 隐藏元素的自定义属性名
     const LENGTH_PROPERTY = "length"; // 缓存length字符串，减少字面量创建
@@ -32,7 +32,7 @@ const PuSet = (function () {
     const sort = ARRAY_PROTO.sort;
     const splice = ARRAY_PROTO.splice;
     const includes = ARRAY_PROTO.includes || function includes(value, fromIndex) {
-        return indexOf.call(this, value, fromIndex) !== -1;
+        return this && indexOf.call(this, value, fromIndex) !== -1;
     };
     const push = ARRAY_PROTO.push;
     const slice = ARRAY_PROTO.slice;
@@ -100,26 +100,29 @@ const PuSet = (function () {
 
     /**
      * 判断是否为类数组对象（可遍历的长度属性）
-     * @param {*} obj - 待检测对象
-     * @returns {boolean} 是否为类数组
+     * 包含：纯数组、原型链为数组的对象、合法length的类数组(arguments/DOM集合等)
+     * @param {*} obj 待判断对象
+     * @returns {boolean}
      */
     const isArrayLike = function isArrayLike(obj) {
-        // 数组直接返回true
-        if (PuSetFactory.isArray(obj)) {
+
+        // 1. 真数组
+        if (Array.isArray(obj)) {
             return true;
         }
 
-        // 存在length属性且不为空
-        const length = !!obj && LENGTH_PROPERTY in obj && obj.length;
-
-        // 排除函数和window对象，函数的length是参数的数量
+        // 2. 排除绝对不可能为类数组的类型：
+        // 函数 / window全局对象（特殊对象，排除）
         if (isFunction(obj) || isWindow(obj)) {
             return false;
         }
 
-        // 判定规则：
-        // 1. length为0 | 2. length是正数且 length-1 存在于对象中
-        return length === 0 || (TYPES.Number === typeof length && length > 0 && (length - 1) in obj);
+        // 3. 校验类数组核心条件：必须拥有合法length属性
+        const length = !!obj && LENGTH_PROPERTY in obj && obj.length;
+        // typeof length === "number"：length必须是数字类型
+        // length === length >>> 0：无符号右移0位，校验length为【非负整数】
+        // 过滤：负数、小数、NaN、非法length
+        return typeof length === "number" && length === length >>> 0;
     };
 
     // ===================== PuSet核心构造类（继承Array） =====================
@@ -137,14 +140,6 @@ const PuSet = (function () {
          */
         constructor(...args) {
             super(...args);
-        }
-
-        /**
-         * 创建新的PuSet实例
-         * @returns {PuSetConstructor} 空的PuSet实例
-         */
-        static newInstance() {
-            return new PuSetConstructor();
         }
 
         /**
@@ -178,8 +173,39 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 新的PuSet实例
          */
         pushStack(elems) {
-            return PuSetFactory.merge(PuSetConstructor.newInstance(), elems)
+            return PuSetFactory.merge(new PuSetConstructor(), elems)
                 .setProperty('prevObject', this);
+        }
+
+        /**
+         * 工厂函数、入口
+         * @param {string|Node|Document|PuSetConstructor|Function} [selector] 选择器
+         * @param {Node|Document|PuSetConstructor} [context] 上下文环境
+         * @returns PuSet实例
+         */
+        PuSet(selector, context) {
+            // 空参数：返回空实例
+            if (!selector) {
+                return new PuSetConstructor();
+            }
+            // PuSet实例
+            if (selector.constructor === PuSetConstructor) {
+                return selector;
+            }
+            // DOM节点：返回包含该节点的实例
+            if (selector.nodeType) {
+                return new PuSetConstructor(selector);
+            }
+            // 字符串选择器：根据上下文查找
+            if (TYPES.String === typeof selector) {
+                return PuSetFactory(context || $document).find(selector);
+            }
+            // 函数：DOM就绪后执行
+            if (isFunction(selector)) {
+                return $document.ready(selector);
+            }
+            // 其他类型（数组/类数组）：封装成新的PuSet实例
+            return PuSetFactory.makeArray(selector, new PuSetConstructor());
         }
 
         /**
@@ -215,9 +241,8 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 合并后的新实例
          */
         add(selector, context) {
-            return this.pushStack(PuSetFactory.uniqueSort(
-                PuSetFactory.merge(slice.call(this), PuSetFactory(selector, context))
-            ));
+            return PuSetFactory.uniqueSort(push.apply(PuSetFactory(selector, context), this))
+                .setProperty('prevObject', this);
         }
 
         /**
@@ -226,14 +251,14 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 匹配的后代元素集合
          */
         find(selector) {
-            const arr = this.pushStack([]);
-            if (selector && TYPES.String === typeof selector) {
-                for (const target of this) {
-                    push.apply(arr, target.querySelectorAll(selector))
+            const arr = [], m = this.length;
+            if (m > 0 && selector && TYPES.String === typeof selector) {
+                for (let i = 0; i < m; i++) {
+                    push.apply(arr, this[i]?.querySelectorAll?.(selector))
                 }
             }
             // 多个元素时去重，单个元素直接返回
-            return this.length > 1 ? PuSetFactory.uniqueSort(arr) : arr;
+            return this.pushStack(m > 1 ? PuSetFactory.uniqueSort(arr) : arr);
         }
 
         /**
@@ -241,7 +266,7 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 上一个实例或新空实例
          */
         end() {
-            return this.prevObject || PuSetConstructor.newInstance();
+            return this.prevObject || new PuSetConstructor();
         }
 
         /**
@@ -307,40 +332,6 @@ const PuSet = (function () {
         return PuSetFactory.grep(elements, elem => includes.call(qualifier, elem), not);
     };
 
-    class FlagUtils {
-
-        #flags = 0;
-
-        constructor(flags) {
-            this.#flags = flags;
-        }
-        set(flag) {
-            this.#flags = flag;
-            return this
-        }
-        add(flag) {
-            this.#flags |= flag;
-            return this
-        }
-        remove(flag) {
-            this.#flags &= ~flag;
-            return this
-        }
-        toggle(flag) {
-            this.#flags ^= flag;
-            return this
-        }
-        has(flag) {
-            return (this.#flags & flag) === flag;
-        }
-        exist() {
-            return this.#flags !== 0;
-        }
-        get value() {
-            return this.#flags;
-        }
-    }
-
     /**
      * DOM节点排序函数（按文档中的位置排序）
      * @param {HTMLElement} a - 节点A
@@ -349,18 +340,22 @@ const PuSet = (function () {
      */
     const compareDocumentPositionSort = function compareDocumentPositionSort(a, b) {
 
-        // Sort on method existence if only one input has compareDocumentPosition
-        const compare = new FlagUtils(!a.compareDocumentPosition - !b.compareDocumentPosition);
-        if (compare.exist()) {
-            return compare;
+        if (a === b) {
+            return 0;
         }
 
-        compare.set((a.ownerDocument || a) === (b.ownerDocument || b)
+        // Sort on method existence if only one input has compareDocumentPosition
+        let compare = !a.compareDocumentPosition - !b.compareDocumentPosition;
+        if (compare) {
+            return compare.value;
+        }
+
+        compare = (a.ownerDocument || a) === (b.ownerDocument || b)
             ? a.compareDocumentPosition(b)
-            : 1);
+            : 1;
 
         // Disconnected nodes
-        if (compare.has(1)) {
+        if (compare & 1) {
 
             if (a === main_document || a.ownerDocument === main_document) {
                 return -1;
@@ -373,7 +368,7 @@ const PuSet = (function () {
             return 0;
         }
 
-        return compare.has(4) ? -1 : 1;
+        return compare & 4 ? -1 : 1;
     };
 
     // ===================== PuSet核心工厂对象 =====================
@@ -383,37 +378,7 @@ const PuSet = (function () {
      * @param {HTMLElement|PuSetConstructor} [context] - 查找上下文
      * @returns {PuSetConstructor} PuSet实例
      */
-    const PuSetFactory = Object.assign(function PuSet(selector, context) {
-        // 空参数：返回空实例
-        if (!selector) {
-            return PuSetConstructor.newInstance();
-        }
-        // DOM节点：返回包含该节点的实例
-        if (selector.nodeType) {
-            return new PuSetConstructor(selector);
-        }
-        // 字符串选择器：根据上下文查找
-        if (TYPES.String === typeof selector) {
-            if (context) {
-                // 上下文是PuSet实例：直接调用find
-                if (context.constructor === PuSetConstructor) {
-                    return context.find(selector);
-                } else {
-                    // 上下文是DOM元素：包装后调用find
-                    return PuSetFactory(context).find(selector);
-                }
-            } else {
-                // 无上下文：全局查找
-                return $document.find(selector);
-            }
-        }
-        // 函数：DOM就绪后执行
-        if (isFunction(selector)) {
-            return $document.ready(selector);
-        }
-        // 其他类型（数组/类数组/PuSet实例）：封装/克隆成新的PuSet实例
-        return PuSetFactory.makeArray(selector, PuSetConstructor.newInstance());
-    }, {
+    const PuSetFactory = Object.assign(PuSetConstructor.prototype.PuSet, {
         // 暴露版本号
         version: version,
         // DOM就绪状态（初始为false，就绪后改为true）
@@ -434,6 +399,9 @@ const PuSet = (function () {
             const namespace = elem && elem.namespaceURI,
                 docElem = elem && (elem.ownerDocument || elem).documentElement;
             return !rhtmlSuffix.test(namespace || docElem && docElem.nodeName || "HTML");
+        },
+        isDirectPuSet(obj) {
+            return obj && obj.constructor === PuSetConstructor && obj instanceof PuSetConstructor;
         },
         /**
          * 判断是否为数值（支持字符串形式的数值）
@@ -493,34 +461,17 @@ const PuSet = (function () {
         },
         /**
          * 元素数组去重并按文档位置排序
-         * @param {Array} results - 待处理的DOM元素数组
+         * @param {Array} likeArray - 待处理的DOM元素数组
          * @returns {Array} 去重排序后的数组
          */
-        uniqueSort(results) {
-            const duplicates = [];
-            let hasDuplicate = false;
-            let i = 0, j = 0;
-            let elem;
-            // 先排序（同时检测重复）
-            sort.call(results, function (a, b) {
-                if (a === b) {
-                    hasDuplicate = true;
-                    return 0;
+        uniqueSort(likeArray) {
+            // 先排序，让重复元素相邻
+            return this.reverseForEachWhile(sort.call(likeArray, compareDocumentPositionSort), function (v, i, a) {
+                // 再去重，存在重复时移除索引值更大的项
+                if (v === a[i - 1]) {
+                    splice.call(a, i, 1);
                 }
-                return compareDocumentPositionSort(a, b);
             });
-            // 去重
-            if (hasDuplicate) {
-                while ((elem = results[i++])) {
-                    if (elem === results[i]) {
-                        j = duplicates.push(i);
-                    }
-                }
-                while (j--) {
-                    splice.call(results, duplicates[j], 1);
-                }
-            }
-            return results;
         },
         /**
          * 合并两个数组（修改第一个数组）
@@ -555,18 +506,18 @@ const PuSet = (function () {
             return matches;
         },
         /**
-         * 遍历数组/对象（类jQuery.each）
+         * 遍历数组/对象
          * @param {Array|Object} obj - 待遍历对象
          * @param {(value:any, key:any, args: any) => boolean} callback - 遍历回调（参数：值、键/索引），返回false终止遍历
          * @param {any} args - 额外参数
          * @returns 原对象（链式调用）
          */
         each: function (obj, callback, args) {
-            let length, i = 0;
+            let length, i;
             // 类数组对象：按索引遍历
             if (isArrayLike(obj)) {
                 length = obj.length;
-                for (; i < length; i++) {
+                for (i = 0; i < length; i++) {
                     if (callback(obj[i], i, args) === false) {
                         break;
                     }
@@ -581,6 +532,22 @@ const PuSet = (function () {
             }
             return obj;
         },
+
+        /**
+         * 
+         * @param {any[]} array 
+         * @param {(value:any,index:number,array:any[]) => boolean | undefined} predicate 
+         * @returns 
+         */
+        reverseForEachWhile(array, predicate) {
+            for (let index = array.length - 1; index >= 0; index--) {
+                if (predicate(array[index], index, array) === false) {
+                    return array;
+                }
+            }
+            return array;
+        },
+
         /**
          * 转为数组
          * @param {*} arr - 待转换的对象（数组/类数组/单个值）
@@ -741,22 +708,6 @@ const PuSet = (function () {
     });
 
     /**
-     * 提示不可冒泡事件的委托问题
-     * @param {string} type - 事件类型
-     * @param {boolean} not - 是否真的不可冒泡
-     */
-    const notBubbles = function notBubbles(len, type) {
-        const text = Array.of(`已忽略${len} 个不支持冒泡但赋予委托的[${type}]事件。`);
-        if (Object.hasOwn(EventSubstitute, type)) {
-            text.push("可使用[" + EventSubstitute[type] + "]事件替代。");
-        } else {
-            text.push("请改用其他可行方案。");
-        }
-        console.warn(text.join(""));
-    };
-
-
-    /**
      * 添加事件监听（底层）
      * @param {HTMLElement} node - 目标元素
      * @param {string} types - 事件类型（多个用空格分隔）
@@ -770,19 +721,20 @@ const PuSet = (function () {
         if (global === null) return;
         const data = ensureObjectProperty(global, "events", Object);
 
-        let t, type, tmp, namespaces;
         // 解析事件类型（拆分多个类型）
-        types = (types || "").match(rnothtmlwhite) || [""];
-        t = types.length;
-        while (t--) {
+        PuSetFactory.reverseForEachWhile((types || "").match(rnothtmlwhite) || [""], function addHandler(value) {
+            let type, tmp, namespaces;
             // 解析事件类型和命名空间
-            tmp = rtypenamespace.exec(types[t] + namespace) || [];
+            tmp = rtypenamespace.exec(value + namespace) || [];
             type = tmp[1];
             namespaces = sort.call((tmp[2] || "").split("."));
-            if (!type) continue;
+            if (!type) return;
+
+            // 真实监听的事件类型
+            const actual = EventSubstitute[type] || type;
 
             // 获取/创建该事件类型的处理函数数组
-            const handlemap = ensureObjectProperty(data, type, Object);
+            const handlemap = ensureObjectProperty(data, actual, Object);
             const handles = ensureObjectProperty(handlemap, "handles", Array);
 
             // 添加处理函数配置
@@ -795,42 +747,40 @@ const PuSet = (function () {
 
             // 首次添加：创建统一监听器并绑定
             if (!handlemap.listener && node.addEventListener) {
-                node.addEventListener(type, handlemap.listener = function listener(event) {
+                node.addEventListener(actual, handlemap.listener = function listener(event) {
                     // 确保事件对象绑定的元素是当前元素
                     if (this !== node) return void console.warn(this, node);
 
                     const path = getComposedPath(node, event);
-                    const data = { type: type, target: node, path: path };
+                    const data = { actual: actual, type: type, target: node, path: path };
                     const not = !event.bubbles;
 
-                    let len = 0, bool = true;
+                    let len = 0, bubbles = new Set();
 
                     for (const handle of handles) {
                         const options = Object.assign({}, handle, data);
                         const { selector, handler } = options;
 
                         if (selector === null) {
-                            bool = handler.call(node, event, options) && bool;
+                            bubbles.add(handler.call(node, event, options));
                         } else if (not) {
                             len++;
-                        } else {
-                            for (const child of path) {
-                                // 获取匹配的元素
-                                if (child !== node && matches.call(child, selector)) {
-                                    bool = handler.call(child, event, options) && bool;
-                                }
+                        } else for (const child of path) {
+                            // 获取匹配的元素
+                            if (child !== node && matches.call(child, selector)) {
+                                bubbles.add(handler.call(child, event, options));
                             }
                         }
                     }
 
                     if (len !== 0) {
-                        notBubbles(len, type);
+                        console.warn(`已忽略 ${len} 个不支持冒泡但赋予委托的[${event.type}]事件，请改用其他可行方案。`);
                     }
 
-                    return bool;
+                    return !bubbles.has(false);
                 });
             }
-        }
+        });
     };
 
     /**
@@ -847,32 +797,31 @@ const PuSet = (function () {
         if (global === null) return;
         const data = ensureObjectProperty(global, "events", Object);
 
-        let t, type, tmp, namespaces;
-        // 解析事件类型
-        types = (types || "").match(rnothtmlwhite) || [""];
-        t = types.length;
-        while (t--) {
-            tmp = rtypenamespace.exec(types[t] + namespace) || [];
+        PuSetFactory.reverseForEachWhile((types || "").match(rnothtmlwhite) || [""], function predicate(value) {
+            let type, tmp, namespaces;
+            // 解析事件类型
+            tmp = rtypenamespace.exec(value + namespace) || [];
             type = tmp[1];
             namespaces = sort.call((tmp[2] || "").split("."));
 
             // 无类型：递归移除所有类型
             if (!type) {
                 for (type in data) {
-                    remove(node, type + types[t], selector, handler);
+                    remove(node, type + value, selector, handler);
                 }
-                continue;
+                return;
             }
+
+            // 真实监听的事件类型
+            const actual = EventSubstitute[type] || type;
 
             // 创建命名空间匹配正则
             tmp = tmp[2] && new RegExp("(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)");
-            const handlemap = ensureObjectProperty(data, type, Object);
+            const handlemap = ensureObjectProperty(data, actual, Object);
             const handles = ensureObjectProperty(handlemap, "handles", Array);
-            let j = handles.length;
 
             // 遍历处理函数数组，移除匹配的项
-            while (j--) {
-                const handle = handles[j];
+            PuSetFactory.reverseForEachWhile(handles, function removeHandler(handle, j) {
                 if (
                     (!tmp || tmp.test(handle.namespace)) && // 命名空间匹配
                     (!selector || selector === handle.selector || selector === "**" && handle.selector) && // 选择器匹配
@@ -880,16 +829,17 @@ const PuSet = (function () {
                 ) {
                     splice.call(handles, j, 1);
                 }
-            }
+            });
 
             // 无处理函数：移除监听器并删除数据
             if (handles.length == 0) {
                 if (node.removeEventListener) {
-                    node.removeEventListener(type, handlemap.listener);
+                    node.removeEventListener(actual, handlemap.listener);
                 }
-                Reflect.deleteProperty(data, type);
+                Reflect.deleteProperty(data, actual);
             }
-        }
+
+        });
     };
 
     /**
@@ -925,20 +875,16 @@ const PuSet = (function () {
 
         // one方法：执行后自动移除
         const handler = (method === 1) ? function autoremove(event, options) {
-            remove(
-                options.target,
-                options.type,
-                options.selector,
-                options.handler,
-                Boolean(options.namespace) ? "." + options.namespace : void 0
-            );
+            const namespace = options.namespace ? ("." + options.namespace) : void 0;
+            remove(options.target, options.type, options.selector, options.handler, namespace);
             return callback.call(this, event, options);
         } : callback;
 
-        // 选择操作（add/remove）
-        const operation = method >= 1 ? add : remove;
-        // 遍历元素执行操作
-        return PuSetFactory.each(elements, target => void operation(target, types, selector, handler));
+        // 遍历元素执行操作                   // 选择操作（add/remove）
+        for (let i = 0, l = elements.length, operation = method >= 1 ? add : remove; i < l; i++) {
+            operation(elements[i], types, selector, handler);
+        }
+        return elements;
     };
 
     // 扩展PuSet实例的事件方法
@@ -980,7 +926,7 @@ const PuSet = (function () {
      * 视图管理类 - 实现数据与DOM的双向绑定（简易版）
      * 支持数组/对象数据驱动DOM更新、事件委托、模板渲染
      */
-    class ViewManager {
+    class ViewModel {
         static guid = 0;
         static index = Symbol("index");
 
@@ -1009,7 +955,7 @@ const PuSet = (function () {
          */
         constructor(options) {
             Object.assign(this, options);
-            this.instanceId = "view-manager-" + ViewManager.guid++;
+            this.instanceId = "view-manager-" + ViewModel.guid++;
             this.source = this.data ?? this.source ?? {}; // 原始数据兜底
             // 映射子元素到数据键
             if (this.selector) {
@@ -1158,7 +1104,7 @@ const PuSet = (function () {
          * @param {HTMLElement} element - 子元素
          */
         #setChild(key, element) {
-            element[ViewManager.index] = key;
+            element[ViewModel.index] = key;
             this.#children.set(key, element);
         }
 
@@ -1192,22 +1138,21 @@ const PuSet = (function () {
          * 绑定事件
          * @param {string} types - 事件类型
          * @param {Function} fn - 事件处理函数
-         * @returns {ViewManager} this
+         * @returns {ViewModel} this
          */
         on(types, fn) {
-            add(this.target, types, null, (event, options) => {
-                let bool = true;
+            const children = this.#children, data = this.data;
+            add(this.target, types, null, function (event, options) {
+                const set = new Set();
                 // 遍历传播路径，找到匹配的子元素
-                for (const item of options.path) {
-                    if (item.hasOwnProperty(ViewManager.index)) {
-                        const key = item[ViewManager.index];
-                        if (this.#children.get(key) === item) {
-                            // 执行委托函数（绑定到子元素，传事件、数据、键）
-                            bool = fn.call(item, event, this.data[key], key, options) && bool;
-                        }
+                for (let key, item, i = 0, m = options.path.length; i < m; i++) {
+                    item = options.path[i], key = item[ViewModel.index];
+                    if (key && children.get(key) === item) {
+                        // 执行委托函数（绑定到子元素，传事件、数据、键）
+                        set.add(fn.call(item, event, data[key], key, options));
                     }
                 }
-                return bool;
+                return !set.has(false);
             }, `.${this.instanceId}`);
             return this;
         }
@@ -1224,9 +1169,9 @@ const PuSet = (function () {
          * 移除隐藏的子元素
          */
         dismiss() {
-            this.#children.forEach((child, key) => {
+            this.#children.forEach(function (child, key, map) {
                 if (HIDE_ATTRIBUTE === child.getAttribute(HIDE_ATTRIBUTE)) {
-                    if (this.#children.delete(key)) {
+                    if (map.delete(key)) {
                         child.remove();
                     } else {
                         console.warn("无法删除子元素：" + key);
@@ -1245,9 +1190,7 @@ const PuSet = (function () {
     }
 
     // 暴露ViewManager创建方法
-    PuSetFactory.ViewManager = function (options) {
-        return new ViewManager(options);
-    };
+    PuSetFactory.mvvm = PuSetFactory.ViewManager = options => new ViewModel(options);
 
     // ===================== 文档解析工具 =====================
     // 扩展HTML/XHTML/XML/SVG解析方法

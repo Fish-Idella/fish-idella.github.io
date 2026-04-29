@@ -597,6 +597,10 @@ const PuSetPlayer = (function () {
     const dashboard = document.querySelector("div.dashboard");
     const urlInput = dashboard.querySelector(".url-box>input[type=url]");
 
+    urlInput.addEventListener("pointerup", function(ev) {
+        ev.stopPropagation();
+    })
+
     dashboard.querySelector("#play").addEventListener("click", function () {
         player.play(urlInput.value);
     });

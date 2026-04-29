@@ -57,11 +57,11 @@ const MainUI = (function (attrs, list) {
     /**
      * 从本地选择一张图片，并获取图片的 Base64 Data URL
      */
-    async chooseFile(accept) {
+    async chooseFile(accept = "*/*") {
         return new Promise((resolve, reject) => {
             const selector = document.createElement("input");
             selector.type = "file";
-            selector.accept = accept || "image/*";
+            selector.accept = accept;
             selector.addEventListener("input", function () {
                 if (selector.files.length == 0) {
                     reject("用户未选择文件");
@@ -103,7 +103,7 @@ const MainUI = (function (attrs, list) {
      * @param {Image} image 
      * @param {Number} [width] 
      * @param {Number} [height] 
-     * @returns 
+     * @returns base64 strings
      */
     async compressImage(image, width = 128, height = 128) {
         const canvas = document.createElement("canvas");
@@ -281,8 +281,7 @@ const MainUI = (function (attrs, list) {
             switch ("" + type) {
                 case "save": {
                     return void storage.getItem("puset-local-wallpaper-bing").then(file => {
-                        const date = file.lastModifiedDate;
-                        PuSet.download(URL.createObjectURL(file), `bing-wallpaper-${date.getFullYear()}-${1 + date.getMonth()}-${date.getDate()}.png`);
+                        PuSet.download(URL.createObjectURL(file), `bing-wallpaper-${file.lastModifiedDate.toISOString().slice(0, 10)}.${file.type}`.replaceAll("/", "."));
                     });
                 }
                 case "":

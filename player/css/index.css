@@ -279,6 +279,7 @@ video::cue {
     bottom: 50px;
     transform: translateX(-50%);
     left: 50%;
+    background: #808080;
 }
 
 .volume-box {
@@ -358,7 +359,7 @@ video::cue {
 }
 
 .dashboard label[type=file] {
-    margin: 0 5px;
+    /* margin: 0 5px; */
 }
 
 .url-box,

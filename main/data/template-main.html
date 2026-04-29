@@ -101,6 +101,8 @@
             const mCanvas2D = mBackground.querySelector("canvas.d2");
             const mCanvas3D = mBackground.querySelector("canvas.d3");
 
+            mBackground.style.backgroundColor = "#FFFFFF"
+
             // 状态对象
             const state = {
                 hide: false,
@@ -160,7 +162,7 @@
             const loadImageBackground = async (path) => {
                 await MainUI.loadImage(path);
                 initVideo();
-                mBackground?.setAttribute("style", `background-image:url(${path});`);
+                mBackground.setAttribute("style", `background-image:url(${path})`);
                 mBackground?.animate(
                     [{ opacity: 0 }, { opacity: 1 }],
                     { duration: 1000, iterations: 1 }
