@@ -2,7 +2,7 @@ const PuSet = (function () {
     "use strict"; // 启用严格模式，避免隐式错误
 
     if (!(window && window.window === window && window.document)) {
-        throw new Error("PuSet 运行环境异常");
+        throw new Error("PuSet 运行环境异常，只能用在现代化浏览器环境");
     }
 
     // ===================== 基础常量定义 =====================
@@ -173,7 +173,8 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 新的PuSet实例
          */
         pushStack(elems) {
-            return PuSetFactory.merge(new PuSetConstructor(), elems)
+            return PuSetFactory
+                .merge(new PuSetConstructor(), elems)
                 .setProperty('prevObject', this);
         }
 
@@ -347,7 +348,7 @@ const PuSet = (function () {
         // Sort on method existence if only one input has compareDocumentPosition
         let compare = !a.compareDocumentPosition - !b.compareDocumentPosition;
         if (compare) {
-            return compare.value;
+            return compare;
         }
 
         compare = (a.ownerDocument || a) === (b.ownerDocument || b)
@@ -595,7 +596,7 @@ const PuSet = (function () {
             }
             try {
                 // 匹配dataURL格式：data:[mimeType];base64,[data]
-                const dataUrlPattern = /^data:([\w\/]+?);base64,(.+)$/;
+                const dataUrlPattern = /^\s*data:([^;]*);base64,(\S+)\s*$/;
                 const matchResult = base64.match(dataUrlPattern);
                 if (matchResult === null || matchResult.length < 3) {
                     console.warn('base64ToBlob: 输入不是有效的base64数据URL格式');
@@ -700,11 +701,7 @@ const PuSet = (function () {
         "mouseenter": "mouseover",
         "mouseleave": "mouseout",
         "pointerenter": "pointerover",
-        "pointerleave": "pointerout",
-        "dragenter": "dragover",
-        "dragexit": "dragleave",
-        "drop": "dragover",
-        "touchcancel": "touchend"
+        "pointerleave": "pointerout"
     });
 
     /**
@@ -1245,7 +1242,7 @@ const PuSet = (function () {
                 const className = this.longName;
                 // 避免重复注入
                 if (HEAD_STYLE.has(className)) {
-                    return void console.warn("重复添加样式：", className);
+                    return void console.warn("已跳过添加重复样式：", className);
                 }
                 const style2 = main_document.createElementNS(NS_HTML, "style");
                 HEAD_STYLE.add(style2.id = className); // 标记已注入

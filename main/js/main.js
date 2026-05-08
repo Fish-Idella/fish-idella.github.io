@@ -333,7 +333,7 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
                     : isLeftMove ? my_order : my_order - 1;
             });
         }).on("dragend", function () {
-            _scroll.querySelectorAll("a.dragging").forEach((a) => a.classList.remove("dragging"));
+            _scroll.querySelectorAll("a.dragging").forEach(a => a.classList.remove("dragging"));
         }).on("drop", function (event) {
             // 放置事件处理
             // 阻止默认行为（避免浏览器默认处理拖拽数据）和事件冒泡

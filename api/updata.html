@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form action="upload.php" method="post" enctype="multipart/form-data">
+        <!-- name="file" 和PHP接收字段一致 -->
+        <input type="file" name="file" accept="image/*" required>
+        <br><br>
+        <button type="submit">提交上传</button>
+    </form>
+</body>
+
+</html>

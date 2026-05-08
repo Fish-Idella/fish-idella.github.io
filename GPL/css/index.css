@@ -1,6 +1,12 @@
-body,html,input,button,select,td,th {
+body,
+html,
+input,
+button,
+select,
+td,
+th {
 	font-size: 14px;
-	font-family: Helvetica,Arial,sans-serif!important;
+	font-family: Helvetica, Arial, sans-serif !important;
 }
 
 a,

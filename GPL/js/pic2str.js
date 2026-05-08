@@ -1,198 +1,186 @@
-(function (tools) {
+class Pic2Str {
+    static main = 0x2800;
+    static anChars = "MNHQ$OC?7>!;:-";
+    // static anChars = ['𝄛', '𝄚', '𝄙', '𝄘', '𝄗', '𝄖']
+    static brailleMap = [
+        [0, 0],
+        [0x01, 0x08],
+        [0x02, 0x10],
+        [0x04, 0x20],
+        [0x40, 0x80]
+    ];
+    // ===================== 新增：八卦符号映射表 =====================
+    static baguaChars = [
+        "☰", // 0,0,0   黑
+        "☱", // 255,0,0 红
+        "☲", // 0,255,0 绿
+        "☳", // 255,255,0 黄
+        "☴", // 0,0,255 蓝
+        "☵", // 255,0,255 紫
+        "☶", // 0,255,255 青
+        "☷"  // 255,255,255 白
+    ];
+    rowcount = 25;
+    colcount = 5;
+    dot = 1;
+    ratio = 15 / 27;
+    minHeight = 1;
+    canvas;
+    ctx;
 
+    onImageloaded(a, b) { b.toText(true); }
+    onComplete() { };
 
-    // c/255 = x/l
-
-    // x = l * (c / 255)
-
-    // x = c * l / 255
-
-    // var colorString = "MWEBHFNARKXYZVGUSPQDOCTLJI!;,.";
-    //   colorString = "MQWBNHEKRAGXSDOTPFUZVCYLJI!;.";
-    //   colorString = "€MQW#BNHEqKmRp¥gdA8G@XSbD$OTPwFk9y6UhZe0aVx&%5sC4fY2LonJuz3£cjIvt}{rl?¿1i7><][=)(|+*¡!\/;:-,~_·.'";
-    // colorString = "MWEBHFNARKXYZVGUSPQDOCTLJI";
-    // colorString = 'WM#oahkbdpqwmZO0QLCJUYXzcvunxrjft1ilI';
-
-    var length = tools.an.length / 255;
-
-    /**
-     * 
-     * @param {HTMLCanvasElement} canvas 绑定的 Canvas 元素
-     * @param {Number} rowcount 横向字符数（每一行字符数量）
-     * @param {Number} ratio 字符对应图片单元的长宽比
-     * @returns 
-     */
-    this.Pic2Str = class {
-
-        static canvas = null;
-
-        static context = null;
-
-        static rowcount = 25;
-
-        static colcount = 5;
-
-        static dot = 1;
-
-        static ratio = 1;
-
-        static minWidth = 1;
-
-        static minHeight = 1;
-
-        static loaded = false;
-
-        static complete = "";
-
-        constructor(canvas, rowcount = 25, ratio = 15 / 27) {
-
-            this.canvas = canvas;
-
-            this.context = canvas.getContext("2d");
-
-            this.setRowCount(rowcount, ratio);
-
-            return this;
-        }
-
-        onImageloaded(a, b) { }
-
-        /**
-         * @param {Function} callback 图片加载成功监听回调
-         * @returns 返回对象本身
-         */
-        setOnImageloadedEventListener(callback) {
-            if (tools.isFunction(callback)) {
-                this.onImageloaded = callback;
-                if (this.loaded) {
-                    this.onImageloaded(this.canvas, this);
-                }
-            }
-            return this;
-        }
-
-        setRowCount(rowcount = 25, ratio = 15 / 27) {
-            this.rowcount = rowcount;
-            this.ratio = ratio;
-
-            this.minHeight = Math.floor(7 / ratio);  // 单位图片高度
-            this.dot = Math.floor(this.minHeight / 5) || 1;     // 小点对应高度
-        }
-
-        loadImage(url, callback) {
-            var img = new Image;
-
-            img.addEventListener("load", () => {
-
-                // 调整 canvas 和图片的 宽高
-                let width = this.canvas.width = 7 * this.rowcount, // 缩放图片
-                    height = this.canvas.height = tools.getHeight(width, img.naturalWidth, img.naturalHeight);
-
-                this.colcount = Math.ceil(height / this.minHeight);
-                this.context.drawImage(img, 0, 0, width, height);
-                this.loaded = true;
-
-                this.onImageloaded(this.canvas, this);
-
-            }, this.loaded = false);
-
-            this.setOnImageloadedEventListener(callback);
-            img.src = url;
-        }
-
-        toText(checked) {
-
-            var i, j, x, y, p, result = [];
-            var n;
-
-            if (this.colcount > 4) {
-                for (j = 0; j < this.colcount; j++) {
-                    for (i = 0; i < this.rowcount; i++) {
-                        if (checked) {
-                            for (p = 0, y = 0; y < 5; y++) {
-                                // for (x = 0; x < 2; x++) {
-                                    p += tools.getGreen(this.context.getImageData(7 * i + (0 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data);
-                                    p += tools.getGreen(this.context.getImageData(7 * i + (1 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data);
-                                // }
-                            }
-
-                            n = Math.floor((p / 10) * length) - 1;
-                            if (n < 0) {
-                                n = 0;
-                            }
-                            result.push(tools.an.charAt(n));
-                        } else {
-                            for (p = 0, y = 0; y < 5; y++) {
-                                // for (x = 0; x < 2; x++) {
-                                    if (tools.getGreen(this.context.getImageData(7 * i + (0 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data) < 128) {
-                                        p |= (1 << (9 - (y * 2 + 0)));
-                                    }
-                                    if (tools.getGreen(this.context.getImageData(7 * i + (1 * 3 + 1), j * this.minHeight + y * this.dot, 2, 2).data) < 128) {
-                                        p |= (1 << (9 - (y * 2 + 1)));
-                                    }
-                                // }
-                            }
-                            result.push(tools.braille.charAt(p & 255));
-                        }
-                    }
-                    result.push("\n");
-                }
-            } else {
-                result.push("发生一个错误");
-            }
-            this.onComplete(this.complete = result.join(""));
-        }
-
-        onComplete(text) { }
-
-        /**
-         * @param {Function} callback 转换字符成功监听回调
-         * @returns 返回对象本身
-         */
-        setOnCompletedEventListener(callback) {
-            if (tools.isFunction(callback)) {
-                this.onComplete = callback;
-                if (this.loaded) {
-                    this.onComplete(this.complete);
-                }
-            }
-            return this;
-        }
-    };
-
-}({
-
-    main: "%u2800",
-
-    an: "⣿⡿⣯⣛⠿⠯⢏⠶⠗⢇⠕⡊⣂⠡⠢⠂",
-
-    braille: "⠂⢀⡀⣀⠠⢠⡠⣠⠄⢄⡄⣄⠤⢤⡤⣤⠐⢐⡐⣐⠰⢰⡰⣰⠔⢔⡔⣔⠴⢴⡴⣴⠂⢂⡂⣂⠢⢢⡢⣢⠆⢆⡆⣆⠦⢦⡦⣦⠒⢒⡒⣒⠲⢲⡲⣲⠖⢖⡖⣖⠶⢶⡶⣶" +
-        "⠈⢈⡈⣈⠨⢨⡨⣨⠌⢌⡌⣌⠬⢬⡬⣬⠘⢘⡘⣘⠸⢸⡸⣸⠜⢜⡜⣜⠼⢼⡼⣼⠊⢊⡊⣊⠪⢪⡪⣪⠎⢎⡎⣎⠮⢮⡮⣮⠚⢚⡚⣚⠺⢺⡺⣺⠞⢞⡞⣞⠾⢾⡾⣾" +
-        "⠁⢁⡁⣁⠡⢡⡡⣡⠅⢅⡅⣅⠥⢥⡥⣥⠑⢑⡑⣑⠱⢱⡱⣱⠕⢕⡕⣕⠵⢵⡵⣵⠃⢃⡃⣃⠣⢣⡣⣣⠇⢇⡇⣇⠧⢧⡧⣧⠓⢓⡓⣓⠳⢳⡳⣳⠗⢗⡗⣗⠷⢷⡷⣷" +
-        "⠉⢉⡉⣉⠩⢩⡩⣩⠍⢍⡍⣍⠭⢭⡭⣭⠙⢙⡙⣙⠹⢹⡹⣹⠝⢝⡝⣝⠽⢽⡽⣽⠋⢋⡋⣋⠫⢫⡫⣫⠏⢏⡏⣏⠯⢯⡯⣯⠛⢛⡛⣛⠻⢻⡻⣻⠟⢟⡟⣟⠿⢿⡿⣿",
-
-    isFunction: function isFunction(obj) {
-
-        // Support: Chrome <=57, Firefox <=52
-        // In some browsers, typeof returns "function" for HTML <object> elements
-        // (i.e., `typeof document.createElement( "object" ) === "function"`).
-        // We don't want to classify *any* DOM node as a function.
-        return typeof obj === "function" && typeof obj.nodeType !== "number";
-    },
-
-    getGrey: function getGrey(data) {
-        // console.log(data.length)
-        for (var result = 0, i = 0; i < data.length; i++) i % 4 != 3 && (result += data[i]);
-        return Math.floor(result / 12);
-    },
-
-    getGreen: function getGreen(data) {
-        for (var result = 0, i = 0; i < data.length; i++) i % 4 == 1 && (result += data[i]);
-        return Math.floor(result / 4);
-    },
-
-    getHeight: function getHeight(currentWidth, naturalWidth, naturalHeight) {
-        return Math.ceil(currentWidth / (naturalWidth / naturalHeight));
+    constructor(canvas, rowcount = 25, ratio = 364 / 648) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d", {
+            willReadFrequently: true
+        });
+        this.rowcount = rowcount;
+        this.ratio = ratio;
+        this.minHeight = Math.floor(7 / ratio);
+        this.dot = Math.max(1, Math.floor(this.minHeight / 5));
     }
 
-}));
+    // ===================== 新增：获取像素RGB（非灰度） =====================
+    getPixelRGB(data, x, y) {
+
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let dy = 0; dy < this.dot; dy++) {
+            for (let dx = 0; dx < 2; dx++) {
+                const px = x + dx;
+                const py = y + dy;
+
+                if (px >= 0 && px < this.canvas.width && py >= 0 && py < this.canvas.height) {
+                    const idx = (py * this.canvas.width + px) * 4;
+                    r += data[idx];
+                    g += data[idx + 1];
+                    b += data[idx + 2];
+                    count++;
+                }
+            }
+        }
+
+        // 平均值 + 二值化：>128=255 否则=0
+        r = r / count > 128 ? 255 : 0;
+        g = g / count > 128 ? 255 : 0;
+        b = b / count > 128 ? 255 : 0;
+        return [r, g, b];
+    }
+
+    getPixelGrey(data, x, y) {
+
+        let total = 0;
+        let count = 0;
+        for (let dy = 0; dy < this.dot; dy++) {
+            for (let dx = 0; dx < 2; dx++) {
+                const px = x + dx;
+                const py = y + dy;
+
+                if (px >= 0 && px < this.canvas.width && py >= 0 && py < this.canvas.height) {
+                    const idx = (py * this.canvas.width + px) * 4;
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+                    total += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                    count++;
+                }
+            }
+        }
+        return total / count;
+    }
+
+    resize(naturalWidth, naturalHeight) {
+        const width = this.canvas.width = 7 * this.rowcount;
+        const height = this.canvas.height = Math.ceil(width * naturalHeight / naturalWidth);
+        this.colcount = Math.ceil(height / this.minHeight);
+    }
+
+    loadImage(url) {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+            this.resize(img.naturalWidth, img.naturalHeight);
+            this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+            this.onImageloaded(this.canvas, this)
+        };
+        img.src = url
+    }
+
+    // ===================== 核心新功能：八卦彩色字符画 =====================
+    toTextBagua() {
+        if (this.colcount < 5) {
+            this.onComplete("图片太小");
+            return
+        }
+
+        const imageDataCache = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+
+        const result = [];
+
+        for (let j = 0; j < this.colcount; j++) {
+            for (let i = 0; i < this.rowcount; i++) {
+                // 采样RGB
+                const [r, g, b] = this.getPixelRGB(imageDataCache, 7 * i + 1, j * this.minHeight);
+
+                // 计算索引：0-7 完美对应8卦
+                const idx = (r ? 1 : 0) | ((g ? 1 : 0) << 1) | ((b ? 1 : 0) << 2);
+
+                result.push(Pic2Str.baguaChars[idx]);
+            }
+            result.push("\n");
+        }
+
+        this.onComplete(result.join(""));
+    }
+
+    toText(useGray) {
+        if (this.colcount < 5) {
+            this.onComplete("图片太小");
+            return
+        }
+
+        const imageDataCache = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+
+        const result = [];
+        if (useGray) {
+            const len = Pic2Str.anChars.length;
+            for (let j = 0; j < this.colcount; j++) {
+                for (let i = 0; i < this.rowcount; i++) {
+                    let grey = 0;
+                    for (let y = 0; y < 5; y++) {
+                        for (let x = 0; x < 2; x++) {
+                            grey += this.getPixelGrey(imageDataCache, 7 * i + 1 + x * 3, j * this.minHeight + y * this.dot)
+                        }
+                    }
+                    result.push(Pic2Str.anChars[(grey * len / 2550) >>> 0]);
+                }
+                result.push("\n")
+            }
+        } else {
+            for (let j = 0; j < this.colcount; j++) {
+                for (let i = 0; i < this.rowcount; i++) {
+                    let p = Pic2Str.main;
+                    for (let y = 1; y < 5; y++) {
+                        for (let x = 0; x < 2; x++) {
+                            const g1 = this.getPixelGrey(imageDataCache, 7 * i + 1 + x * 3, j * this.minHeight + y * this.dot);
+                            if (g1 < 128) p += Pic2Str.brailleMap[y][x]
+                        }
+                    }
+                    result.push(String.fromCharCode(p === Pic2Str.main ? 0x2812 : p))
+                }
+                result.push("\n")
+            }
+        }
+        this.onComplete(result.join(""))
+    }
+
+    setOnImageloadedEventListener(cb) {
+        if (typeof cb === "function") this.onImageloaded = cb;
+        return this
+    }
+    setOnCompletedEventListener(cb) {
+        if (typeof cb === "function") this.onComplete = cb;
+        return this
+    }
+}

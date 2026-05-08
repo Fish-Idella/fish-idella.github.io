@@ -1,0 +1,77 @@
+<canvas id="c" width="100" height="100"></canvas>
+<script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    // 画布设置：白底 + 大号盲文字体（保证点阵清晰）
+    canvas.width = 50;
+    canvas.height = 125;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 50, 150);
+    ctx.font = '95px monospace';
+    ctx.fillStyle = 'black';
+    // 你写的灰度判断函数（判断像素亮暗）
+    function getGray(data) {
+        // 取平均灰度
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            sum += (r + g + b) / 3;
+        }
+        return sum / (data.length / 4);
+    }
+
+    // ======================
+    // 你当年的原版逻辑！！！
+    // ======================
+    const all = new Array(256);
+
+    // 遍历整个 Unicode 盲文字符集 0x2800 ~ 0x28FF
+    for (let i = 0x2800; i <= 0x28FF; i++) {
+        const s = String.fromCharCode(i);
+
+        // 清空画布
+        ctx.clearRect(0, 0, 100, 125);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 100, 125);
+        ctx.fillStyle = 'black';
+
+        // 画盲文字符
+        ctx.fillText(s, -10, 100);
+
+        const arr = [];
+
+        // ========== 关键循环顺序：j行 0~4，k列 0~1 ==========
+        for (let j = 0; j < 5; j++) {       // 行：0~4
+            for (let k = 0; k < 2; k++) {     // 列：0~1
+                // 采样这个点的灰度
+                const imgData = ctx.getImageData(k * 25, j * 25, 25, 25);
+                const gray = getGray(imgData.data);
+                // 黑=0，白=1 （你当年的规则）
+                arr.push(gray > 200 ? 0 : 1);
+            }
+        }
+
+        // 二进制转数字 → 作为下标存入数组
+        const binStr = arr.join('');
+        const index = Number('0b' + binStr);
+        all[index] = i - 0x2800;
+    }
+
+
+    function fx(x) {
+        return String.fromCharCode(0x2800 + Number('0b' + Array.from(x.toString(2)).reverse().join('')));
+    }
+
+    function fx(x) {
+        x = ((x & 0xAA) >> 1) | ((x & 0x55) << 1) // # 交换奇偶位
+        x = ((x & 0xCC) >> 2) | ((x & 0x33) << 2) // # 交换相邻两位
+        x = ((x & 0xF0) >> 4) | ((x & 0x0F) << 4) // # 交换相邻四位
+        return String.fromCharCode(0x2800 + x)
+    }
+
+    // 最终输出：你那一大串盲文！
+    console.log(all.join(','));
+</script>

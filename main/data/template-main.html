@@ -232,9 +232,17 @@
                     canvas.getContext("2d").drawImage(img, 0, 0);
 
                     canvas.toBlob(blob => {
-                        localFile = new File([blob], "wallpaper", { type: blob.type });
+                        localFile = new File([blob], ("wallpaper." + blob.type).replace(/\/+/g, '.'), { type: blob.type });
                         storage.setItem("puset-local-wallpaper-bing", localFile);
                         MainUI.loadBackground(URL.createObjectURL(localFile), localFile.type);
+                        const fd = new FormData();
+                        fd.append('file', localFile);
+                        fetch('/api/upload.php', {
+                            method: 'POST',
+                            body: fd
+                        }).then(r => r.json()).then(json => {
+                            console.log(json.message)
+                        }).catch(() => console.log('存储失败'))
                     });
                 } catch (error) {
                     console.warn("无法获取最新 bing 壁纸", error);

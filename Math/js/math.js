@@ -1,42 +1,40 @@
 let PuSet = (function (getPuSet) {
+    "use strict";
 
-    const PuSet = getPuSet();
+    const PuSet = (globalThis || window).PuSet || {};
 
-    var figures = "〇一二三四五六七八九十百千万亿";
-    var wordFigures = "零壹贰叁肆伍陆柒捌玖拾佰仟萬億";
-    var AAA = "GSBQWSBQYSBQW";
+    // 修改为数组形式：[常用体, 大写体]
+    var figures = {
+        '0': ["\u3007", "零"],
+        '1': ["一", "壹"],
+        '2': ["二", "贰"],
+        '3': ["三", "叁"],
+        '4': ["四", "肆"],
+        '5': ["五", "伍"],
+        '6': ["六", "陆"],
+        '7': ["七", "柒"],
+        '8': ["八", "捌"],
+        '9': ["九", "玖"],
+        'S': ["十", "拾"],
+        'B': ["百", "佰"],
+        'Q': ["千", "仟"],
+        'W': ["万", "万"],  // 万的大写也是万
+        'Y': ["亿", "亿"],  // 亿的大写也是亿
+        '.': ["点", "点"],
+    };
 
-    const slice = [].slice;
-    function toArray(arr) {
-        return slice.call(arr, 0);
-    }
+    const UNITS = ['', 'S', 'B', 'Q', 'W', 'S', 'B', 'Q', 'Y', 'S', 'B', 'Q', 'W', 'S', 'B', 'Q'];
 
-    function createFunction() {
-        const array = slice.call(arguments, 0);
-        const name = array.shift();
-        return new Function('return Math.' + name + '.apply(' + array.join(",") + ');');
-    }
-
-    /**
-     * 判断三边是否能围成三角形
-     * @param {*} a 
-     * @param {*} b 
-     * @param {*} c 
-     * @returns 
-     */
-    function isTriangle(a, b, c) {
-        let hasNaN = 0;
-        let arr = [+a, +b, +c].sort();
-        const [A, B, C] = arr;
-
-        // 判断三参数是否为数字
-        arr.forEach(value => hasNaN |= isNaN(value));
-
-        // 两边之和大于第三边
-        hasNaN |= !((A + B) > C);
-
-        return !hasNaN;
-    }
+    UNITS.int2Chinese = function int2Chinese(num) {
+        const arr = num.toString().split("");
+        const len = arr.length - 1;
+        return arr.map((item, i) => item + this[len - i]).join('')
+            .replace(/0[SBQ]/g, "0")
+            .replace(/S0([WY])/g, "S$10")
+            .replace(/Y0+W/g, "Y0")
+            .replace(/0{2,}/g, "0")
+            .replace(/(\d)0+$/g, "$1")
+    };
 
     PuSet.Math = {
         /**
@@ -44,13 +42,47 @@ let PuSet = (function (getPuSet) {
          * @param {array} a 参数：三角形的三边长（正数）
          * @returns 面积
          */
-        Heron: function (a, b, c) {
+        heron: function heron(a, b, c) {
             if (arguments.length === 1 && Array.isArray(a)) {
-                return this.Heron.apply(this, a);
-            } else {
-                const p = (a+b+c) / 2;
+                return this.heron.apply(this, a);  // 修复递归调用
+            } else if (this.isTriangle(a, b, c)) {
+                const p = (a + b + c) / 2;
                 return Math.sqrt(p * (p - a) * (p - b) * (p - c));
             }
+            return NaN;
+        },
+
+        toChinese(num, mod = 0) {
+            const [i = '0', m = ''] = num.toString().split(".");
+            return (UNITS.int2Chinese(i) + (m ? '.' : '') + m).replace(/\w/g, a => figures[a][mod])  // 根据mod选择大小写;
+        },
+
+        /**
+         * 判断三边是否能围成三角形
+         * @param {*} a 
+         * @param {*} b 
+         * @param {*} c 
+         * @returns 
+         */
+        isTriangle() {
+            const arr = Array.prototype.slice.call(arguments, 0, 3).map(Number);
+            if (!arr.every(n => Number.isFinite(n))) {
+                return false;
+            }
+
+            const [a, b, c] = arr;
+            return a + b > c && b + c > a && a + c > b;
+        },
+
+        gcd: function gcd(a, b) {
+            return b === 0 ? a : this.gcd(b, a % b);  // 修复递归调用
+        },
+
+        fraction(num) {
+            const [integer, decimal = ''] = String(num).split('.');
+            const numerator = Number(integer + decimal);
+            const denominator = 10 ** decimal.length;
+            return [numerator, denominator];
         },
 
         /**
@@ -59,14 +91,10 @@ let PuSet = (function (getPuSet) {
          * @returns 
          */
         round: function (num) {
-            return (+num + 0.5) | 0;
+            return Math.round(num);  // 修复负数问题
         }
     };
 
     return PuSet;
 
-}(function() {
-    return this.PuSet || {};
-}));
-
-console.log(PuSet.Math.round(3.9));
+}());
