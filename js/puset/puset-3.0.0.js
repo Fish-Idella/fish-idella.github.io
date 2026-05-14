@@ -1020,16 +1020,12 @@ const PuSet = (function () {
             this.data = new Proxy(this.source, {
                 // 监听属性设置
                 set: (target, property, value, receiver) => {
-                    // 使用requestAnimationFrame优化渲染
-                    requestAnimationFrame(() => {
-                        this.#handleDataChange(target, property, value, receiver);
-                    });
+                    this.#handleDataChange(target, property, value, receiver);
                     return Reflect.set(target, property, value, receiver);
                 },
                 // 监听属性删除
                 deleteProperty: (target, property) => {
-                    // 使用requestAnimationFrame优化渲染
-                    requestAnimationFrame(() => void PuSetFactory.show(this.#children.get(property), false));
+                    PuSetFactory.show(this.#children.get(property), false);
                     return Reflect.deleteProperty(target, property);
                 }
             });
@@ -1072,8 +1068,7 @@ const PuSet = (function () {
         #handleLengthChange(newLength) {
             // 隐藏超出新长度的元素
             for (let i = newLength, oldLength = this.childCount; i < oldLength; i++) {
-                // 使用requestAnimationFrame优化渲染
-                requestAnimationFrame(() => void PuSetFactory.show(this.#children.get(String(i)), false));
+                PuSetFactory.show(this.#children.get(String(i)), false);
             }
             // 触发resize回调
             if (this.#hasResize) {
@@ -1160,6 +1155,14 @@ const PuSet = (function () {
          */
         update(newData) {
             Object.assign(this.data, newData);
+            if (this.#isArrayData) {
+                this.data.length = newData.length;
+            }
+        }
+
+        relayout(key, value = this.data[key]) {
+            const child = this.#getChild(this.target, String(key), value);
+            this.#handlePropertyChange(child, value, key);
         }
 
         /**

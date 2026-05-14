@@ -1,0 +1,13 @@
+<style>
+    pre {
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
+
+    [contenteditable]:empty:not(:focus)::before {
+        content: attr(placeholder);
+        color: #999;
+        pointer-events: none;
+    }
+</style>
+<pre contenteditable="true" placeholder="ast"></pre>
