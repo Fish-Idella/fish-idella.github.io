@@ -140,6 +140,7 @@ ul.fc.scroll li:nth-child(even) {
 
 [disabled]:disabled {
 	cursor: not-allowed !important;
+	opacity: 0.8;
 }
 
 button {
@@ -149,13 +150,13 @@ button {
 	min-height: 32px;
 	border-radius: 16px;
 	line-height: 1;
-	font-weight: 400;
 }
 
 button>svg {
 	touch-action: none;
 	pointer-events: none;
 	width: 1rem;
+	height: 1rem;
 }
 
 .dialog-content {
@@ -180,9 +181,22 @@ button>svg {
 	font-display: swap;
 }
 
-button#send {
+button#send[name=send] {
 	background-color: #2196F3;
 	color: white;
+}
+
+button#send[name=send]>svg.stop {
+	display: none;
+}
+
+button#send[name=stop] {
+	background-color: #cb9696;
+	color: rgb(255, 0, 0);
+}
+
+button#send[name=stop]>svg.send {
+	display: none;
 }
 
 #login-view {
@@ -198,6 +212,9 @@ button#send {
 #chat-view {
 	background-image: url(../image/bg.jpg);
 	background-size: cover;
+	max-width: 100vmin;
+	left: 50%;
+	transform: translateX(-50%);
 }
 
 .top {
@@ -233,8 +250,8 @@ header button,
 	flex-direction: row-reverse;
 }
 
-.chat-message-output-box[data-persona="user"] .remake,
-.chat-message-output-box[data-persona="user"] .usage {
+.chat-message-output-box[data-persona="user"] [name=remake],
+.chat-message-output-box[data-persona="user"] [name=usage] {
 	display: none;
 }
 
@@ -260,10 +277,11 @@ header button,
 	padding: 0.2rem;
 	font-weight: 400;
 	white-space: pre-wrap;
+	min-height: 1rem;
 }
 
 .chat-message>.chat-message-title {
-	background-color: rgb(155, 228, 228);
+	background-color: #dedede;
 }
 
 .chat-message>.chat-message-title>.state {
@@ -275,7 +293,7 @@ header button,
 
 .chat-message>.chat-message-title>.think {
 	white-space: pre-wrap;
-	font-weight: 200;
+	font-weight: 300;
 }
 
 .buttons {
@@ -312,7 +330,7 @@ span.dd {
 	left: 0%;
 	transition: left 0.3s ease-in-out;
 	box-shadow: 2px 0px 10px 0rem rgba(0, 0, 0, 0.1);
-	padding: 1rem;
+	padding: 0 1rem;
 }
 
 .overlay {
@@ -324,7 +342,63 @@ ul {
 	padding: 0;
 }
 
-ul#agent-list {
+ul#character-list {
 	line-height: 2rem;
-	/* padding: 0 1rem; */
+	overflow: hidden auto;
+}
+
+
+/* 表单整体 */
+.login-form {
+	gap: 1rem;
+}
+
+/* 横向行容器 */
+.login-row {
+	width: 90%;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+/* 统一输入框样式 */
+.login-input {
+	padding: 0.6rem;
+	border: 1px solid #ddd;
+	border-radius: 0.5rem;
+	width: 90%;
+	box-sizing: border-box;
+	background-color: #f5f5f5;
+}
+
+.login-row>.login-input {
+	width: 100%;
+}
+
+/* 下拉选择框 */
+.login-select {
+	padding: 0.6rem;
+	border: 1px solid #ddd;
+	border-radius: 0.5rem;
+	box-sizing: border-box;
+	background-color: #f5f5f5;
+}
+
+/* 测试连接按钮 */
+.login-btn {
+	padding: 0.6rem;
+	background-color: #4CAF50;
+	color: white;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	border: none;
+}
+
+/* 保存/退出按钮 */
+.login-btn-primary {
+	padding: 0.6rem;
+	background-color: #2196F3;
+	color: white;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	border: none;
 }

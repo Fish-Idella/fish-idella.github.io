@@ -18,8 +18,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     const apiUrlInput = document.getElementById('api-url');       // API地址输入框
     const apiKeyInput = document.getElementById('api-key');       // API密钥输入框
     const modelSelect = document.getElementById('models');        // 模型选择下拉框
-    const agentName = document.getElementById("agent-name");      // 智能体名称输入框
-    const agentPrompt = document.getElementById("agent-prompt");  // 系统提示词输入框
+    const characterName = document.getElementById("character-name");      // 智能体名称输入框
+    const characterPrompt = document.getElementById("character-prompt");  // 系统提示词输入框
     // 按钮元素
     const saveConfigBtn = document.getElementById('enter-chat');   // 保存配置并进入聊天按钮
     const testConnectBtn = document.getElementById('test-connect');// 测试连接按钮
@@ -34,7 +34,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     const messageBoxTemplate = messageList.firstElementChild;
 
     const drawer = document.getElementById('drawer');          // 侧边抽屉菜单
-    const agentList = drawer.querySelector('ul#agent-list');  // 智能体列表容器
+    const characterList = drawer.querySelector('ul#character-list');  // 智能体列表容器
 
     // ============================ 数据初始化区 ============================
     /**
@@ -43,7 +43,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
      */
     const data = await storage.getItem('chat-data') || {
         lastChatId: 1778219422521,
-        agents: {
+        characters: {
             1778219422521: {
                 "id": 1778219422521,
                 "name": "默认助手",
@@ -51,10 +51,17 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 "key": "none",
                 "model": "DeepSeek-R1-Distill-Qwen-8B-Q4_K_M",
                 "prompt": "你是默认助手",
-                "messages": []                              // 历史消息记录
+                "branch": []                              // 历史消息记录
             }
         }
     };
+
+    if (!data.characters) {
+        data.characters = data.agents;
+        delete data.agents;
+    }
+
+    let autoScroll = true;
 
     const EscapeSequenceHTML = {
         "&": "&amp;",
@@ -94,7 +101,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             if (!chunk) return;
             this.reasoningContent.push(chunk);
             const elapsed = ((performance.now() - this.thinkStartTime) / 1000).toFixed(2);
-            this.message.state = `推理中…（${elapsed}秒）`;
+            this.message.state = `思考中…（${elapsed}秒）`;
             this.message.reasoner = this.getReasoningChunk();
 
             vm_message.render(vm_message.activeItem, this.message, this.index);
@@ -131,6 +138,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         "model": 'gpt-3.5-turbo',
         "stream": true,          // 启用流式传输，实现逐字输出效果
         "temperature": 0.8,
+        // "extra_body": { "thinking": { "type": "disabled" } },
         "messages": []           // 待填充的消息列表
     };
     const headers = {
@@ -150,10 +158,10 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         render(box, message, index) {
             // 计算当前消息在分支组中的位置，更新切换按钮文本
             if (index > 0) {
-                const group = this.data[index - 1].next;
+                const group = this.data[index - 1].branch;
                 const v = 1 + group.indexOf(message);
                 const max = group.length;
-                box.querySelector('button.select').textContent = `${v}/${max}`;
+                box.querySelector('button[name=select]').textContent = `${v}/${max}`;
             }
 
             box.querySelector('.state').textContent = message.state || "已完成";
@@ -162,7 +170,9 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 .replace(/\n|\r\n/g, '<br>')
                 .replace(/(\uff08[^\uff09]*\uff09)|(\([^\)]*\))/g, '<span class="dd">$1</span>');
             const target = this.target;
-            target.scrollTop = target.scrollHeight; // 自动滚动到底部
+            if (autoScroll) {
+                target.scrollTop = target.scrollHeight; // 自动滚动到底部
+            }
         },
         layout(box, message, index) {
             this.activeItem = box;
@@ -173,9 +183,9 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         }
     });
 
-    const messages = window.messages = vm_message.data;
+    const messages = vm_message.data;
     // 初始化消息队列（用于组装AI请求体）
-    let agent, api;       // 当前智能体对象、拼接后的API URL
+    let character, api;       // 当前智能体对象、拼接后的API URL
 
     // ============================ 核心函数定义区 ============================
 
@@ -196,8 +206,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             const content = document.createElement('pre');
             content.className = 'content flex-vertical';
             content.style.maxHeight = '60vh';
-            content.style.maxWidth = '23rem';
-            content.style.width = '80vw';
+            content.style.maxWidth = '80vw';
+            content.style.width = 'fit-content';
             content.style.borderRadius = '1rem';
             content.style.margin = '0';
 
@@ -354,7 +364,7 @@ SYSTEM CONTEXT:
         }
 
         // 将之前最后一条消息中的所有分支标记为非主分支
-        const group = messages.at(last).next;
+        const group = messages.at(last).branch;
         group.forEach(item => item.main = false);
 
         const message = {
@@ -362,67 +372,99 @@ SYSTEM CONTEXT:
             main: true,
             reasoner: '',
             content: inputContent,
-            next: []
+            branch: []
         };
         group.push(message);
         messages.push(message);
         return new MessageBox(message, index);
     }
 
+    class ReadStreamLine {
+
+        constructor(response) {
+            this.response = response;
+        }
+
+        [Symbol.asyncIterator]() {
+            const reader = this.response.body.getReader();
+            const decoder = new TextDecoder("UTF-8");
+            let buffer = "";
+            return {
+                next: async function next() {
+                    const index = buffer.indexOf("\n");
+                    if (index >= 0) {
+                        const message = buffer.slice(0, index);
+                        buffer = buffer.slice(index + 1);
+                        return { value: message, done: false };
+                    }
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        if (buffer.length > 0) {
+                            const message = buffer;
+                            buffer = '';
+                            return { value: message, done: false };
+                        }
+                        return { value: buffer, done: true };
+                    } else {
+                        buffer += decoder.decode(value, { stream: true });
+                        return next();
+                    }
+                }
+            };
+        }
+    }
+
     /**
      * 核心发送函数：构造请求，发起fetch流式调用
      */
-    async function send() {
+    function send() {
         const abortController = new AbortController();
         sendMessage.reasoning = abortController;   // 标记推理中，并保存中止控制器
 
         /** @type {MessageBox} */
-        let assistantBox;
+        const body = messagePurifying(messages);               // 收集信息
+        const assistantBox = addMessage('assistant', '');      // 收集信息后创建助手回复消息框，否则会收集到空助手回复;
+        autoScroll = true;
+        sendMsgBtn.name = 'stop';
+
         fetch(api, {
             method: 'POST',
             headers: headers,
-            body: messagePurifying(messages),
+            body: body,
             signal: abortController.signal
         }).then(async function readStream(response) {
-            assistantBox = addMessage('assistant', '');      // 发送信息后创建助手回复消息框
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("UTF-8");
-            readerLoop: while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const lines = decoder.decode(value, { stream: true }).split(r_np);
-                for (const line of lines) {
-                    const arr = line.match(r_sse_data);
-                    if (arr === null) continue;
-                    const trimmedLine = arr[1]
-                    if (trimmedLine === "[DONE]") break readerLoop;
+            for await (const line of new ReadStreamLine(response)) {
+                if (!line) { continue }
+                const arr = line.match(r_sse_data);
+                if (arr === null) continue;
+                const trimmedLine = arr[1]
+                if (trimmedLine === "[DONE]") break;
 
-                    const data = JSON.parse(trimmedLine);
-                    const choic = data.choices[0];
-                    const delta = choic.delta;
+                const data = JSON.parse(trimmedLine);
+                const choic = data.choices[0];
+                const delta = choic.delta;
 
-                    // 处理推理内容（reasoning/reasoning_content）
-                    const reasoning = delta.reasoning || delta.reasoning_content;
-                    if (reasoning) {
-                        assistantBox.addReasoningChunk(reasoning);
-                    }
+                // 处理推理内容（reasoning/reasoning_content）
+                const reasoning = delta.reasoning || delta.reasoning_content;
+                if (reasoning) {
+                    assistantBox.addReasoningChunk(reasoning);
+                }
 
-                    const content = delta.content;
-                    if (content) {
-                        assistantBox.addContentChunk(content);
-                    }
+                const content = delta.content;
+                if (content) {
+                    assistantBox.addContentChunk(content);
+                }
 
-                    if (choic.finish_reason === "stop") {
-                        assistantBox.setUsage(data.usage);
-                    }
+                if (choic.finish_reason === "stop") {
+                    assistantBox.setUsage(data.usage);
                 }
             }
         }).catch(function (e) {
-            assistantBox.addContentChunk(`[${e.name}]:`);
-            assistantBox.addContentChunk(e.message);
+            assistantBox.addContentChunk(`[${e.name}]: ${e.message}`);
         }).finally(function endChat() {
             sendMessage.reasoning = false;
             assistantBox.done();
+            sendMsgBtn.name = 'send';
             storage.setItem('chat-data', data);
         });
     }
@@ -467,7 +509,7 @@ SYSTEM CONTEXT:
             messages.push(message);   // 存入全局messages数组
 
             // 继续处理下一组分支消息
-            current = message.next;
+            current = message.branch;
             index++;
         }
     }
@@ -488,16 +530,16 @@ SYSTEM CONTEXT:
      */
     function initAgent(value) {
         if (value) {
-            agent = value;
-            api = urlConcat(agent.api, "chat/completions");     // 拼接完整的API endpoint
-            title.textContent = `与${agent.name}的对话`;          // 更新页面标题
-            aiRequestConfig.model = agent.model;
-            headers.Authorization = `Bearer ${agent.key}`;
-            // 构建消息链表：系统指令位于索引0，其next指向历史消息数组
-            messages[0] = { "role": "system", "content": agent.prompt, next: agent.messages };
+            character = value;
+            api = urlConcat(character.api, "chat/completions");     // 拼接完整的API endpoint
+            title.textContent = `与${character.name}的对话`;          // 更新页面标题
+            aiRequestConfig.model = character.model;
+            headers.Authorization = `Bearer ${character.key}`;
+            // 构建消息链表：系统指令位于索引0，其branch指向历史消息数组
+            messages[0] = { "role": "system", "content": character.prompt, branch: character.branch };
             messages.length = 1;
-            initMessageList(agent.messages);   // 渲染历史消息
-            data.lastChatId = agent.id;         // 记录最后使用的智能体
+            initMessageList(character.branch);   // 渲染历史消息
+            data.lastChatId = character.id;         // 记录最后使用的智能体
         } else {
             title.textContent = `未选择智能体`;          // 更新页面标题
             messages.length = 0;
@@ -506,38 +548,54 @@ SYSTEM CONTEXT:
         PuSet.show(drawer, false);    // 关闭侧边菜单
     }
 
+    // 3. 获取 DOM 元素（提前缓存，避免重复查询）
+    const apiSelect = document.getElementById('api-url-list');
+    const keySelect = document.getElementById('api-key-list');
 
+    function buildDataList() {
+        const apis = new Set(['https://api.deepseek.com/', 'https://api.openai.com/v1/']);
+        const keys = new Set(['none']);
 
+        Object.values(data.characters).forEach(a => {
+            a?.api && apis.add(a.api);
+            a?.key && keys.add(a.key);
+        });
 
+        apiSelect.innerHTML = '';
+        keySelect.innerHTML = '';
 
+        apis.forEach(v => apiSelect.appendChild(new Option(v, v)));
+        keys.forEach(v => keySelect.appendChild(new Option(v, v)));
+    }
 
 
     // 初始化默认智能体（根据存储的最后使用ID）
-    initAgent(data.agents[data.lastChatId]);
+    initAgent(data.characters[data.lastChatId]);
 
     // 智能体列表视图管理器（基于PuSet库，负责渲染列表及响应点击）
-    const vm_agents = PuSet.ViewManager({
-        target: agentList,
+    const vm_characters = PuSet.ViewManager({
+        target: characterList,
         selector: 'li',
-        data: Object.keys(data.agents),
-        bt_edit(agent) {
+        data: Object.keys(data.characters),
+        bt_edit(character) {
             // 将智能体数据填充到配置表单，并切换到配置视图
-            loginView.dataset.agent_id = agent.id;
-            agentName.value = agent.name;
-            apiUrlInput.value = agent.api;
-            apiKeyInput.value = agent.key;
+            loginView.dataset.character_id = character.id;
+            characterName.value = character.name;
+            apiUrlInput.value = character.api;
+            apiKeyInput.value = character.key;
             // modelSelect.value = value.model;
-            agentPrompt.value = agent.prompt;
+            characterPrompt.value = character.prompt;
+            buildDataList();
             PuSet.show(loginView, true);
         },
-        bt_delete(agent) {
-            showModalDialog('确定要删除智能体【' + agent.name + '】吗？\n包括与此智能体的所有对话记录。',
+        bt_delete(character) {
+            showModalDialog('确定要删除智能体【' + character.name + '】吗？\n包括与此智能体的所有对话记录。',
                 '确认', '取消').then((result) => {
                     if (result.index === 0) {   // 确认删除
-                        if (Reflect.deleteProperty(data.agents, agent.id)) {
-                            vm_agents.update(Object.keys(data.agents));
+                        if (Reflect.deleteProperty(data.characters, character.id)) {
+                            vm_characters.update(Object.keys(data.characters));
                             storage.setItem('chat-data', data); // 持久化
-                            if (agent.id === data.lastChatId) {
+                            if (character.id === data.lastChatId) {
                                 initAgent(null);
                             }
                         } else {
@@ -547,15 +605,15 @@ SYSTEM CONTEXT:
                 });
         },
         layout(li, id) {
-            li.querySelector('span.name').textContent = data.agents[id].name;
+            li.querySelector('span.name').textContent = data.characters[id].name;
         }
     }).on('click', function (e, id) {
         // 如果点击的是按钮（编辑/删除），执行对应操作
         if (e.target.tagName === 'BUTTON') {
-            vm_agents['bt_' + e.target.name]?.(data.agents[id]);
+            vm_characters['bt_' + e.target.name]?.(data.characters[id]);
         } else {
             // 非按钮点击：切换智能体
-            initAgent(data.agents[id]);
+            initAgent(data.characters[id]);
         }
     });
 
@@ -592,7 +650,7 @@ SYSTEM CONTEXT:
     const content_edit = content.querySelector('textarea');
     PuSet(content).on('click', 'button', function (ev) {
         const inputContent = content_edit.value.trim();
-        if (inputContent === '') { 
+        if (inputContent === '') {
             return;
         }
         const { button, parentBox, dataIndex, message } = editData;
@@ -630,10 +688,10 @@ SYSTEM CONTEXT:
             initMessageList(group);
         },
         previous(button, parentBox, dataIndex) {
-            messageButtonActions._switchBranch(messages[dataIndex - 1].next, dataIndex, -1);
+            messageButtonActions._switchBranch(messages[dataIndex - 1].branch, dataIndex, -1);
         },
         next(button, parentBox, dataIndex) {
-            messageButtonActions._switchBranch(messages[dataIndex - 1].next, dataIndex, 1);
+            messageButtonActions._switchBranch(messages[dataIndex - 1].branch, dataIndex, 1);
         },
         copy(button, parentBox, dataIndex) {
             navigator.clipboard.writeText(messages[dataIndex]?.content).then(function () {
@@ -650,12 +708,12 @@ SYSTEM CONTEXT:
                 const role = parentBox.dataset.persona;
 
                 messages.length = dataIndex;
-                let m = messages.at(dataIndex - 1).next;
+                let m = messages.at(dataIndex - 1).branch;
 
                 if (m.length === 1 && role === 'assistant') {
                     // 最后一条助手消息分支，连带删除上一级用户消息
                     messages.length = dataIndex - 1;
-                    m = messages.at(dataIndex - 2).next;
+                    m = messages.at(dataIndex - 2).branch;
                 }
 
                 const start = m.findIndex(item => item.main);
@@ -689,26 +747,28 @@ SYSTEM CONTEXT:
      * 利用事件委托（PuSet库封装）监听动态生成的消息按钮
      */
     PuSet(messageList).on("click", "button", function (ev) {
-        const action = messageButtonActions[this.className];
+        const action = messageButtonActions[this.name];
         if (!action) return;
 
         const parentBox = this.closest(".chat-message-output-box");
         const dataIndex = Number(parentBox.dataset.index);
 
         action(this, parentBox, dataIndex);
+    }).on('scroll', function (ev) {
+        autoScroll = false;
     });
 
     // 保存配置并进入聊天
     saveConfigBtn.addEventListener("click", function () {
         const config = Object.assign({
             "id": String(Date.now()),
-            "messages": []
-        }, data.agents[loginView.dataset.agent_id], {
-            "name": agentName.value,
+            "branch": []
+        }, data.characters[loginView.dataset.character_id], {
+            "name": characterName.value,
             "api": apiUrlInput.value,
             "key": apiKeyInput.value,
             "model": modelSelect.value,
-            "prompt": agentPrompt.value
+            "prompt": characterPrompt.value
         });
         if (config.api === "") {
             return showModalDialog("请填写API地址", "确认");
@@ -716,12 +776,16 @@ SYSTEM CONTEXT:
         if (config.model === "") {
             return showModalDialog("请选择模型", "确认");
         }
-        data.agents[config.id] = config;
+        data.characters[config.id] = config;
         initAgent(config);
         PuSet.show(loginView, false);
         storage.setItem('chat-data', data);
-        vm_agents.update(Object.keys(data.agents));
+        vm_characters.update(Object.keys(data.characters));
     });
+
+    document.getElementById('current').addEventListener("click", function () {
+        showModalDialog(JSON.stringify(data.characters[data.lastChatId], null, 2), "确认")
+    })
 
     // 取消编辑，关闭配置视图
     document.getElementById("exit-edit").addEventListener("click", function () {
@@ -729,36 +793,49 @@ SYSTEM CONTEXT:
     });
 
     // 添加新智能体：重置表单，打开配置视图
-    document.getElementById("add-agent").addEventListener("click", function () {
+    document.getElementById("add-character").addEventListener("click", function () {
         loginView.reset();
-        loginView.dataset.agent_id = '';
+        loginView.dataset.character_id = '';
+        buildDataList();
         PuSet.show(loginView, true);
     });
 
     // 测试连接：获取模型列表并填充下拉框
-    testConnectBtn.addEventListener("click", function () {
-        const baseUrl = apiUrlInput.value.trim();
-        if (!baseUrl) {
-            return showModalDialog("请填写API地址", "确认");
-        }
-        fetch(urlConcat(baseUrl, "models"), {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKeyInput.value.trim()}`
+    testConnectBtn.addEventListener("click", async function () {
+        try {
+            const baseUrl = apiUrlInput.value.trim();
+            if (!baseUrl) {
+                return showModalDialog("请填写API地址", "确认");
             }
-        }).then(r => r.json()).then(modelList => {
+
+            // 发送请求（纯 await 写法）
+            const response = await fetch(urlConcat(baseUrl, "models"), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKeyInput.value.trim()}`
+                }
+            });
+
+            // 解析返回数据
+            const modelList = await response.json();
+
+            // 填充下拉框
             apiUrlInput.value = baseUrl;
             modelSelect.length = 0;
             modelList.data.forEach((modelObj) => {
                 const id = String(modelObj.id);
                 modelSelect.appendChild(new Option(id, id));
             });
+
+            // 启用按钮
             saveConfigBtn.disabled = false;
             modelSelect.disabled = false;
-        }).catch(e => {
+
+        } catch (e) {
+            // 统一捕获所有异常
             showModalDialog(`测试失败：${e.message}`, "确认");
-        });
+        }
     });
 });
