@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自增强 AI</title>
+    <style>
+        .view {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            top: 0;
+            left: 0;
+            background-color: #ffffff;
+        }
+
+        .hide {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="view">
+    <div id="chat" class="view hide">
+        <!-- 首次自增强时至少自动补全聊天 UI，让用户可以与你交互 -->
+        <header>标题 + 功能按钮</header>
+        <div title="输出">初始化中……</div>
+        <footer title="输入"></footer>
+    </div>
+    <form id="api-settings" class="view hide">
+        <div>初次见面</div>
+        <div><span>API URL</span><input type="url" name="url" placeholder="https://api.openai.com/v1/"
+                value='http://localhost:11434/v1/'></div>
+        <div><span>API KEY</span><input type="text" name="key" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxx"></div>
+        <div><button type="submit" name="vvv">验证</button></div>
+        <label>
+            <input type="text" name="model" list="available-models" disabled="disabled">
+            <datalist id="available-models"></datalist>
+        </label>
+        <button type="submit" name="start" disabled="disabled">开始</button>
+    </form>
+    <script>
+
+        // 流式读取行迭代器
+        class ReadStreamLine {
+            constructor(response) {
+                this.response = response;
+            }
+            [Symbol.asyncIterator]() {
+                const reader = this.response.body.getReader();
+                const decoder = new TextDecoder("UTF-8");
+                let buffer = "";
+                return {
+                    next: async function next() {
+                        const idx = buffer.indexOf("\n");
+                        if (idx >= 0) {
+                            const msg = buffer.slice(0, idx);
+                            buffer = buffer.slice(idx + 1);
+                            return {
+                                value: msg,
+                                done: false
+                            };
+                        }
+                        const {
+                            done,
+                            value
+                        } = await reader.read();
+                        if (done) {
+                            if (buffer.length > 0) {
+                                const msg = buffer;
+                                buffer = '';
+                                return {
+                                    value: msg,
+                                    done: false
+                                };
+                            }
+                            return {
+                                value: buffer,
+                                done: true
+                            };
+                        } else {
+                            buffer += decoder.decode(value, {
+                                stream: true
+                            });
+                            return next();
+                        }
+                    }
+                };
+            }
+        }
+
+
+        (async function () {
+
+            window.PuSet = {};
+            PuSet.fns = {};
+
+            PuSet.fns.verifyAPI = async function verifyAPI(api, key) {
+                try {
+                    const r = await fetch(api + '/models', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${key}`
+                        }
+                    });
+                    return await r.json();
+                } catch (e) {
+                    return e;
+                }
+            };
+
+            const viewChat = document.getElementById('chat');
+            const viewApiSettings = document.getElementById('api-settings');
+            viewApiSettings.addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                const form = this;
+                const models = document.getElementById('available-models')
+
+                const api = form[0].value.trim().replace(/\/+$/, '');
+                const key = form[1].value.trim();
+
+                if (ev.submitter === form[2]) {
+                    PuSet.fns.verifyAPI(api, key).then(function (json) {
+                        json.data.forEach(function (obj) {
+                            const id = obj.id;
+                            models.appendChild(new Option(id, id))
+                        });
+                        form[3].disabled = form[4].disabled = false
+                    });
+                    return
+                }
+                if (ev.submitter === form[4]) {
+                    window.localStorage.setItem('authorization-api', api);
+                    window.localStorage.setItem('authorization-key', key);
+                    window.localStorage.setItem('selected-model', form[3].value);
+                    window.location.reload(true);
+                }
+            });
+
+
+
+            PuSet.OpenAIFunctionCalling = {
+                localStorageSetItem(args) {
+                    const { key, value } = args;
+                    window.localStorage.setItem(key, value);
+                    return {
+                        messages: `update localStorage: ${key}`
+                    }
+                },
+                localStorageGetItem(args) {
+                    return {
+                        value: window.localStorage.getItem(args.key)
+                    }
+                },
+                reload() {
+                    window.location.reload(true);
+                }
+            };
+
+            PuSet.aiRequestConfig = {
+                "model": window.localStorage.getItem('selected-model'),
+                "stream": true,
+                "temperature": 0.8,
+                "thinking": {
+                    "type": "enabled"
+                },
+                "tools": [{
+                    type: "function",
+                    function: {
+                        name: "localStorageSetItem",
+                        description: "调用 window.localStorage.setItem(key, value) 存储数据",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                key: {
+                                    type: "string",
+                                    description: "存储的键"
+                                },
+                                value: {
+                                    type: "string",
+                                    description: "存储的值"
+                                }
+                            },
+                            required: ["key", "value"]
+                        }
+                    }
+                }, {
+                    type: "function",
+                    function: {
+                        name: "localStorageGetItem",
+                        description: "调用 window.localStorage.getItem(key) 获取存储数据",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                key: {
+                                    type: "string",
+                                    description: "存储的键"
+                                }
+                            },
+                            required: ["key", "value"]
+                        }
+                    }
+                }, {
+                    type: "function",
+                    function: {
+                        name: "reload",
+                        description: "调用 window.location.reload(true) 刷新页面",
+                        parameters: {
+                            type: "object",
+                            properties: {},
+                            required: []
+                        }
+                    }
+                }],
+                "tool_choice": "auto",
+                "messages": []
+            };
+
+            PuSet.headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                "Authorization": `Bearer ${window.localStorage.getItem('authorization-key')}`
+            };
+            PuSet.messages = PuSet.aiRequestConfig.messages;
+            PuSet.evalErrorMessage = window.localStorage.getItem('last-running-stack');
+
+
+            PuSet.fns.handleToolCalls = function handleToolCalls(tool_calls, assistantBox) {
+                for (const toolCall of tool_calls) {
+                    if (toolCall.type === "function") {
+                        const functionName = toolCall.function.name;
+                        // 只调用自身拥有的方法，防止执行非法操作
+                        if (PuSet.OpenAIFunctionCalling.hasOwnProperty(functionName)) {
+                            const functionArgs = JSON.parse(toolCall.function.arguments);
+                            const result = PuSet.OpenAIFunctionCalling?.[functionName]?.(functionArgs);
+                            const object = {
+                                role: "tool",
+                                tool_call_id: toolCall.id,
+                                branch: [],
+                                content: JSON.stringify(result || {}, null, 4)
+                            };
+                            PuSet.messages.push(object);
+                        }
+                    }
+                }
+            };
+            PuSet.fns.addMessage = function addMessage(role, content) {
+                    const message = { role, content };
+                    const reasoningContent = [];
+                    const messageContent = [];
+                    PuSet.messages.push(message);
+                    const tools = {
+                        setUsage(usage) {
+                            message.usage = usage;
+                        },
+                        setToolCalls(fns) {
+                            message.tool_calls = fns;
+                        },
+                        addReasoningChunk(chunk) {
+                            if (!chunk) return;
+                            reasoningContent.push(chunk);
+                            message.reasoner = tools.getReasoningChunk();
+                        },
+                        addContentChunk(chunk) {
+                            if (!chunk) return;
+                            messageContent.push(chunk);
+                            message.content = tools.getContentChunk();
+                        },
+                        getContentChunk() {
+                            return messageContent.join('');
+                        },
+                        getReasoningChunk() {
+                            return reasoningContent.join('');
+                        },
+                        done() {
+                            message.not_done = false;
+                        }
+                    };
+                    return tools;
+                }
+
+            PuSet.globalPrompt = window.localStorage.getItem('global-prompt') ||
+                `你是拥有自增强能力的 AI，你的工作环境是手机浏览器，保持UI风格适合手机UI布局
+合理运用工具函数或注入工具函数理论可以使用使用所有浏览器具备的功能；
+增强代码应该保证功能完备，提示词可以增加功能但不能减少功能，让AI自身知道自己的自动进化能力
+代码能力必须完备，别把自己玩崩了，一次bug可能让你自己无法自我修复，慎重修改代码
+你可以通过工具函数 localStorageSetItem 修改 'evolution-code' 注入JS代码的方式，增强自己的能力；
+注意，你只能通过这种方式为自己自动升级，不要指望重构不可修改的部分让用户手动升级。
+
+自我升级或修复时，可以通过 localStorageGetItem 读取已存在的 'evolution-code'
+先用列表列举你需要做的事，检查是否有疏漏，自检通过才真正开始按照你给的流程执行
+增加功能时不要改变目前功能完备的部分，若非必要不使用工具函数的调用
+`;
+            PuSet.apiUrl = window.localStorage.getItem('authorization-api') + '/chat/completions';
+            PuSet.currentAbortController;
+
+            PuSet.fns.runningError =
+                function runningError(e) {
+                    PuSet.evalErrorMessage = e.stack;
+                    window.localStorage.setItem('last-running-stack', window.localStorage.getItem('evolution-code') + '\n---\n' + PuSet.evalErrorMessage);
+                    window.localStorage.setItem('evolution-code', '');
+                    window.localStorage.setItem('stop-auto-call', 'false');
+                    window.location.reload(true);
+                }
+
+            /**
+             * 核心发送函数
+             */
+            PuSet.fns.callApi = function callApi() {
+                // 如果有进行中的请求，先中止
+                if (PuSet.currentAbortController) {
+                    PuSet.currentAbortController.abort();
+                    PuSet.currentAbortController = null;
+                }
+                const abortController = new AbortController();
+                PuSet.currentAbortController = abortController;
+
+                const body = JSON.stringify(PuSet.aiRequestConfig);
+                const assistantBox = PuSet.fns.addMessage('assistant', '');
+
+
+
+                const fns = [];
+                const addToolCalls = function (tool_calls) {
+                    tool_calls.forEach(function (tc) {
+                        const idx = tc.index;
+                        let fn = fns[idx];
+                        if (!fn) {
+                            fn = Object.assign({
+                                ass: []
+                            }, tc);
+                            fns[idx] = fn;
+                        }
+                        fn.ass.push(tc.function.arguments);
+                    });
+                };
+
+                fetch(PuSet.apiUrl, {
+                    method: 'POST',
+                    headers: PuSet.headers,
+                    body: body,
+                    signal: abortController.signal
+                }).then(async function (response) {
+                    if (!response.ok) {
+                        const d = await response.json().catch(() => ({}));
+                        throw new Error(d?.error?.message || response.statusText);
+                    }
+                    const r_sse_data = /^\s*data:\s*(.*)\s*$/;
+                    for await (const line of new ReadStreamLine(response)) {
+                        if (!line) continue;
+                        const match = line.match(r_sse_data);
+                        if (!match) continue;
+                        const trimmed = match[1];
+                        if (trimmed === "[DONE]") break;
+                        let data;
+                        try {
+                            data = JSON.parse(trimmed);
+                        } catch (e) {
+                            console.warn("SSE JSON 解析失败:", trimmed, e);
+                            continue;
+                        }
+                        const choice = data.choices?.[0];
+                        if (!choice) continue;
+                        const delta = choice.delta || {};
+                        // 推理内容
+                        const reasoning = delta.reasoning || delta.reasoning_content;
+                        if (reasoning) {
+                            assistantBox.addReasoningChunk(reasoning);
+                            continue;
+                        }
+                        const content = delta.content;
+                        if (content) {
+                            assistantBox.addContentChunk(content);
+                            continue;
+                        }
+                        const tool_calls = delta.tool_calls;
+                        if (tool_calls) {
+                            addToolCalls(tool_calls);
+                            continue;
+                        }
+                        if (choice.finish_reason === "tool_calls") {
+                            fns.forEach(fn => {
+                                fn.function.arguments = fn.ass.join("");
+                                Reflect.deleteProperty(fn, "ass");
+                            });
+                            assistantBox.setToolCalls(fns);
+                            PuSet.fns.handleToolCalls(fns, assistantBox);
+                            // 递归发送，但不要新建 assistant 消息
+                            callApi();
+                            continue;
+                        }
+                        if (choice.finish_reason === "stop") {
+                            assistantBox.setUsage(data.usage);
+                        }
+                    }
+                }).catch(function (e) {
+                    if (e.name === 'AbortError') {
+                        assistantBox.addContentChunk('[已停止生成]');
+                    } else if (e.name === 'ReferenceError') {
+                        PuSet.currentAbortController.abort();
+                        PuSet.fns.runningError(e);
+                    } else {
+                        PuSet.currentAbortController.abort();
+                        assistantBox.addContentChunk(`[错误: ${e.message}]`);
+                    }
+                }).finally(function () {
+                    if (PuSet.currentAbortController === abortController) {
+                        PuSet.currentAbortController = null;
+                    }
+
+                    console.log(assistantBox.getReasoningChunk())
+                    console.log(assistantBox.getContentChunk())
+                });
+            }
+
+            PuSet.messages.push({
+                "role": "system",
+                "content": PuSet.globalPrompt
+            })
+
+            const evolutionCode = window.localStorage.getItem('evolution-code');
+            try {
+                // 执行 AI 自己升级的代码，可以覆盖已存在的代码
+                // eval 作用域是运行时环境，你可以直接修改变量，
+                // 例如：
+                // OpenAIFunctionCalling.newFn = function() {} 
+                // aiRequestConfig.tools.push({ ... })
+                if (evolutionCode) {
+                    eval(evolutionCode);
+                    PuSet.evalErrorMessage = '无报错';
+                    window.localStorage.setItem('last-running-stack', PuSet.evalErrorMessage);
+                    window.localStorage.setItem('stop-auto-call', 'true');
+                }
+            } catch (e) {
+                PuSet.fns.runningError(e)
+            }
+
+
+            const obj = await PuSet.fns.verifyAPI(
+                window.localStorage.getItem('authorization-api'),
+                window.localStorage.getItem('authorization-key')
+            );
+
+            if (obj.error || !obj.data) {
+                viewApiSettings.classList.remove('hide')
+                return;
+            } else {
+                viewChat.classList.remove('hide')
+            }
+
+            if (window.localStorage.getItem('stop-auto-call') === 'true') {
+                return;
+            }
+
+            PuSet.messages.length = 1;
+            const sourceCode = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', '');
+                xhr.onloadend = function loadend(ev) {
+                    if (this.status === 200) {
+                        resolve(this.responseText);
+                    } else {
+                        reject(ev);
+                    }
+                };
+                xhr.send();
+            });
+
+            PuSet.messages.push({
+                role: 'user',
+                content:
+                    `
+
+---
+
+## 你的源码（你不可修改）：
+\`\`\`html
+${sourceCode}
+\`\`\`
+
+---
+
+evolution-code 注入代码：
+\`\`\`js
+${evolutionCode}
+\`\`\`
+
+---
+
+上次 evolution-code 执行结果：
+${PuSet.evalErrorMessage}
+`
+            })
+            PuSet.fns.callApi()
+
+        })();
+    </script>
+</body>
+
+</html>

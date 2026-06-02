@@ -42,16 +42,11 @@ const MainUI = (function (attrs, list) {
 
     /**
      * bing每日壁纸会用到
-     * @param {Date} date 
+     * @param {number} timestamp  
      * @returns 
      */
-    isToday: function (date) {
-        const today = new Date;
-        if (today?.constructor === date?.constructor) {
-            const keys = ['getFullYear', 'getMonth', 'getDate'];
-            return keys.every(fx => date[fx]() === today[fx]());
-        }
-        return false;
+    isToday(timestamp) {
+        return Math.floor(Date.now() / 86400000) === Math.floor(timestamp / 86400000);
     },
 
     /**

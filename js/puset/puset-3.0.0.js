@@ -242,8 +242,9 @@ const PuSet = (function () {
          * @returns {PuSetConstructor} 合并后的新实例
          */
         add(selector, context) {
-            return PuSetFactory.uniqueSort(push.apply(PuSetFactory(selector, context), this))
-                .setProperty('prevObject', this);
+            const res = PuSetFactory(selector, context);
+            push.apply(res, this);
+            return PuSetFactory.uniqueSort(res).setProperty('prevObject', this);
         }
 
         /**
@@ -467,8 +468,10 @@ const PuSet = (function () {
          */
         uniqueSort(likeArray) {
             // 先排序，让重复元素相邻
-            return this.reverseForEachWhile(sort.call(likeArray, compareDocumentPositionSort), function (v, i, a) {
-                // 再去重，存在重复时移除索引值更大的项
+            sort.call(likeArray, compareDocumentPositionSort);
+
+            // 再去重，存在重复时移除索引值更大的项
+            return this.reverseForEachWhile(likeArray, function unique(v, i, a) {
                 if (v === a[i - 1]) {
                     splice.call(a, i, 1);
                 }
@@ -1314,6 +1317,9 @@ const PuSet = (function () {
 
     // 扩展组件管理方法
     Object.assign(PuSetFactory, {
+
+        ensureObjectProperty,
+
         /**
          * 获取组件实例
          * @param {string} [name=DEFAULT_NAME] - 组件名

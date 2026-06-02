@@ -210,42 +210,55 @@
             // 处理Bing壁纸
             const handleBing = async () => {
                 let localFile = null;
+                // 1. 检查本地缓存壁纸
                 try {
                     localFile = await storage.getItem("puset-local-wallpaper-bing");
-                    if (localFile && MainUI.isToday(localFile.lastModifiedDate)) {
+                    if (localFile) {
                         MainUI.loadBackground(URL.createObjectURL(localFile), localFile.type);
-                        return;
+                        if (MainUI.isToday(localFile.lastModified)) {
+                            return; // 今天的壁纸已存在，直接返回
+                        }
                     }
                 } catch (error) {
                     console.log("Bing wallpaper is overdue or not found");
                 }
 
+                // 2. 获取并更新最新的 Bing 壁纸
                 try {
+                    // 获取图片 URL
                     const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.bing_background)}`);
                     const json = await response.json();
                     const imageUrl = new URL(json?.images?.[0]?.url, MainUI.bing_background).href;
-                    const img = await MainUI.loadImage(imageUrl, true);
 
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    canvas.getContext("2d").drawImage(img, 0, 0);
+                    // 加载原图并转换为 PNG
+                    const blob = await new Promise((resolve, reject) => {
+                        MainUI.loadImage(imageUrl, true).then(img => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = img.naturalWidth;
+                            canvas.height = img.naturalHeight;
+                            canvas.getContext("2d").drawImage(img, 0, 0);
+                            canvas.toBlob(resolve, 'image/png', 1);
+                        }).catch(reject);
+                    });
 
-                    canvas.toBlob(blob => {
-                        localFile = new File([blob], ("wallpaper." + blob.type).replace(/\/+/g, '.'), { type: blob.type });
-                        storage.setItem("puset-local-wallpaper-bing", localFile);
-                        MainUI.loadBackground(URL.createObjectURL(localFile), localFile.type);
+                    // 创建文件并保存到本地
+                    localFile = new File([blob], ("wallpaper." + blob.type).replace(/\/+/g, '.'), { type: blob.type });
+                    await storage.setItem("puset-local-wallpaper-bing", localFile);
+                    MainUI.loadBackground(URL.createObjectURL(localFile), localFile.type);
+
+                    // 上传到服务器（失败仅打印，不影响主流程）
+                    try {
                         const fd = new FormData();
                         fd.append('file', localFile);
-                        fetch('/api/upload.php', {
-                            method: 'POST',
-                            body: fd
-                        }).then(r => r.json()).then(json => {
-                            console.log(json.message)
-                        }).catch(() => console.log('存储失败'))
-                    });
+                        const uploadRes = await fetch('/api/upload.php', { method: 'POST', body: fd });
+                        const uploadJson = await uploadRes.json();
+                        console.log(uploadJson.message);
+                    } catch (uploadError) {
+                        console.log('存储失败');
+                    }
                 } catch (error) {
                     console.warn("无法获取最新 bing 壁纸", error);
+                    // 回退：使用本地缓存的壁纸（即使过期）或随机壁纸
                     if (localFile) {
                         MainUI.loadBackground(URL.createObjectURL(localFile), localFile.type);
                     } else {
@@ -253,7 +266,6 @@
                     }
                 }
             };
-
             // 加载背景主函数
             MainUI.loadBackground = async (path, type) => {
                 try {

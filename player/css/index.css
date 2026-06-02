@@ -492,3 +492,7 @@ ul.file-list>li.file>.icon::after {
 ul.file-list>li:hover {
     border-color: blue;
 }
+
+.scroll-y {
+    overflow-y: scroll;
+}
