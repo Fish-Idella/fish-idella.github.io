@@ -393,9 +393,6 @@ Promise.resolve(StorageHelper.open({
      * 核心发送函数
      */
     function callApi() {
-        if (!apiUrl) {
-            return showModalDialog("先填写API", "确认")
-        }
         // 如果有进行中的请求，先中止
         if (currentAbortController) {
             currentAbortController.abort();
@@ -406,6 +403,12 @@ Promise.resolve(StorageHelper.open({
 
         const body = messagePurifying(messages);
         const assistantBox = addMessage('assistant', '');
+
+
+        if (!apiUrl) {
+            assistantBox.addContentChunk('[提示：]\n\n需要点击页面左上角打开抽屉栏，配置API之后才能正常使用\n\n所有数据存储在浏览器环境，切换浏览器会丢失所有信息');
+            return
+        }
 
         autoScroll = true;
         sendMsgBtn.name = 'stop';
@@ -562,7 +565,10 @@ Promise.resolve(StorageHelper.open({
         data.currentModel = modelValue;
         const [id, model] = modelValue.split("||");
         currentApiConfig = data.apiList[id];
-        if (!currentApiConfig) throw new Error(`API 配置不存在: ${id}`);
+        if (!currentApiConfig) {
+            data.currentModel = '';
+            return;
+        }
         apiUrl = urlConcat(currentApiConfig.api, "chat/completions");
         aiRequestConfig.model = model;
         headers.Authorization = `Bearer ${currentApiConfig.key}`;
@@ -934,6 +940,9 @@ Promise.resolve(StorageHelper.open({
                     const value = newId + "||" + name;
                     modelSelect.appendChild(new Option(name, value, false, false));
                 });
+                if (!data.currentModel) {
+                    initAPI(modelSelect.children.item(0).value);
+                }
                 storage.setItem('chat-data', data);
                 PuSet.show(apiModal, false);
             }).catch(e => showModalDialog(`测试链接失败：${e.message}`, "确认"));
