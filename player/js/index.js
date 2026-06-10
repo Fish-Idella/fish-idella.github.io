@@ -586,6 +586,7 @@ const PuSetPlayer = (function () {
     }, {
         composedPath: composedPath
     });
+
     // 暴露到全局环境
     return (globalThis || window || {}).PuSetPlayer = PuSetPlayer;
 
@@ -597,7 +598,7 @@ const PuSetPlayer = (function () {
     const dashboard = document.querySelector("div.dashboard");
     const urlInput = dashboard.querySelector(".url-box>input[type=url]");
 
-    urlInput.addEventListener("pointerup", function(ev) {
+    urlInput.addEventListener("pointerup", function (ev) {
         ev.stopPropagation();
     })
 

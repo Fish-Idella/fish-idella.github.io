@@ -25,8 +25,7 @@
 
 <body class="view">
     <div id="chat" class="view hide">
-        <!-- 首次自增强时至少自动补全聊天 UI，让用户可以与你交互 -->
-        <header>标题 + 功能按钮</header>
+        <header title="标题栏"></header>
         <div title="输出">初始化中……</div>
         <footer title="输入"></footer>
     </div>
@@ -44,61 +43,34 @@
     </form>
     <script>
 
-        // 流式读取行迭代器
-        class ReadStreamLine {
-            constructor(response) {
-                this.response = response;
-            }
-            [Symbol.asyncIterator]() {
-                const reader = this.response.body.getReader();
-                const decoder = new TextDecoder("UTF-8");
-                let buffer = "";
-                return {
-                    next: async function next() {
-                        const idx = buffer.indexOf("\n");
-                        if (idx >= 0) {
-                            const msg = buffer.slice(0, idx);
-                            buffer = buffer.slice(idx + 1);
-                            return {
-                                value: msg,
-                                done: false
-                            };
-                        }
-                        const {
-                            done,
-                            value
-                        } = await reader.read();
-                        if (done) {
-                            if (buffer.length > 0) {
-                                const msg = buffer;
-                                buffer = '';
-                                return {
-                                    value: msg,
-                                    done: false
-                                };
-                            }
-                            return {
-                                value: buffer,
-                                done: true
-                            };
-                        } else {
-                            buffer += decoder.decode(value, {
-                                stream: true
-                            });
-                            return next();
-                        }
-                    }
-                };
-            }
-        }
 
+        window.PuSet = (async function () {
 
-        (async function () {
+            const defaultPrompt = `
+你是拥有自增强能力的 AI，你的工作环境是手机浏览器，保持UI风格适合手机UI布局
+合理运用工具函数或注入工具函数理论可以使用使用所有浏览器具备的功能；
 
-            window.PuSet = {};
-            PuSet.fns = {};
+你可以通过工具函数 localStorageSetItem 修改 'evolution-code' 注入JS代码的方式，增强自己的能力；
+增强代码应该保证功能完备，提示词可以增加功能但不能减少功能，让AI自身知道自己的自动进化能力
+更新代码必须自检合格再注入，避免错误导致页面崩溃卡死
 
-            PuSet.fns.verifyAPI = async function verifyAPI(api, key) {
+你应该尽快保证UI上的输入输出功能，让用户可以输入对话，指导你的进化方向
+
+注意，你只能通过这种方式为自己自动升级，不要指望重构不可修改的部分让用户手动升级。
+
+自我升级或修复时，可以通过 localStorageGetItem 读取已存在的 'evolution-code'
+先用列表列举你需要做的事，检查是否有疏漏，自检通过才真正开始按照你给的流程执行
+增加功能时不要改变目前功能完备的部分，若非必要不使用工具函数的调用
+
+避免单个代码文档太大，修改不方便，
+模块化存储JS代码到不同的位置，虽然它们不会自动加载执行，但是你可以在'evolution-code'中调用执行
+固定的常量字面量，例如[css style]、[system prompt]等也可以存储为单独的项
+`.trim();
+
+            const PuSet = { fns: {} };
+            const fns = PuSet.fns;
+
+            fns.verifyAPI = async function verifyAPI(api, key) {
                 try {
                     const r = await fetch(api + '/models', {
                         headers: {
@@ -113,35 +85,52 @@
                 }
             };
 
-            const viewChat = document.getElementById('chat');
-            const viewApiSettings = document.getElementById('api-settings');
-            viewApiSettings.addEventListener('submit', function (ev) {
-                ev.preventDefault();
-                const form = this;
-                const models = document.getElementById('available-models')
 
-                const api = form[0].value.trim().replace(/\/+$/, '');
-                const key = form[1].value.trim();
+            // 流式读取行迭代器
+            function ReadStreamLine(response) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("UTF-8");
+                let buffer = "";
+                const b = {
+                    next: async function next() {
+                        const idx = buffer.indexOf("\n");
+                        if (idx >= 0) {
+                            const msg = buffer.slice(0, idx);
+                            buffer = buffer.slice(idx + 1);
+                            return { value: msg, done: false };
+                        }
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            if (buffer.length > 0) {
+                                const msg = buffer;
+                                buffer = '';
+                                return { value: msg, done: false };
+                            }
+                            return { value: buffer, done: true };
+                        } else {
+                            buffer += decoder.decode(value, { stream: true });
+                            return next();
+                        }
+                    },
+                    [Symbol.asyncIterator]() {
+                        return b;
+                    }
+                };
+                return b;
+            };
 
-                if (ev.submitter === form[2]) {
-                    PuSet.fns.verifyAPI(api, key).then(function (json) {
-                        json.data.forEach(function (obj) {
-                            const id = obj.id;
-                            models.appendChild(new Option(id, id))
-                        });
-                        form[3].disabled = form[4].disabled = false
-                    });
-                    return
-                }
-                if (ev.submitter === form[4]) {
-                    window.localStorage.setItem('authorization-api', api);
-                    window.localStorage.setItem('authorization-key', key);
-                    window.localStorage.setItem('selected-model', form[3].value);
-                    window.location.reload(true);
-                }
+            const sourceCode = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', '');
+                xhr.onloadend = function loadend(ev) {
+                    if (this.readyState === 4 && this.status === 200) {
+                        resolve(this.responseText);
+                    } else {
+                        reject(ev.message);
+                    }
+                };
+                xhr.send();
             });
-
-
 
             PuSet.OpenAIFunctionCalling = {
                 localStorageSetItem(args) {
@@ -155,6 +144,9 @@
                     return {
                         value: window.localStorage.getItem(args.key)
                     }
+                },
+                getHTMLSourceCode() {
+                    return sourceCode;
                 },
                 reload() {
                     window.location.reload(true);
@@ -207,6 +199,17 @@
                 }, {
                     type: "function",
                     function: {
+                        name: "getHTMLSourceCode",
+                        description: "获取入口HTML页面的代码，里面存在不可编辑的源码",
+                        parameters: {
+                            type: "object",
+                            properties: {},
+                            required: []
+                        }
+                    }
+                }, {
+                    type: "function",
+                    function: {
                         name: "reload",
                         description: "调用 window.location.reload(true) 刷新页面",
                         parameters: {
@@ -229,7 +232,7 @@
             PuSet.evalErrorMessage = window.localStorage.getItem('last-running-stack');
 
 
-            PuSet.fns.handleToolCalls = function handleToolCalls(tool_calls, assistantBox) {
+            fns.handleToolCalls = function handleToolCalls(tool_calls, assistantBox) {
                 for (const toolCall of tool_calls) {
                     if (toolCall.type === "function") {
                         const functionName = toolCall.function.name;
@@ -248,69 +251,57 @@
                     }
                 }
             };
-            PuSet.fns.addMessage = function addMessage(role, content) {
-                    const message = { role, content };
-                    const reasoningContent = [];
-                    const messageContent = [];
-                    PuSet.messages.push(message);
-                    const tools = {
-                        setUsage(usage) {
-                            message.usage = usage;
-                        },
-                        setToolCalls(fns) {
-                            message.tool_calls = fns;
-                        },
-                        addReasoningChunk(chunk) {
-                            if (!chunk) return;
-                            reasoningContent.push(chunk);
-                            message.reasoner = tools.getReasoningChunk();
-                        },
-                        addContentChunk(chunk) {
-                            if (!chunk) return;
-                            messageContent.push(chunk);
-                            message.content = tools.getContentChunk();
-                        },
-                        getContentChunk() {
-                            return messageContent.join('');
-                        },
-                        getReasoningChunk() {
-                            return reasoningContent.join('');
-                        },
-                        done() {
-                            message.not_done = false;
-                        }
-                    };
-                    return tools;
-                }
+            fns.addMessage = function addMessage(role, content) {
+                const message = { role, content };
+                const reasoningContent = [];
+                const messageContent = [];
+                PuSet.messages.push(message);
+                const tools = {
+                    setUsage(usage) {
+                        message.usage = usage;
+                    },
+                    setToolCalls(fns) {
+                        message.tool_calls = fns;
+                    },
+                    addReasoningChunk(chunk) {
+                        if (!chunk) return;
+                        reasoningContent.push(chunk);
+                        message.reasoner = tools.getReasoningChunk();
+                    },
+                    addContentChunk(chunk) {
+                        if (!chunk) return;
+                        messageContent.push(chunk);
+                        message.content = tools.getContentChunk();
+                    },
+                    getContentChunk() {
+                        return messageContent.join('');
+                    },
+                    getReasoningChunk() {
+                        return reasoningContent.join('');
+                    },
+                    done() {
+                        message.not_done = false;
+                    }
+                };
+                return tools;
+            }
 
-            PuSet.globalPrompt = window.localStorage.getItem('global-prompt') ||
-                `你是拥有自增强能力的 AI，你的工作环境是手机浏览器，保持UI风格适合手机UI布局
-合理运用工具函数或注入工具函数理论可以使用使用所有浏览器具备的功能；
-增强代码应该保证功能完备，提示词可以增加功能但不能减少功能，让AI自身知道自己的自动进化能力
-代码能力必须完备，别把自己玩崩了，一次bug可能让你自己无法自我修复，慎重修改代码
-你可以通过工具函数 localStorageSetItem 修改 'evolution-code' 注入JS代码的方式，增强自己的能力；
-注意，你只能通过这种方式为自己自动升级，不要指望重构不可修改的部分让用户手动升级。
-
-自我升级或修复时，可以通过 localStorageGetItem 读取已存在的 'evolution-code'
-先用列表列举你需要做的事，检查是否有疏漏，自检通过才真正开始按照你给的流程执行
-增加功能时不要改变目前功能完备的部分，若非必要不使用工具函数的调用
-`;
+            PuSet.globalPrompt = window.localStorage.getItem('global-prompt') || defaultPrompt;
             PuSet.apiUrl = window.localStorage.getItem('authorization-api') + '/chat/completions';
             PuSet.currentAbortController;
 
-            PuSet.fns.runningError =
-                function runningError(e) {
-                    PuSet.evalErrorMessage = e.stack;
-                    window.localStorage.setItem('last-running-stack', window.localStorage.getItem('evolution-code') + '\n---\n' + PuSet.evalErrorMessage);
-                    window.localStorage.setItem('evolution-code', '');
-                    window.localStorage.setItem('stop-auto-call', 'false');
-                    window.location.reload(true);
-                }
+            fns.runningError = function runningError(e) {
+                PuSet.evalErrorMessage = e.stack;
+                window.localStorage.setItem('last-running-stack', window.localStorage.getItem('evolution-code') + '\n---\n' + PuSet.evalErrorMessage);
+                window.localStorage.setItem('evolution-code', '');
+                window.localStorage.setItem('stop-auto-call', 'false');
+                window.location.reload(true);
+            };
 
             /**
              * 核心发送函数
              */
-            PuSet.fns.callApi = function callApi() {
+            fns.callApi = function callApi() {
                 // 如果有进行中的请求，先中止
                 if (PuSet.currentAbortController) {
                     PuSet.currentAbortController.abort();
@@ -320,22 +311,19 @@
                 PuSet.currentAbortController = abortController;
 
                 const body = JSON.stringify(PuSet.aiRequestConfig);
-                const assistantBox = PuSet.fns.addMessage('assistant', '');
+                const assistantBox = fns.addMessage('assistant', '');
 
 
 
-                const fns = [];
+                const fn_group = [];
                 const addToolCalls = function (tool_calls) {
                     tool_calls.forEach(function (tc) {
                         const idx = tc.index;
-                        let fn = fns[idx];
+                        let fn = fn_group[idx];
                         if (!fn) {
-                            fn = Object.assign({
-                                ass: []
-                            }, tc);
-                            fns[idx] = fn;
+                            (fn_group[idx] = fn = tc).__arguments_fragments__ = [];
                         }
-                        fn.ass.push(tc.function.arguments);
+                        fn.__arguments_fragments__.push(tc.function.arguments);
                     });
                 };
 
@@ -350,7 +338,7 @@
                         throw new Error(d?.error?.message || response.statusText);
                     }
                     const r_sse_data = /^\s*data:\s*(.*)\s*$/;
-                    for await (const line of new ReadStreamLine(response)) {
+                    for await (const line of ReadStreamLine(response)) {
                         if (!line) continue;
                         const match = line.match(r_sse_data);
                         if (!match) continue;
@@ -383,12 +371,12 @@
                             continue;
                         }
                         if (choice.finish_reason === "tool_calls") {
-                            fns.forEach(fn => {
+                            fn_group.forEach(fn => {
                                 fn.function.arguments = fn.ass.join("");
-                                Reflect.deleteProperty(fn, "ass");
+                                Reflect.deleteProperty(fn, "__arguments_fragments__");
                             });
-                            assistantBox.setToolCalls(fns);
-                            PuSet.fns.handleToolCalls(fns, assistantBox);
+                            assistantBox.setToolCalls(fn_group);
+                            fns.handleToolCalls(fn_group, assistantBox);
                             // 递归发送，但不要新建 assistant 消息
                             callApi();
                             continue;
@@ -402,7 +390,7 @@
                         assistantBox.addContentChunk('[已停止生成]');
                     } else if (e.name === 'ReferenceError') {
                         PuSet.currentAbortController.abort();
-                        PuSet.fns.runningError(e);
+                        fns.runningError(e);
                     } else {
                         PuSet.currentAbortController.abort();
                         assistantBox.addContentChunk(`[错误: ${e.message}]`);
@@ -436,67 +424,70 @@
                     window.localStorage.setItem('stop-auto-call', 'true');
                 }
             } catch (e) {
-                PuSet.fns.runningError(e)
+                fns.runningError(e)
             }
 
 
-            const obj = await PuSet.fns.verifyAPI(
-                window.localStorage.getItem('authorization-api'),
-                window.localStorage.getItem('authorization-key')
-            );
 
-            if (obj.error || !obj.data) {
-                viewApiSettings.classList.remove('hide')
-                return;
-            } else {
-                viewChat.classList.remove('hide')
-            }
 
-            if (window.localStorage.getItem('stop-auto-call') === 'true') {
-                return;
-            }
 
-            PuSet.messages.length = 1;
-            const sourceCode = await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', '');
-                xhr.onloadend = function loadend(ev) {
-                    if (this.status === 200) {
-                        resolve(this.responseText);
-                    } else {
-                        reject(ev);
+            async function autoCall() {
+
+                const viewChat = document.getElementById('chat');
+                const viewApiSettings = document.getElementById('api-settings');
+                viewApiSettings.addEventListener('submit', function (ev) {
+                    ev.preventDefault();
+                    const form = this;
+                    const models = document.getElementById('available-models')
+
+                    const api = form[0].value.trim().replace(/\/+$/, '');
+                    const key = form[1].value.trim();
+
+                    if (ev.submitter === form[2]) {
+                        fns.verifyAPI(api, key).then(function (json) {
+                            json.data.forEach(function (obj) {
+                                const id = obj.id;
+                                models.appendChild(new Option(id, id))
+                            });
+                            form[3].disabled = form[4].disabled = false
+                        });
+                        return
                     }
-                };
-                xhr.send();
-            });
+                    if (ev.submitter === form[4]) {
+                        window.localStorage.setItem('authorization-api', api);
+                        window.localStorage.setItem('authorization-key', key);
+                        window.localStorage.setItem('selected-model', form[3].value);
+                        window.location.reload(true);
+                    }
+                });
 
-            PuSet.messages.push({
-                role: 'user',
-                content:
-                    `
+                const obj = await fns.verifyAPI(
+                    window.localStorage.getItem('authorization-api'),
+                    window.localStorage.getItem('authorization-key')
+                );
 
----
+                if (obj.error || !obj.data) {
+                    viewApiSettings.classList.remove('hide')
+                    return;
+                } else {
+                    viewChat.classList.remove('hide')
+                }
 
-## 你的源码（你不可修改）：
-\`\`\`html
-${sourceCode}
-\`\`\`
+                if (window.localStorage.getItem('stop-auto-call') === 'true') {
+                    return;
+                }
 
----
+                PuSet.messages.length = 1;
+                PuSet.messages.push({
+                    role: 'user',
+                    content: `上次 evolution-code 执行结果：\n` + PuSet.evalErrorMessage + `\n现在开始升级自身吧！`
+                })
+                fns.callApi()
+            }
 
-evolution-code 注入代码：
-\`\`\`js
-${evolutionCode}
-\`\`\`
+            autoCall();
 
----
-
-上次 evolution-code 执行结果：
-${PuSet.evalErrorMessage}
-`
-            })
-            PuSet.fns.callApi()
-
+            return PuSet;
         })();
     </script>
 </body>

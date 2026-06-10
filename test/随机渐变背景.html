@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>圆锥渐变 + 径向柔化中心 | 无接缝 · 可开关柔光</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            transition: background 0.3s ease;
+        }
+
+        .glass-card {
+            background: rgba(15, 25, 35, 0.65);
+            backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            max-width: 620px;
+            width: 90%;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .sub {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            margin-bottom: 1.2rem;
+            background: rgba(0,0,0,0.3);
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+        }
+
+        .info-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 1.5rem;
+            padding: 1rem 1.3rem;
+            margin: 1.2rem 0;
+            text-align: left;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            word-break: break-word;
+            border-left: 4px solid #ffaa44;
+        }
+
+        .angle-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+
+        .angle-badge {
+            background: #00000066;
+            padding: 0.2rem 1rem;
+            border-radius: 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffe6a3;
+        }
+
+        .color-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0 10px;
+            justify-content: center;
+        }
+
+        .color-chip {
+            width: 48px;
+            height: 48px;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.8);
+            transition: transform 0.1s ease;
+            cursor: pointer;
+        }
+
+        .color-chip:hover {
+            transform: scale(1.05);
+        }
+
+        .seamless-note {
+            font-size: 0.7rem;
+            background: #2a6f6f33;
+            border-radius: 1rem;
+            padding: 0.2rem 0.6rem;
+            display: inline-block;
+            margin-top: 6px;
+            color: #c0ffd0;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.4);
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-switch input {
+            width: 40px;
+            height: 20px;
+            appearance: none;
+            background: #555;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        .toggle-switch input:checked {
+            background: #ffaa44;
+        }
+
+        .toggle-switch input::before {
+            content: "";
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            transition: 0.2s;
+        }
+
+        .toggle-switch input:checked::before {
+            transform: translateX(20px);
+        }
+
+        button {
+            background: white;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 3rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: #1e2a3a;
+            margin-top: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            background: #fafaff;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        footer {
+            margin-top: 1.3rem;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .code-snippet {
+            font-size: 0.68rem;
+            background: #00000066;
+            padding: 8px;
+            border-radius: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 8px;
+            font-family: monospace;
+        }
+
+        @media (max-width: 500px) {
+            .glass-card { padding: 1.5rem; }
+            .color-chip { width: 40px; height: 40px; }
+            .info-panel { font-size: 0.7rem; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-card">
+    <h1>🌀 圆锥 + 径向柔光</h1>
+    <div class="sub">无缝圆锥渐变 · 中心柔化可开关</div>
+    
+    <div class="info-panel">
+        <div class="angle-row">
+            <span>🎛️ 起始角度</span>
+            <span class="angle-badge" id="angleDisplay">0°</span>
+        </div>
+        <div>🎨 核心颜色（随机生成，首尾闭环）</div>
+        <div class="color-preview" id="colorPalette"></div>
+        <div class="seamless-note">✨ 已自动将首色复制到末尾 → 圆锥无硬边</div>
+        <div class="code-snippet" id="gradientCode"></div>
+    </div>
+
+    <div class="control-group">
+        <span style="color:white;">🌀 中心柔化径向渐变</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="softCenterToggle" checked>
+            <span style="color:white; font-size:0.8rem;">开启</span>
+        </label>
+    </div>
+    
+    <button id="randomizeBtn">
+        ✨ 随机生成新渐变 ✨
+    </button>
+    <footer>圆锥渐变 + 可叠加径向柔光层（半透光晕覆盖中心，消除突兀汇聚点）</footer>
+</div>
+
+<script>
+    (function() {
+        // 随机整数
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 鲜艳 HSL
+        function getRandomColor() {
+            const hue = randomInt(0, 360);
+            const saturation = randomInt(65, 88);
+            const lightness = randomInt(55, 75);
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        function generateRandomColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(getRandomColor());
+            }
+            return colors;
+        }
+
+        function getRandomAngle() {
+            return randomInt(0, 359);
+        }
+
+        // 构建无缝圆锥渐变 (自动首色闭环)
+        function buildSeamlessConicGradient(angleDeg, baseColors) {
+            const seamlessColors = [...baseColors, baseColors[0]];
+            const colorStops = seamlessColors.join(', ');
+            return `conic-gradient(from ${angleDeg}deg, ${colorStops})`;
+        }
+
+        // 构建径向柔化层: 从中心半透光晕到完全透明，可随机生成光晕颜色（暖/冷/中性半透）
+        function buildRadialSoftening() {
+            // 随机决定光晕主色：偏暖白、冷白、淡粉、淡金等，避免太突兀
+            const variants = [
+                'radial-gradient(circle at center, rgba(255, 240, 200, 0.35) 0%, rgba(255, 255, 255, 0) 70%)',
+                'radial-gradient(circle at center, rgba(200, 220, 255, 0.4) 0%, rgba(255, 255, 255, 0) 75%)',
+                'radial-gradient(circle at center, rgba(255, 200, 210, 0.3) 0%, rgba(255, 255, 255, 0) 68%)',
+                'radial-gradient(circle at center, rgba(230, 245, 200, 0.35) 0%, rgba(255, 255, 255, 0) 72%)',
+                'radial-gradient(circle at center, rgba(255, 180, 140, 0.3) 0%, rgba(255, 255, 255, 0) 80%)',
+                'radial-gradient(circle at center, rgba(210, 230, 250, 0.45) 0%, rgba(255, 255, 255, 0) 65%)'
+            ];
+            // 随机挑选一款柔化效果，避免每次一样
+            const randomIndex = Math.floor(Math.random() * variants.length);
+            return variants[randomIndex];
+        }
+
+        // 获取径向渐变 (固定或随机风格) 但为了每次刷新可以略微不同，在更新背景时也可变化
+        // 为了开关方便，我们定义一个获取当前径向渐变字符串的函数，每次刷新时重新随机一次风格。
+        let currentRadialGradient = buildRadialSoftening();
+
+        function refreshRadialGradient() {
+            currentRadialGradient = buildRadialSoftening();
+        }
+
+        // 更新整个背景: 根据是否开启柔化层，组合背景渐变
+        let softEnabled = true; // 默认开启
+        let currentConicGradient = '';
+        let currentColors = [];
+        let currentAngle = 0;
+
+        function applyBackground() {
+            let bgValue = currentConicGradient;
+            if (softEnabled && currentConicGradient) {
+                // 先写径向渐变(上层)，再写圆锥渐变(下层)。径向渐变覆盖中心区域，呈现柔光效果
+                bgValue = `${currentRadialGradient}, ${currentConicGradient}`;
+            }
+            document.body.style.background = bgValue;
+            document.body.style.backgroundAttachment = 'fixed';
+            document.body.style.backgroundSize = 'cover';
+            // 更新代码展示区 (展示实际生效的background)
+            const codeElem = document.getElementById('gradientCode');
+            if (softEnabled) {
+                codeElem.textContent = `background: ${currentConicGradient},\n        ${currentRadialGradient};`;
+            } else {
+                codeElem.textContent = `background: ${currentConicGradient};`;
+            }
+        }
+
+        // 重新生成所有随机内容 (圆锥角度、颜色，径向渐变随机风格)
+        function generateNewBackground() {
+            // 随机生成颜色和角度
+            const colorCount = randomInt(3, 7);
+            const baseColors = generateRandomColors(colorCount);
+            const angle = getRandomAngle();
+            currentColors = baseColors;
+            currentAngle = angle;
+            currentConicGradient = buildSeamlessConicGradient(angle, baseColors);
+            
+            // 刷新径向渐变效果（换一种柔光风格）
+            refreshRadialGradient();
+            
+            // 更新UI色块、角度显示
+            document.getElementById('angleDisplay').textContent = `${angle}°`;
+            const paletteContainer = document.getElementById('colorPalette');
+            paletteContainer.innerHTML = '';
+            baseColors.forEach((color, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'color-chip';
+                chip.style.backgroundColor = color;
+                chip.title = `${color}`;
+                paletteContainer.appendChild(chip);
+            });
+            
+            // 应用背景（考虑柔化开关状态）
+            applyBackground();
+        }
+
+        // 监听开关变化
+        const toggleCheckbox = document.getElementById('softCenterToggle');
+        toggleCheckbox.addEventListener('change', (e) => {
+            softEnabled = e.target.checked;
+            applyBackground();
+        });
+
+        // 随机按钮
+        const randomBtn = document.getElementById('randomizeBtn');
+        randomBtn.addEventListener('click', () => {
+            generateNewBackground();
+            // 按钮反馈
+            randomBtn.style.transform = 'scale(0.96)';
+            setTimeout(() => { randomBtn.style.transform = ''; }, 120);
+        });
+
+        // 初始化
+        generateNewBackground();
+    })();
+</script>
+</body>
+</html>

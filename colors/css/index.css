@@ -29,9 +29,12 @@
     top: 50px;
     left: 50px;
     background-color: white;
-    background-image: url(hue.png);
+    /* background-image: url(hue.png); */
+    background-image: conic-gradient(from 0deg, hsl(0, 100%, 50%), hsl(30, 100%, 50%), hsl(60, 100%, 50%), hsl(90, 100%, 50%),
+            hsl(120, 100%, 50%), hsl(150, 100%, 50%), hsl(180, 100%, 50%), hsl(210, 100%, 50%), hsl(240, 100%, 50%),
+            hsl(270, 100%, 50%), hsl(300, 100%, 50%), hsl(330, 100%, 50%), hsl(360, 100%, 50%));
     background-repeat: no-repeat;
-    background-position: -110px -110px;
+    /* background-position: -110px -110px; */
     border-radius: 130px;
 }
 

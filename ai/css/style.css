@@ -458,8 +458,8 @@ label.checkbox-button>.outlay {
 .tips {
 	font-size: 0.8rem;
 	color: var(--color-dark);
-	margin: 0.5rem 0;
-	gap: 0.5rem;
+	padding: 0.4rem 0;
+	gap: 0.4rem;
 }
 
 #data-dialog {
@@ -488,5 +488,21 @@ label.checkbox-button>.outlay {
 }
 
 .nli {
-	margin: 0.4rem 0;
+	padding: 0.4rem 0 0.4rem 0.4rem;
+}
+
+.archive summary {
+	color: #2196F3;
+	padding: 0.4rem;
+	cursor: pointer;
+}
+
+.hover:hover ,
+.hover:hover button{
+	background-color: #ffffff;
+	border-radius: 5px;
+}
+
+.subtitle {
+	padding: 0 0 0 0.4rem;
 }

@@ -182,10 +182,11 @@
 
     <div id="drawer" class="view unselect overlay hide">
         <nav class="flex-vertical drawer-nav">
-            <div class="fill scroll-y">
+            <div class="fill scroll-y archive">
                 <details id="character-list">
-                    <summary class="flex-horizontal" style="line-height: 3rem;">
-                        <h2 class="fill unify">资料卡</h2>
+                    <summary class="hover">资料卡</summary>
+                    <div class="flex-horizontal subtitle">
+                        <div class="fill place-center tips">世界书中的词条</div>
                         <div class="flex-horizontal place-center">
                             <button name="add" class="character" title="创建">
                                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -205,9 +206,9 @@
                                 </svg>
                             </button> -->
                         </div>
-                    </summary>
+                    </div>
                     <ul class="fill unify">
-                        <li class="flex-horizontal align-center nli">
+                        <li class="flex-horizontal align-center nli hover">
                             <span class="name fill">默认资料卡</span>
                             <button name="delete" title="删除">
                                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -220,8 +221,9 @@
                     </ul>
                 </details>
                 <details id="agent-list">
-                    <summary class="flex-horizontal" style="line-height: 3rem;">
-                        <h2 class="fill unify">提示词</h2>
+                    <summary class="hover">提示词</summary>
+                    <div class="flex-horizontal subtitle">
+                        <div class="fill place-center tips">独立系统提示词</div>
                         <div class="flex-horizontal place-center">
                             <button name="add" class="agent" title="创建">
                                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -234,9 +236,9 @@
                                 </svg>
                             </button>
                         </div>
-                    </summary>
+                    </div>
                     <ul class="fill unify">
-                        <li class="flex-horizontal align-center nli">
+                        <li class="flex-horizontal align-center nli hover">
                             <span class="name fill">默认提示词</span>
                             <button name="delete" title="删除">
                                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -249,7 +251,7 @@
                     </ul>
                 </details>
             </div>
-            <div class="flex-vertical settings gap-0_4rem" style="margin-top: 0.4rem;">
+            <div class="flex-vertical settings gap-0_4rem" style="margin: 0.4rem 0;">
                 <!-- <button type="button" name="api">导入</button>
                 <button type="button" name="api">导出</button> -->
                 <button type="button" name="api">管理 API</button>

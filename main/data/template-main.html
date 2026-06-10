@@ -86,6 +86,46 @@
             });
         }
 
+        // 随机整数 [min,max]
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 生成鲜艳但舒服的 HSL 颜色 (高饱和，中亮度)
+        function getRandomColor() {
+            const hue = randomInt(0, 360);
+            const saturation = randomInt(65, 88);  // 高饱和显色好
+            const lightness = randomInt(55, 75);   // 明亮但不刺眼
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        // 生成一组不重复的随机颜色 (数量 n，允许极小概率重复，但几乎不会)
+        function generateRandomColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(getRandomColor());
+            }
+            return colors;
+        }
+
+        // 获取随机起始角度 0~359
+        function getRandomAngle() {
+            return randomInt(0, 359);
+        }
+
+        /**
+         * 构建无缝圆锥渐变
+         * @param {number} angleDeg 起始角度
+         * @param {string[]} baseColors 原始颜色数组 (3~7种)
+         * @returns {string} CSS conic-gradient 字符串，首尾闭合无接缝
+         */
+        function buildSeamlessConicGradient(angleDeg, baseColors) {
+            // 关键：将第一个颜色追加到末尾，使终点颜色 == 起点颜色，消除 0°/360° 边界硬缝
+            const seamlessColors = [...baseColors, baseColors[0]];
+            const colorStops = seamlessColors.join(', ');
+            return `conic-gradient(from ${angleDeg}deg, ${colorStops})`;
+        }
+
         /**
          * 用户自定义的背景处理函数
          * @param {Element} target 
@@ -101,7 +141,10 @@
             const mCanvas2D = mBackground.querySelector("canvas.d2");
             const mCanvas3D = mBackground.querySelector("canvas.d3");
 
-            mBackground.style.backgroundColor = "#FFFFFF"
+            function initBackground() {
+                mBackground.style.backgroundColor = "#b6d6e3";
+                mBackground.style.backgroundImage = `url("data:image/svg+xml;charset=utf-8,%3Csvg width='1920' height='1080' viewBox='0 0 1920 1080' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236136a4'/%3E%3Cstop offset='33%25' stop-color='%23b464a6'/%3E%3Cstop offset='66%25' stop-color='%23df9c9f'/%3E%3Cstop offset='100%25' stop-color='%23ffe0a1'/%3E%3C/linearGradient%3E%3CradialGradient id='glowGrad' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.9'/%3E%3Cstop offset='30%25' stop-color='%23ffd89b' stop-opacity='0.6'/%3E%3Cstop offset='60%25' stop-color='%23ff9e5c' stop-opacity='0.25'/%3E%3Cstop offset='100%25' stop-color='%23ff6a00' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23bgGrad)'/%3E%3Ccircle cx='580' cy='850' r='1000' fill='url(%23glowGrad)'/%3E%3Ccircle cx='580' cy='850' r='90' fill='%23ffebab'/%3E%3Cpath d='M0 1080L0 880Q300 720 600 880C900 650 1100 850 1400 820Q1650 750 1920 880L1920 1080Z' fill='%23000000' opacity='1'/%3E%3C/svg%3E")`;
+            }
 
             // 状态对象
             const state = {
@@ -164,7 +207,7 @@
                 initVideo();
                 mBackground.setAttribute("style", `background-image:url(${path})`);
                 mBackground?.animate(
-                    [{ opacity: 0 }, { opacity: 1 }],
+                    [{ opacity: 0.1 }, { opacity: 1 }],
                     { duration: 1000, iterations: 1 }
                 );
             };
@@ -200,7 +243,7 @@
                         MainUI.loadBackground(URL.createObjectURL(file), file.type);
                     } else {
                         console.warn("本地壁纸丢失");
-                        loadImageBackground('/api/random_wallpaper_provider.php');
+                        initBackground()
                     }
                 } catch (error) {
                     console.error("Error handling file background:", error);
@@ -262,7 +305,7 @@
                     if (localFile) {
                         MainUI.loadBackground(URL.createObjectURL(localFile), localFile.type);
                     } else {
-                        loadImageBackground('/api/random_wallpaper_provider.php');
+                        initBackground()
                     }
                 }
             };

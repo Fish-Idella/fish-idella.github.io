@@ -460,37 +460,47 @@ span.goback {
     padding: 0
 }
 
+#path-bar {
+    font-weight: 500;
+    padding: 0.4rem;
+}
+
+
 ul.file-list {
-    /* padding: 10px 0; */
+    padding: 0;
+    margin: 0;
 }
 
 
 ul.file-list>li {
     cursor: pointer;
-    border: 1px solid transparent;
-    border-width: 0 10px 1px 10px;
+    /* border: 1px solid transparent; */
+    box-sizing: border-box;
+    /* border-width: 0 10px 1px 10px; */
     border-bottom-color: #000;
     list-style: none;
+    padding: 0.4rem;
 }
 
-ul.file-list>li>.icon::after {
+ul.file-list>li::before {
     content: "F";
     font-weight: bold;
     margin: 0 4px 0 0;
 }
 
-ul.file-list>li.directory>.icon::after {
+ul.file-list>li.directory::before {
     content: "D";
     color: chocolate;
 }
 
-ul.file-list>li.file>.icon::after {
+ul.file-list>li.file::before {
     content: "F";
     color: cornflowerblue;
 }
 
 ul.file-list>li:hover {
-    border-color: blue;
+    /* border-color: #818181; */
+    background: #3b3b3b;
 }
 
 .scroll-y {

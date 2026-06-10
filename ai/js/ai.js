@@ -66,6 +66,20 @@ Promise.resolve(StorageHelper.open({
         return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
     }
 
+    function changeImage(l = 0) {
+        const image = new Image();
+        const positions = [[-30, 100], [0, 100], [-24, 100], [-22, 100], [-20, 120], [-2, 100], [-5, 80]];
+        image.onload = () => {
+            const img = document.querySelector('#image>img');
+            img.src = image.src;
+            img.style.setProperty('bottom', positions[i][0] + '%')
+            img.style.setProperty('width', positions[i][1] + '%')
+        };
+        const max = positions.length;
+        const n = l % max;
+        const i = n < 0 ? n + max : n;
+        image.src = `image/${1 + i}.png`;
+    }
 
     const bookIndex = PuSet.ensureObjectProperty(data, "book-index", Object);
     const characters = PuSet.ensureObjectProperty(data, "characters", Object);
@@ -773,7 +787,7 @@ Promise.resolve(StorageHelper.open({
         aaa.save(loginView.dataset.type);
     });
 
-    PuSet(characterList).add('#agent-list').on('click', 'summary button', function () {
+    PuSet(characterList).add('#agent-list').on('click', '.subtitle button', function () {
         aaa.add(this.className);
     });
 
