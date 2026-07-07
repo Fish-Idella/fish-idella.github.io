@@ -22,12 +22,12 @@ body,
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     position: absolute;
-    top: 0;
-    left: 0;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
+    inline-size: 100%;
+    block-size: 100%;
     overflow: hidden;
 }
 
@@ -79,12 +79,12 @@ body,
 .flex-vertical>.fill {
     position: relative;
     flex-grow: 1;
-    min-width: 0px;
-    min-height: 0;
+    min-inline-size: 0px;
+    min-block-size: 0;
 }
 
 .info .fc {
-    height: 100%;
+    block-size: 100%;
     margin: 0;
 }
 
@@ -102,8 +102,8 @@ ul.fc.scroll li:nth-child(even) {
 
 ::-webkit-scrollbar {
     background-color: #00000000;
-    width: 0.2rem;
-    height:0.2rem;
+    inline-size: 0.2rem;
+    block-size:0.2rem;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -116,10 +116,10 @@ ul.fc.scroll li:nth-child(even) {
     display: flex;
     place-content: center;
     place-items: center;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: 100%;
     margin: 0;
     padding: 0;
     background-color: white;

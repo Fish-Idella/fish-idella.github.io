@@ -25,8 +25,7 @@ function setSL(x, y) {
     _preview.nextElementSibling.style.background =
         _preview.style.background = `hsl(${_hue.value}, ${_saturation.value}%, ${_lightness.value}%)`;
 
-    _preview.nextElementSibling.style.color =
-        _preview.style.color = `hsl(${(+_hue.value + 180) % 360}, ${Math.floor(_saturation.value / 2) + 50}%, ${Math.abs(100 - _lightness.value)}%)`;
+    _preview.nextElementSibling.style.color = _preview.style.color = `hsl(0, 0%, ${Math.abs(_lightness.value > 50 ? 0: 100)}%)`;
 }
 
 function setHue(x, y) {
@@ -46,8 +45,7 @@ function setHue(x, y) {
     _preview.nextElementSibling.style.background =
         _preview.style.background = `hsl(${angle}, 100%, 50%)`;
 
-    _preview.nextElementSibling.style.color =
-        _preview.style.color = `hsl(${(180 + angle) % 360}, 100%, 50%)`;
+    _preview.nextElementSibling.style.color = _preview.style.color = `hsl(0, 0%, 0%)`;
 
     for (let i = 0; i < 101; i++) {
         colors[i].style.backgroundImage = `linear-gradient(90deg, hsl(${angle}, 0%, ${100 - i}%), hsl(${angle}, 100%, ${100 - i}%))`;

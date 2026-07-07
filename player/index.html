@@ -7,223 +7,19 @@
     <title>Document</title>
     <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="css/index.css">
-    <style>
-        body {
-            background-color: #101010;
-            color: #efefef;
-        }
-
-        #app {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        #a,
-        #b,
-        #c,
-        #d {
-            position: relative;
-        }
-
-        #a {
-            background-color: rgb(0, 0, 0);
-            color: #fff;
-        }
-
-        #b {
-            /* background-color: rgb(22, 48, 48); */
-            padding: 10px 0;
-        }
-
-        #c {
-            /* background-color: rgb(44, 131, 44); */
-            user-select: none;
-        }
-
-        #d {
-            /* background-color: rgb(76, 103, 51); */
-            max-width: 100vh;
-            max-height: 100vh;
-        }
-
-
-        /* ========== 1. 手机场景：宽高比 ≤ 9/16，或平板竖屏（宽<高） ========== */
-        @media (aspect-ratio: 9/16),
-        (max-aspect-ratio: 9/16),
-        (orientation: portrait) {
-
-            /* 宽度≤500px 时生效 */
-            @media (max-width: calc(56.25vh + 400px)) {
-
-                #c,
-                #d {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    overflow: hidden;
-                }
-
-                #c {
-                    display: none;
-                }
-            }
-
-
-            /* 宽度>=500px 时生效 */
-            @media (min-width: calc(56.25vh + 400px)) {
-
-                #app {
-                    display: flex;
-                    flex-direction: row;
-                }
-
-                #c {
-                    position: relative;
-                    flex-grow: 1;
-                }
-
-                #d {
-                    position: relative;
-                    aspect-ratio: 9/16;
-                }
-
-            }
-
-            #d:not(.portrait),
-            #d.landscape {
-                display: flex;
-                flex-direction: column;
-            }
-
-            #d:not(.portrait)>#a,
-            #d.landscape>#a {
-                aspect-ratio: 16/9;
-            }
-
-            #d:not(.portrait)>#b,
-            #d.landscape>#b {
-                position: relative;
-                flex-grow: 1;
-            }
-
-            #d.portrait>#a,
-            #d.portrait>#b {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-            }
-
-            #d.portrait>#b {
-                display: none;
-            }
-        }
-
-
-        /* ========== 2. PC场景：宽高比 ≥ 16/9，或平板横屏（宽>高） ========== */
-        @media (aspect-ratio: 16/9),
-        (min-aspect-ratio: 16/9),
-        (orientation: landscape) {
-
-            #app {
-                display: flex;
-                flex-direction: row;
-            }
-
-            #c {
-                position: relative;
-                width: 600px;
-            }
-
-            #d {
-                position: relative;
-                flex-grow: 1;
-            }
-
-
-            /* 宽度≤500px 时生效 */
-            @media (max-width: calc(100vh + 600px)) {
-
-                #d.portrait>#a,
-                #d.portrait>#b {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    overflow: hidden;
-                }
-
-                #d.portrait>#b {
-                    display: none;
-                }
-            }
-
-            /* 宽度>=500px 时生效 */
-            @media (min-width: calc(100vh + 600px)) {
-
-                #d.portrait>#a {
-                    position: relative;
-                    aspect-ratio: 9/16;
-                }
-
-                #d.portrait>#b {
-                    flex-grow: 1;
-                }
-
-            }
-
-            #d:not(.portrait),
-            #d.landscape {
-                display: flex;
-                flex-direction: column;
-            }
-
-            #d:not(.portrait)>#a,
-            #d.landscape>#a {
-                aspect-ratio: 16/9;
-            }
-
-            #d:not(.portrait)>#b,
-            #d.landscape>#b {
-                position: relative;
-                flex-grow: 1;
-            }
-
-            #d.portrait {
-                display: flex;
-                flex-direction: row;
-            }
-        }
-
-        .match-parent {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-    </style>
 </head>
 
 <body class="view flex-horizontal">
-    <div>左侧按钮区</div>
+    <div id="sidebar" class="flex-vertical">
+        <button name="show-player">播放器</button>
+        <button name="show-video-list">播放列表</button>
+    </div>
     <div class="fill">
         <div id="app">
             <div id="d" data-class="portrait">
                 <div id="a">
                     <div id="player-video-layer" class="video-layer grid-vertical center">
-                        <video class="video fill" poster="/mediae/icons/0x300a0a0.png" muted="muted" preload="metadata"
-                            src="https://localhost/av/Videos/Carib-052218-672-FHD/052218-672-carib-1080p.mp4" autoplay>
+                        <video class="video fill" poster="/mediae/icons/0x300a0a0.png" muted="muted" preload="metadata" autoplay>
                             <track src="" kind="subtitles" srclang="zh" label="中文" default>
                             <span>你的浏览器不支持 HTML5 视频。</span>
                         </video>
@@ -329,7 +125,13 @@
                         </div>
                     </div>
                 </div>
-                <div id="b">
+                <div id="b" class="flex-vertical">
+                    <h3>字幕编辑</h3>
+                    <textarea id="subtitle-input" class="fill unify" placeholder="输入字幕，视频播放时按【Enter】键添加时间轴"></textarea>
+                    <div class="flex-horizontal">
+                        <button name="lock-subtitle">锁定字幕</button>
+                        <button name="clear-subtitle">清空字幕</button>
+                    </div>
                 </div>
             </div>
             <div id="c" class="scroll-y">
@@ -343,7 +145,6 @@
     </div>
     <script type="text/javascript" src="/js/puset/puset-3.0.0.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
-    <script type="text/javascript" src="js/file.js"></script>
 </body>
 
 </html>

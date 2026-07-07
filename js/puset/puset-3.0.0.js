@@ -162,7 +162,7 @@ const PuSet = (function () {
         setProperty(property, value, priority = false) {
             // 只有当 priority 为 true 且属性已存在时，才不设置值
             if (!(priority === true && this.hasOwnProperty(property))) {
-                this[property] = value;
+                Reflect.set(this, property, value);
             }
             return this;
         }
@@ -663,15 +663,18 @@ const PuSet = (function () {
      * @param {Object} target - 目标对象
      * @param {string|Symbol} property - 属性名
      * @param {Function} [Constructor=Object] - 构造函数
+     * @param  {...any} args - 构造函数参数
      * @returns {*} 属性值（或null，若对象不可扩展）
      */
-    const ensureObjectProperty = function ensureObjectProperty(target, property, Constructor = Object) {
-        if (Object.hasOwn(target, property)) {
-            return target[property];
+    const ensureObjectProperty = function ensureObjectProperty(target, property, Constructor = Object, ...args) {
+        if (target !== Object(target)) return null;
+        const value = target[property];
+        if (value) {
+            return value;
         }
         // 对象可扩展：创建新实例
-        if (Object.isExtensible(target)) {
-            return target[property] = new Constructor();
+        if (typeof Constructor === "function" && Object.isExtensible(target)) {
+            return target[property] = new Constructor(...args);
         }
         return null;
     };

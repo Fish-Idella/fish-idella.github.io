@@ -215,11 +215,24 @@
             // 处理动画类型背景
             const handleAnimation = async (path) => {
                 try {
-                    const response = await fetch(path);
-                    const script = await response.text();
-                    const fn = eval(script);
-                    if (typeof fn === "function") {
-                        fn(ctx, webgl, state);
+                    const url = new URL(path, window.location.href);
+
+                    // ✅ 严格同源校验（协议 + 域名 + 端口）
+                    if (url.origin !== window.location.origin) {
+                        console.warn("Blocked cross-origin animation:", path);
+                        return;
+                    }
+
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    // ✅ 直接执行 IIFE，无需 eval / return
+                    const api = (new Function(await response.text()))();
+
+                    if (typeof api === "function") {
+                        api(ctx, webgl, state);
                     }
                 } catch (error) {
                     console.error("Error loading animation:", path, error);
@@ -272,6 +285,10 @@
                     const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.bing_background)}`);
                     const json = await response.json();
                     const imageUrl = new URL(json?.images?.[0]?.url, MainUI.bing_background).href;
+
+                    storage.setItem("puset-local-wallpaper-bing-json", json).then(() => {
+                        // document.querySelector("input#word").value = json?.images?.[0]?.title;
+                    });
 
                     // 加载原图并转换为 PNG
                     const blob = await new Promise((resolve, reject) => {

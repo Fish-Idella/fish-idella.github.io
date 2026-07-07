@@ -1,7 +1,7 @@
 const PuSetPlayer = (function () {
     "use strict";
 
-    const instanceMap = new Map();
+    const instanceMap = new WeakMap();
     const HIDE = "hide";
 
     // 获取事件冒泡路径（兼容不同浏览器）
@@ -325,10 +325,11 @@ const PuSetPlayer = (function () {
                                 arr.push(`var(--buffered-color) ${100 * buffered.start(i) / duration}% ${end}%`);
 
                                 next = 1 + i;
-                                arr.push(`#00000000 ${end}% ${(next < max) ? (100 * buffered.start(next) / duration) : 100}%`);
+                                arr.push(`transparent ${end}% ${(next < max) ? (100 * buffered.start(next) / duration) : 100}%`);
                             }
 
-                            for (let i; (i = arr.indexOf("#00000000 100% 100%")) >= 0; arr.splice(i, 1));
+                            // 移除透明间隔段，避免影响渐变显示
+                            for (let i; (i = arr.indexOf("transparent 100% 100%")) >= 0; arr.splice(i, 1));
 
                             self.progressBar.style.setProperty("--buffered", `linear-gradient(90deg,${arr.join()})`);
                         }
@@ -484,15 +485,15 @@ const PuSetPlayer = (function () {
                 "svg/combined.svg": function (target) {
                     document.exitFullscreen().then(() => target.src = "svg/separate.svg");
                 },
-                "fn": function (target) {
-                    // console.log(target.getAttribute("src"));
+                "fn": function (target, src) {
+                    console.log("未定义的按钮事件处理器", src);
                 }
             };
             self.playerContainer.querySelectorAll(".bt>img").forEach(function (element) {
                 element.addEventListener("click", function (ev) {
                     ev.preventDefault();
-                    // console.log(this.getAttribute("src"));
-                    ((controlButtons[this.getAttribute("src")] || controlButtons.fn)(this));
+                    const src = this.getAttribute("src");
+                    ((controlButtons[src] || controlButtons.fn)(this, src));
                 });
             });
 
@@ -569,12 +570,21 @@ const PuSetPlayer = (function () {
         play: function (url) {
             // 播放新视频
             if (url && url !== this.video.src) {
-                URL.revokeObjectURL(this.video.src);
-                this.video.src = url;
-                this.video.currentTime = 0;
-                this.track.src = url.replace(/\.mp4$/, ".vtt");
+                headers(url).then(f => {
+                    if (!f.success) return;
+                    URL.revokeObjectURL(this.video.src);
+                    if (f.contentType.startsWith("video/")) {
+                        this.video.src = f.url;
+                        this.video.currentTime = 0;
+                        this.track.src = f.url.replace(/\.\w+$/, ".vtt");
+                    } else if (f.contentType.startsWith("image/")) {
+                        // 设置封面
+                        this.video.src = "";
+                        this.video.setAttribute("poster", f.url);
+                    }
+                });
             }
-            this.video.play();
+            this.video.play().catch(e => console.error("播放失败", e));
         },
 
         stop: function () {
@@ -587,6 +597,16 @@ const PuSetPlayer = (function () {
         composedPath: composedPath
     });
 
+    async function headers(url) {
+        const r = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+        return (r.ok) ? {
+            success: true, url: r.url,
+            contentLength: r.headers.get('Content-Length'),
+            contentType: r.headers.get('Content-Type'),
+            lastModified: r.headers.get('Last-Modified')
+        } : { success: false, url: r.url };
+    }
+
     // 暴露到全局环境
     return (globalThis || window || {}).PuSetPlayer = PuSetPlayer;
 
@@ -594,6 +614,7 @@ const PuSetPlayer = (function () {
 
 (function 控制器() {
     const player = new PuSetPlayer(document.getElementById("player-video-layer"));
+    player.play("https://localhost/av/Videos/%E6%9E%AB%E8%8A%B1%E6%81%8B%EF%BC%88%E6%A5%93%E3%82%AB%E3%83%AC%E3%83%B3-Kaede%20Karen%EF%BC%89/IPX-776/[G211.cc]IPX-776%E6%9B%BF%E8%BA%AB%E8%82%89%E4%BE%BF%E5%99%A8,%E5%8D%B3%E4%BD%BF%E5%B0%84%E7%B2%BE%E4%BE%9D%E6%97%A7%E4%B8%8D%E5%81%9C%E6%81%AF%E6%BD%AE%E5%90%B9%E5%87%8C%E8%BE%B1,10%E6%97%A5%E7%9B%91%E7%A6%81%E7%94%9F%E6%B4%BB..%E6%9E%AB%E5%8F%AF%E6%80%9C.mp4")
 
     const dashboard = document.querySelector("div.dashboard");
     const urlInput = dashboard.querySelector(".url-box>input[type=url]");
@@ -620,4 +641,77 @@ const PuSetPlayer = (function () {
     dashboard.querySelector("#close").addEventListener("click", function () {
         dashboard.classList.add("hide");
     });
+}());
+
+(function () {
+    let listData;
+    const path = 'Videos';
+
+    const player = new PuSetPlayer(document.getElementById("player-video-layer"));
+
+    const c = document.getElementById("c");
+    const v_list = PuSet.mvvm({
+        target: c.querySelector("ul"),
+        selector: "li",
+        data: [],
+        compare(a, b) {
+            return a.type.localeCompare(b.type) || a.name.localeCompare(b.name);
+        },
+        layout(li, value) {
+            li.className = value.type
+            li.textContent = value.name
+        }
+    }).on("click", (li, value) => {
+        if (value.type === "directory") {
+            getList(listData.path + "/" + value.name)
+        } else if (value.type === "file") {
+            player.play("/av/" + listData.path + "/" + value.name);
+            c.classList.remove("show")
+        }
+    });
+
+    // 返回上层
+    PuSet("#path-bar").on("click", () => {
+        if (listData.path === path) return;
+        getList(listData.path.split("/").slice(0, -1).join("/") || path)
+    })
+
+    function getList(path) {
+        fetch("/api/directory_content_fetcher.php", {
+            method: "POST",
+            body: new URLSearchParams({ path })
+        }).then(r => r.json()).then(json => {
+            if (json.success) {
+                listData = json;
+                v_list.update(listData.data.sort(v_list.compare))
+            } else {
+                throw new Error(json.message)
+            }
+        }).catch(e => {
+            alert(e.message)
+        })
+    }
+
+    getList(path)
+})();
+
+(function menu() {
+    const a = document.getElementById("a");
+    const b = document.getElementById("b");
+    const c = document.getElementById("c");
+    const d = document.getElementById("d");
+
+    PuSet("div#sidebar").on("click", "button", function (ev) {
+        ev.preventDefault();
+        switch (this.name) {
+            case "show-player":
+                // 处理显示播放器的逻辑
+                c.classList.remove('show')
+                break;
+            case "show-video-list":
+                // 处理显示播放列表的逻辑
+                c.classList.add('show')
+                break;
+        }
+    })
 }());

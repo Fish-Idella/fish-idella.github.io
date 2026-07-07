@@ -1,37 +1,29 @@
-body.theme-default {
-    --theme-background-color: #ebebeb;
-    --theme-text-color: #123;
+/* =========================================
+   1. 全局变量与基础样式
+   ========================================= */
+body {
+    --theme-background-color: #101010;
+    --theme-text-color: #efefef;
 }
 
 body {
-    color: var(--theme-text-color);
+    margin: 0;
+    /* 建议添加 */
     background-color: var(--theme-background-color);
+    color: var(--theme-text-color);
 }
 
-@font-face {
-    font-family: 'Fira Sans';
-    src: local("FiraSans-Regular"), url(/mediae/fonts/FiraSans-Regular.woff2) format("woff2"), url(/mediae/fonts/FiraSans-Regular.ttf) format("ttf");
-    font-weight: 400;
-    font-style: normal;
+.hide {
+    display: none !important;
 }
 
-
-.out-box {
-    display: flex;
-    flex-direction: column;
-    -webkit-user-select: none;
-    user-select: none
-}
-
-table.info {
+.match-parent {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: 100%;
     overflow: hidden;
-}
-
-.out-box>#player.content {
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px
 }
 
 .center {
@@ -43,14 +35,95 @@ table.info {
 .center .fill {
     grid-area: 1 / 2;
     position: relative;
-    width: 100%;
-    height: 100%;
-    max-height: 100vh;
+    inline-size: 100%;
+    block-size: 100%;
+    max-block-size: 100vh;
+}
+
+.scroll {
+    overflow: auto scroll;
+    block-size: 100%;
+    padding: 0;
+}
+
+.scroll-y {
+    overflow-y: scroll;
+}
+
+/* =========================================
+   2. 字体定义
+   ========================================= */
+@font-face {
+    font-family: 'Fira Sans';
+    src: local("FiraSans-Regular"),
+        url(/mediae/fonts/FiraSans-Regular.woff2) format("woff2"),
+        url(/mediae/fonts/FiraSans-Regular.ttf) format("ttf");
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* =========================================
+   3. 应用布局容器 (#app, #a-d)
+   ========================================= */
+#app {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: hidden;
+}
+
+#a,
+#b,
+#c,
+#d {
+    position: relative;
+    background-color: var(--theme-background-color);
+    color: var(--theme-text-color);
+    max-width: 100vh;
+    max-block-size: 100vh;
+}
+
+.out-box {
+    display: flex;
+    flex-direction: column;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.in-box {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* =========================================
+   4. 播放器核心 (Video & Layers)
+   ========================================= */
+.out-box>#player.content {
+    position: relative;
+    inline-size: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.video-layer {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    inline-size: 100%;
+    block-size: 100%;
+    background-color: var(--theme-background-color);
+    border: 1px solid #000;
+}
+
+.video-layer:fullscreen {
+    background-color: var(--theme-background-color);
 }
 
 video.video {
-    background-color: #000000;
-    /* aspect-ratio: 16 / 9; */
+    background-color: var(--theme-background-color);
 }
 
 video::cue {
@@ -61,6 +134,13 @@ video::cue {
     text-shadow: 0 0 4px #000000;
 }
 
+table.info {
+    overflow: hidden;
+}
+
+/* =========================================
+   5. 控件区域 (Controls, Progress, Buttons)
+   ========================================= */
 .controls {
     font-size: 1rem;
     text-align: center;
@@ -70,18 +150,19 @@ video::cue {
     font-weight: bold;
 }
 
+/* Tooltip */
 .controls>.layer-tooltip {
     place-content: center;
     place-items: center;
 }
 
 .controls .tooltip {
-    width: 90px;
-    height: 50px;
+    inline-size: 90px;
+    block-size: 50px;
     line-height: 50px;
     border-radius: 5px;
-    background: #000000ad;
-    color: white;
+    background: var(--theme-background-color);
+    color: var(--theme-text-color);
     font-weight: bold;
     font-size: large;
     text-align: center;
@@ -89,117 +170,24 @@ video::cue {
 }
 
 .controls .tooltip>img {
-    width: 35px;
+    inline-size: 35px;
 }
 
+/* Bottom Control Bar */
 .controls>.bottom {
     position: absolute;
     display: flex;
     flex-direction: column;
-    left: 0;
-    bottom: 0;
+    inset-inline-start: 0;
+    inset-block-end: 0;
     padding: 0;
-    width: 100%;
-    height: 4rem;
-    background-image: linear-gradient(transparent, rgba(0, 0, 0, .76) 40%, rgba(0, 0, 0, .76))
-}
-
-.progress-bar {
-    position: relative;
-    height: 1.6rem;
-    margin: 0 10px;
-    display: flex;
-    place-items: center;
-    place-content: center;
-    cursor: pointer
-}
-
-.progress-bar>.progress-preview {
-    position: absolute;
-    width: 160px;
-    height: 90px;
-    background: #000000;
-    background-repeat: no-repeat;
-    background-size: contain;
-    background-position: center;
-    overflow: hidden;
-    left: 0;
-    bottom: 20px;
-    border-radius: 2px;
-    box-shadow: 0 0 6px 2px #24252c;
-}
-
-.progress-bar>.progress-preview>.progress-preview-time {
-    --text-shadow-color: #000000a6;
-    position: absolute;
-    width: 100%;
-    line-height: 2rem;
-    height: 2rem;
-    color: white;
-    left: 0;
-    bottom: 0;
-    text-shadow: 0 -2px 1px var(--text-shadow-color),
-        /*上*/
-        1px -1px 1px var(--text-shadow-color),
-        /*右上*/
-        2px 0 1px var(--text-shadow-color),
-        /*右*/
-        1px 1px 1px var(--text-shadow-color),
-        /*右下*/
-        0 2px 1px var(--text-shadow-color),
-        /*下*/
-        -1px 1px 1px var(--text-shadow-color),
-        /*左下*/
-        -2px 0 1px var(--text-shadow-color),
-        /*左*/
-        -1px -1px 1px var(--text-shadow-color);
-}
-
-.progress-bar>.progress {
-    --played: 0;
-    --buffered: none;
-    --buffered-color: #ffffff8a;
-    --radius: 2px;
-    position: relative;
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 4px;
-    margin: 0;
-    border: none;
-    border-radius: var(--radius);
-    overflow: hidden;
-    background-color: rgb(255 255 255 / 30%);
-}
-
-.progress-bar>.progress::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    border-radius: var(--radius);
-    background: var(--buffered);
-}
-
-.progress-bar>.progress::after {
-    content: '';
-    position: absolute;
-    width: var(--played);
-    top: 0;
-    left: 0;
-    height: 100%;
-    border-radius: var(--radius);
-    background-color: rgb(10, 135, 218);
-}
-
-.progress-bar:hover>.progress {
-    height: 6px
+    inline-size: 100%;
+    block-size: 4rem;
+    background-image: linear-gradient(transparent, rgba(0, 0, 0, .76) 40%, rgba(0, 0, 0, .76));
 }
 
 .controls>.bottom.min {
-    height: 1px;
+    block-size: 1px;
 }
 
 .controls>.bottom.min .progress-bar {
@@ -210,6 +198,102 @@ video::cue {
     --radius: 0;
 }
 
+/* Progress Bar */
+.progress-bar {
+    position: relative;
+    block-size: 1.6rem;
+    margin: 0 10px;
+    display: flex;
+    place-items: center;
+    place-content: center;
+    cursor: pointer;
+}
+
+.progress-bar:hover>.progress {
+    block-size: 6px;
+}
+
+.progress-bar>.progress {
+    --played: 0;
+    --buffered: none;
+    --buffered-color: #ffffff8a;
+    --radius: 2px;
+    position: relative;
+    -webkit-appearance: none;
+    appearance: none;
+    inline-size: 100%;
+    block-size: 4px;
+    margin: 0;
+    border: none;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: rgb(255 255 255 / 30%);
+}
+
+.progress-bar>.progress::before {
+    content: '';
+    position: absolute;
+    inline-size: 100%;
+    block-size: 100%;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    border-radius: var(--radius);
+    background: var(--buffered);
+}
+
+.progress-bar>.progress::after {
+    content: '';
+    position: absolute;
+    inline-size: var(--played);
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    block-size: 100%;
+    border-radius: var(--radius);
+    background-color: rgb(10, 135, 218);
+}
+
+/* Progress Preview Thumbnail */
+.progress-bar>.progress-preview {
+    position: absolute;
+    inline-size: 160px;
+    block-size: 90px;
+    background: #000000;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    overflow: hidden;
+    inset-inline-start: 0;
+    inset-block-end: 20px;
+    border-radius: 2px;
+    box-shadow: 0 0 6px 2px #24252c;
+}
+
+.progress-bar>.progress-preview>.progress-preview-time {
+    --text-shadow-color: #000000a6;
+    position: absolute;
+    inline-size: 100%;
+    line-height: 2rem;
+    block-size: 2rem;
+    color: white;
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    text-shadow:
+        0 -2px 1px var(--text-shadow-color),
+        1px -1px 1px var(--text-shadow-color),
+        2px 0 1px var(--text-shadow-color),
+        1px 1px 1px var(--text-shadow-color),
+        0 2px 1px var(--text-shadow-color),
+        -1px 1px 1px var(--text-shadow-color),
+        -2px 0 1px var(--text-shadow-color),
+        -1px -1px 1px var(--text-shadow-color);
+}
+
+.progress-preview img {
+    inline-size: 100%;
+    display: none;
+}
+
+/* Buttons Area */
 .buttons {
     flex-grow: 1;
     display: flex;
@@ -220,31 +304,32 @@ video::cue {
 .controls .buttons .bt {
     position: relative;
     display: inline-flex;
-    width: auto;
-    height: 2.6rem;
+    inline-size: auto;
+    block-size: 2.6rem;
     line-height: 2.6rem;
-    color: #ffffff;
+    color: var(--theme-text-color);
     word-wrap: normal;
     white-space: nowrap;
     margin: 0 2px;
 }
 
 .controls .buttons .bt>img {
-    width: 1.4rem;
-    height: 100%
-}
-
-.bpx-player-ctrl-time-label {
-    padding: 0 10px;
+    inline-size: 1.4rem;
+    block-size: 100%;
 }
 
 .bt.bt-playback-rate {
     min-width: 3rem;
 }
 
+.bpx-player-ctrl-time-label {
+    padding: 0 10px;
+}
+
+/* Playback Rate Menu */
 .bpx-player-ctrl-file-result,
 .bpx-player-ctrl-playbackrate-result {
-    width: 60px;
+    inline-size: 60px;
 }
 
 .bpx-player-ctrl-playbackrate-menu {
@@ -252,11 +337,11 @@ video::cue {
     display: block;
     margin: 0;
     padding: 0;
-    width: 60px;
-    height: auto;
+    inline-size: 60px;
+    block-size: auto;
     list-style: none;
-    left: 0;
-    bottom: 4rem;
+    inset-inline-start: 0;
+    inset-block-end: 4rem;
     background-color: #2b2b2b;
     overflow: hidden;
     border-radius: 2px;
@@ -272,94 +357,85 @@ video::cue {
     color: cornflowerblue;
 }
 
-.dashboard {
-    position: absolute;
-    display: block;
-    overflow: hidden;
-    bottom: 50px;
-    transform: translateX(-50%);
-    left: 50%;
-    background: #808080;
-}
-
+/* Volume Control */
 .volume-box {
     position: absolute;
-    width: 50px;
-    height: 170px;
-    left: -15px;
-    bottom: 4rem;
+    inline-size: 50px;
+    block-size: 170px;
+    inset-inline-start: -15px;
+    inset-block-end: 4rem;
     background-color: #2b2b2b;
     border-radius: 2px;
     text-align: center;
 }
 
 .volume-value {
-    height: 2rem;
+    block-size: 2rem;
     line-height: calc(2rem + 8px);
 }
 
 .volume-bar {
-    /* position: relative; */
-    /* width: 100%; */
-    /* height: 100%; */
     cursor: pointer;
 }
 
 .volume-bar .thumb {
     position: absolute;
-    background: white;
-    width: 6%;
-    top: 8px;
-    height: 116px;
-    left: 47%;
+    background: var(--theme-text-color);
+    inline-size: 6%;
+    inset-block-start: 8px;
+    block-size: 116px;
+    inset-inline-start: 47%;
     overflow: visible;
     pointer-events: none;
 }
 
 .volume-bar .thumb .thumb-dot {
     position: absolute;
-    width: 16px;
-    height: 16px;
-    left: calc(50% - 8px);
-    top: 100px;
+    inline-size: 16px;
+    block-size: 16px;
+    inset-inline-start: calc(50% - 8px);
+    inset-block-start: 100px;
     pointer-events: none;
     border-radius: 10px;
-    background-color: #ffffff;
+    background-color: var(--theme-text-color);
+}
+
+/* Dashboard Overlay */
+.dashboard {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    inset-block-end: 50px;
+    transform: translateX(-50%);
+    inset-inline-start: 50%;
+    background: #808080;
 }
 
 .out-box>.dashboard {
+    position: relative;
+    box-sizing: border-box;
     flex-grow: 1;
     padding: 0 10px 10px;
-    overflow: hidden auto
+    overflow: hidden auto;
 }
 
-.out-box>.dashboard,
-.video-layer {
+/* =========================================
+   6. UI 组件 (Box, Inputs, File List)
+   ========================================= */
+.box {
     position: relative;
-    box-sizing: border-box;
-    overflow: hidden;
+    block-size: auto;
+    background-color: var(--theme-background-color);
+    border-radius: 5px;
+    padding: 10px;
 }
 
-.video-layer {
-    width: 100%;
-    height: 100%;
-    /* aspect-ratio: 16 / 9; */
-    background-color: rgb(0 0 0);
-    border: 1px solid #000;
+.box.mt {
+    margin-top: 10px;
 }
 
-.video-layer:fullscreen {
-    background-color: #000
-}
-
-.in-box {
-    position: relative;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-.dashboard label[type=file] {
-    /* margin: 0 5px; */
+.box.mb {
+    margin-bottom: 10px;
 }
 
 .url-box,
@@ -369,7 +445,7 @@ label[type=file] {
     position: relative;
     overflow: hidden;
     min-width: 5rem;
-    height: 2rem;
+    block-size: 2rem;
     text-align: center;
     line-height: 2rem;
     border: 1px solid #123;
@@ -380,14 +456,14 @@ label[type=button]>span,
 label[type=file]>input[type=file],
 label[type=file]>span {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    inline-size: 100%;
+    block-size: 100%;
     padding: 0;
-    top: 0;
-    left: 0;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     background-color: #fff;
     color: #000;
-    display: inline-block
+    display: inline-block;
 }
 
 .url-box>.bt-play {
@@ -395,69 +471,31 @@ label[type=file]>span {
     margin: 0;
 }
 
-.hide {
-    display: none !important
-}
-
-.box {
-    position: relative;
-    height: auto;
-    background-color: #fff;
-    border-radius: 5px;
-    padding: 10px
-}
-
-.box.mt {
-    margin-top: 10px
-}
-
-.box.mb {
-    margin-bottom: 10px
-}
-
-span.goback {
-    display: inline-block;
-    width: 2rem;
-    text-align: center;
-}
-
-.file-list-title:hover {
-    color: blue;
-    cursor: pointer;
-}
-
 .address {
     line-height: 2rem;
     word-wrap: normal;
     white-space: nowrap;
-    overflow: hidden
+    overflow: hidden;
 }
 
 .address input {
     border-bottom: 1px dashed #000;
     margin: 3px 10px;
-    font-family: 'Consolas', monospace
+    font-family: 'Consolas', monospace;
 }
 
 .address input:focus {
-    border-bottom: 1px solid #000
+    border-bottom: 1px solid #000;
 }
 
 .address button {
-    margin: 3px 0
+    margin: 3px 0;
 }
 
-.progress-preview img {
-    width: 100%;
-    display: none;
-}
-
-
-
-.scroll {
-    overflow: auto scroll;
-    height: 100%;
-    padding: 0
+span.goback {
+    display: inline-block;
+    inline-size: 2rem;
+    text-align: center;
 }
 
 #path-bar {
@@ -465,18 +503,20 @@ span.goback {
     padding: 0.4rem;
 }
 
+#sidebar {
+    padding: 10px;
+    gap: 10px;
+}
 
+/* File List */
 ul.file-list {
     padding: 0;
     margin: 0;
 }
 
-
 ul.file-list>li {
     cursor: pointer;
-    /* border: 1px solid transparent; */
     box-sizing: border-box;
-    /* border-width: 0 10px 1px 10px; */
     border-bottom-color: #000;
     list-style: none;
     padding: 0.4rem;
@@ -499,10 +539,173 @@ ul.file-list>li.file::before {
 }
 
 ul.file-list>li:hover {
-    /* border-color: #818181; */
     background: #3b3b3b;
 }
 
-.scroll-y {
-    overflow-y: scroll;
+.file-list-title:hover {
+    color: blue;
+    cursor: pointer;
+}
+
+/* =========================================
+   7. 响应式布局 (Media Queries)
+   ========================================= */
+
+/* --- 手机场景 / 平板竖屏 --- */
+@media (aspect-ratio: 9/16),
+(max-aspect-ratio: 9/16),
+(orientation: portrait) {
+
+    /* 小宽度适配 */
+    @media (max-width: calc(56.25vh + 400px)) {
+
+        #c,
+        #d {
+            position: absolute;
+            inset-block-start: 0;
+            inset-inline-start: 0;
+            inline-size: 100%;
+            block-size: 100%;
+            overflow: hidden;
+        }
+
+        #c:not(.show) {
+            display: none;
+        }
+    }
+
+    /* 大宽度适配 */
+    @media (min-width: calc(56.25vh + 400px)) {
+        #app {
+            display: flex;
+            flex-direction: row;
+        }
+
+        #c {
+            position: relative;
+            flex-grow: 1;
+        }
+
+        #d {
+            position: relative;
+            aspect-ratio: 9/16;
+        }
+    }
+
+    /* 通用方向控制 */
+    #d:not(.portrait),
+    #d.landscape {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #d:not(.portrait)>#a,
+    #d.landscape>#a {
+        aspect-ratio: 16/9;
+    }
+
+    #d:not(.portrait)>#b,
+    #d.landscape>#b {
+        position: relative;
+        flex-grow: 1;
+    }
+
+    #d.portrait>#a,
+    #d.portrait>#b {
+        position: absolute;
+        inset-block-start: 0;
+        inset-inline-start: 0;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: hidden;
+    }
+
+    #d.portrait>#b {
+        display: none;
+    }
+}
+
+/* --- PC场景 / 平板横屏 --- */
+@media (aspect-ratio: 16/9),
+(min-aspect-ratio: 16/9),
+(orientation: landscape) {
+
+    #app {
+        display: flex;
+        flex-direction: row;
+    }
+
+    #c {
+        position: relative;
+        inline-size: auto;
+        flex: 1;
+        overflow-x: hidden;
+    }
+
+    #d {
+        position: relative;
+        flex-grow: 1;
+    }
+
+    /* 小宽度适配 */
+    @media (max-width: calc(100vh + 600px)) {
+
+        #d.portrait>#a,
+        #d.portrait>#b {
+            position: absolute;
+            inset-block-start: 0;
+            inset-inline-start: 0;
+            inline-size: 100%;
+            block-size: 100%;
+            overflow: hidden;
+        }
+
+        #d.portrait>#b {
+            display: none;
+        }
+    }
+
+    /* 大宽度适配 */
+    @media (min-width: calc(100vh + 600px)) {
+        #d.portrait>#a {
+            position: relative;
+            aspect-ratio: 9/16;
+        }
+
+        #d.portrait>#b {
+            flex-grow: 1;
+        }
+    }
+
+    /* 通用方向控制 */
+    #d:not(.portrait),
+    #d.landscape {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #d:not(.portrait)>#a,
+    #d.landscape>#a {
+        aspect-ratio: 16/9;
+    }
+
+    #d:not(.portrait)>#b,
+    #d.landscape>#b {
+        position: relative;
+        flex-grow: 1;
+    }
+
+    #d.portrait {
+        display: flex;
+        flex-direction: row;
+    }
+}
+
+
+
+#subtitle-input {
+    resize: none;
+    color: #fff;
+    font-size: 1rem;
+    background: #29292980;
 }

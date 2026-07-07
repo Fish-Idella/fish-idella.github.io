@@ -24,6 +24,11 @@ th {
 	--color-background: #f5f5f5;
 	--color-dark: #a8a8a8;
 	--color-dark-d: #a8a8a80a;
+	--color-title: #E0B989;
+	--color-highlight: #5d5553;
+	--color-sub: #E0AA89;
+	--color-sub-d: #E0AA89;
+	--color-a: #2196F3
 }
 
 a,
@@ -39,8 +44,8 @@ body,
 	left: 0;
 	margin: 0;
 	padding: 0;
-	width: 100%;
-	height: 100%;
+	inline-size: 100%;
+	block-size: 100%;
 	overflow: hidden;
 }
 
@@ -92,8 +97,8 @@ body,
 .flex-vertical>.fill {
 	position: relative;
 	flex-grow: 1;
-	min-width: 0px;
-	min-height: 0;
+	min-inline-size: 0px;
+	min-block-size: 0;
 }
 
 textarea#input-message {
@@ -103,7 +108,7 @@ textarea#input-message {
 }
 
 .info .fc {
-	height: 100%;
+	block-size: 100%;
 	margin: 0;
 }
 
@@ -121,8 +126,8 @@ ul.fc.scroll li:nth-child(even) {
 
 ::-webkit-scrollbar {
 	background-color: #00000000;
-	width: 0.2rem;
-	height: 0.2rem;
+	inline-size: 0.2rem;
+	block-size: 0.2rem;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -161,8 +166,8 @@ ul.fc.scroll li:nth-child(even) {
 button {
 	background-color: var(--color-background);
 	border: none;
-	min-width: 32px;
-	min-height: 32px;
+	min-inline-size: 32px;
+	min-block-size: 32px;
 	border-radius: 16px;
 	line-height: 0;
 }
@@ -170,15 +175,15 @@ button {
 button>svg {
 	touch-action: none;
 	pointer-events: none;
-	width: 1rem;
-	height: 1rem;
+	inline-size: 1rem;
+	block-size: 1rem;
 }
 
 .dialog-content {
-	width: 20rem;
-	max-width: 80%;
-	max-height: 80%;
-	min-height: 5rem;
+	inline-size: 20rem;
+	max-inline-size: 80%;
+	max-block-size: 80%;
+	min-block-size: 5rem;
 	background-color: var(--color-background);
 	padding: 1rem;
 	border-radius: 0.5rem;
@@ -197,7 +202,7 @@ button>svg {
 }
 
 button#send[name=send] {
-	background-color: #2196F3;
+	background-color: var(--color-a);
 	color: white;
 }
 
@@ -215,19 +220,19 @@ button#send[name=stop]>svg.send {
 }
 
 #login-view .title {
-	max-width: 20rem;
+	max-inline-size: 20rem;
 }
 
 #chat-view {
 	background-image: url(../image/20210110174630_6b3c2.jpg);
 	background-size: cover;
-	max-width: 100vmin;
+	max-inline-size: 100vmin;
 	left: 50%;
 	transform: translateX(-50%);
 }
 
 .top {
-	height: 3rem;
+	block-size: 3rem;
 	line-height: 3rem;
 	font-weight: 600;
 	background-color: var(--color-background);
@@ -242,7 +247,7 @@ header button,
 #image>img {
 	position: absolute;
 	bottom: -30%;
-	width: 100%;
+	inline-size: 100%;
 	left: 50%;
 	transform: translateX(-50%);
 }
@@ -252,10 +257,18 @@ header button,
 	font-family: "MiSans", "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, Sans-Serif;
 }
 
-.chat-message-output-box[data-persona="system"],
-.chat-message-output-box[data-persona="tool"],
-.chat-message-output-box[data-persona="assistant"].tool_calls {
+.chat-message-output-box[data-persona="system"] {
 	display: none !important;
+}
+
+.chat-message-output-box[data-persona="tool"] .output,
+.chat-message-output-box[data-persona="assistant"].tool_calls .output {
+	inline-size: calc(100% - 4rem);
+
+	.buttons {
+		display: none !important;
+	}
+
 }
 
 .chat-message-output-box[data-persona="user"] {
@@ -268,20 +281,20 @@ header button,
 }
 
 .output {
-	width: auto;
-	max-width: calc(100% - 4rem);
+	inline-size: auto;
+	max-inline-size: calc(100% - 4rem);
 }
 
 .chat-message {
-	/* border: 1px solid darkslategray; */
+	/* border: 1px solid var(--color-highlight); */
 	border-radius: 0.4rem;
 	overflow: hidden;
 	background-color: var(--color-background);
-	box-shadow: 1px 1px 0px 0px darkslategray;
+	box-shadow: 1px 1px 0px 0px var(--color-highlight);
 }
 
 .chat-message pre {
-	max-width: 100%;
+	max-inline-size: 100%;
 	overflow: scroll;
 	margin: 0;
 }
@@ -290,7 +303,7 @@ header button,
 	padding: 0.2rem;
 	font-weight: 400;
 	white-space: pre-wrap;
-	min-height: 1rem;
+	min-block-size: 1rem;
 }
 
 .chat-message>.chat-message-title {
@@ -298,10 +311,14 @@ header button,
 }
 
 .chat-message>.chat-message-title>.state {
-	background-color: darkslategray;
+	background-color: var(--color-highlight);
 	line-height: 2rem;
 	padding: 0 0.2rem;
 	color: bisque;
+}
+
+.chat-message-output-box[data-persona="user"] .chat-message>.chat-message-title>.state {
+	background-color: rgb(53, 40, 88);
 }
 
 .chat-message>.chat-message-title>.think {
@@ -337,9 +354,9 @@ span.dd {
 .drawer-nav {
 	position: absolute;
 	background-color: var(--color-background);
-	min-width: 100px;
-	max-width: 70%;
-	height: 100%;
+	min-inline-size: 100px;
+	max-inline-size: 70%;
+	block-size: 100%;
 	left: 0%;
 	transition: left 0.3s ease-in-out;
 	box-shadow: 2px 0px 10px 0rem rgba(0, 0, 0, 0.1);
@@ -375,23 +392,24 @@ ul#character-list>li {
 
 /* 横向行容器 */
 .login-row {
-	width: 90%;
+	inline-size: 90%;
 	justify-content: space-between;
 	gap: 1rem;
-	/* min-height: 2rem; */
+	/* min-block-size: 2rem; */
 }
 
 /* 统一输入框样式 */
 .login-input {
 	padding: 0.6rem;
 	border-radius: 0.5rem;
-	width: 90%;
+	inline-size: 90%;
+	line-height: 1.2rem;
 	box-sizing: border-box;
 	background-color: var(--color-background);
 }
 
 .login-row>.login-input {
-	width: 100%;
+	inline-size: 100%;
 }
 
 /* 下拉选择框 */
@@ -404,29 +422,20 @@ ul#character-list>li {
 }
 
 /* 测试连接按钮 */
-.login-btn {
-	padding: 0.6rem;
-	background-color: #4CAF50;
-	color: white;
-	border-radius: 0.5rem;
-	cursor: pointer;
-	border: none;
-}
-
-/* 保存/退出按钮 */
+.login-btn,
 .login-btn-primary {
 	padding: 0.6rem;
-	background-color: #2196F3;
+	background-color: var(--color-a);
 	color: white;
 	border-radius: 0.5rem;
 	cursor: pointer;
 	border: none;
 	line-height: 1.2rem;
+	flex: 1;
 }
 
 label.checkbox-button {
-	height: 2rem;
-	/* line-height: 2rem; */
+	block-size: 2rem;
 	font-size: 13px;
 	user-select: none;
 }
@@ -435,10 +444,10 @@ label.checkbox-button input[type="checkbox"] {
 	display: none;
 }
 
-.settings>button ,
+.settings>button,
 label.checkbox-button input[type="checkbox"]:checked+span {
-	border: 1px solid #2196F3;
-	color: #2196F3;
+	border: 1px solid var(--color-a);
+	color: var(--color-a);
 	background-color: #2195f30a;
 	box-sizing: border-box;
 }
@@ -449,7 +458,7 @@ label.checkbox-button>.outlay {
 	background-color: var(--color-dark-d);
 	border-radius: 1rem;
 	padding: 0 0.5rem;
-	height: 100%;
+	block-size: 100%;
 	gap: 3px;
 	user-select: none;
 	box-sizing: border-box;
@@ -463,13 +472,13 @@ label.checkbox-button>.outlay {
 }
 
 #data-dialog {
-	width: 80%;
-	height: 80%;
+	inline-size: 80%;
+	block-size: 80%;
 }
 
 .click {
-	min-width: 32px;
-	min-height: 32px;
+	min-inline-size: 32px;
+	min-block-size: 32px;
 	border-radius: 16px;
 	border: 1px solid var(--color-dark);
 	padding: 0 0.4rem;
@@ -479,7 +488,7 @@ label.checkbox-button>.outlay {
 }
 
 #api-list {
-	max-height: 50%;
+	max-block-size: 50%;
 	line-height: 2rem;
 }
 
@@ -492,17 +501,55 @@ label.checkbox-button>.outlay {
 }
 
 .archive summary {
-	color: #2196F3;
+	color: var(--color-a);
 	padding: 0.4rem;
 	cursor: pointer;
 }
 
-.hover:hover ,
-.hover:hover button{
+.hover:hover,
+.hover:hover button {
 	background-color: #ffffff;
 	border-radius: 5px;
 }
 
 .subtitle {
 	padding: 0 0 0 0.4rem;
+}
+
+.toast {
+	position: fixed;
+	inline-size: fit-content;
+	block-size: fit-content;
+	padding: 1rem;
+	background-color: azure;
+	left: 50%;
+	top: 60%;
+	font-weight: 600;
+	transform: translate(-50%);
+	border-radius: 0.4rem;
+	box-shadow: 1px 1px 10px 2px #000;
+	user-select: none;
+	touch-action: none;
+	pointer-events: none;
+}
+
+.dialog-progress {
+	appearance: none;
+}
+
+@keyframes moveStripes {
+	0% {
+		background-position: 36px 0;
+	}
+
+	100% {
+		background-position: 0 0;
+	}
+}
+
+.dialog-progress::-webkit-progress-bar {
+	background-color: cadetblue;
+	background-image: linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+	background-size: 36px 36px;
+	animation: moveStripes 1s linear infinite;
 }

@@ -1,127 +1,159 @@
-aaa = (function () {
 
-    // 初始化小球数量
-    const length = 100;
+// --- Particle 类 ---
+class Particle {
+    constructor(x, y, options) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.size = Math.random() * 19 + 1;
+        this.fillStyle = `hsl(${Math.random() * 360}, 50%, 50%)`;
+        this.attraction = 0.05;
+        this.options = options;
+    }
 
-    class Point {
-        // 移动倍速
-        nx = 1;
-        ny = 1;
-        constructor(x = 10, y = 10, n = 3) {
-            this.x = x, this.y = y, this.n = n;
-            this.dx = random(0, 1)
-            this.dy = random(0, 1)
-        }
+    init(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.size = Math.random() * 10 + 1;
+        this.fillStyle = `hsl(${Math.random() * 360}, 50%, 50%)`;
+        this.attraction = 0.05;
+    }
 
-        /**
-         * @param {CanvasRenderingContext2D} ctx
-         */
-        draw(ctx, l) {
+    update(mouse) {
+        this.x += this.vx;
+        this.y += this.vy;
 
-            if (this.dx == 1) {
-                this.x += this.nx + l;
-            } else {
-                this.x -= this.nx + l;
+        const { dw, dh } = this.options;
+        if (this.x > dw || this.x < 0) this.vx *= -1;
+        if (this.y > dh || this.y < 0) this.vy *= -1;
+
+        if (mouse.x != null && mouse.y != null) {
+            const dx = mouse.x - this.x;
+            const dy = mouse.y - this.y;
+            const distSq = dx * dx + dy * dy;
+            const radius = 150;
+            if (distSq < radius * radius && distSq > 0) {
+                const dist = Math.sqrt(distSq);
+                const force = this.attraction;
+                this.vx += force * dx / dist;
+                this.vy += force * dy / dist;
             }
-
-            if (this.dy == 1) {
-                this.y += this.ny + l;
-            } else {
-                this.y -= this.ny + l;
-            }
-
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.n, 0, 2 * Math.PI); // 绘制圆形
-            ctx.fillStyle = "#FFFFFF"; // 设置填充颜色
-            ctx.fill(); // 填充颜色
-
         }
     }
 
-    function random(start = 0, end = 100) {
-        return Math.floor((1 + end - start) * Math.random() + start);
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.fillStyle;
+        ctx.fill();
+    }
+}
+
+// --- 主函数 ---
+return function colosseum(ctx, c3d, options) {
+    ctx.canvas.classList.remove("hide");
+
+    ctx.canvas.width = options.dw;
+    ctx.canvas.height = options.dh;
+
+    const mouse = { x: null, y: null };
+    const canvas = ctx.canvas;
+    const rect = canvas.getBoundingClientRect();
+
+    document.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+    });
+    document.addEventListener('mouseleave', () => {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    // --- 直接初始化粒子（移除 createParticles 函数） ---
+    const particleCount = 120;
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
+        const x = Math.random() * options.dw;
+        const y = Math.random() * options.dh;
+        particles.push(new Particle(x, y, options));
     }
 
-    /**
-     * @param {CanvasRenderingContext2D} ctx
-     */
-    return function (ctx, c3d, options) {
-        ctx.canvas.classList.remove("hide");
+    // --- 点击生成粒子 ---
+    document.addEventListener('click', (e) => {
+        const rect2 = canvas.getBoundingClientRect();
+        const cx = e.clientX - rect2.left;
+        const cy = e.clientY - rect2.top;
+        for (let i = 0; i < 10; i++) {
+            const idx = Math.floor(Math.random() * particles.length);
+            particles[idx].init(
+                cx + (Math.random() - 0.5) * 20,
+                cy + (Math.random() - 0.5) * 20
+            );
+        }
+    });
 
-        /** @type {Point[]} */
-        const arr = new Array(length);
-        for (let index = 0; index < length; index++) {
-            arr[index] = new Point(random(0, options.dw), random(0, options.dh), 4);
+    // --- 动画主循环 ---
+    function animate() {
+        ctx.clearRect(0, 0, options.dw, options.dh);
+
+        // 更新所有粒子
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update(mouse);
         }
 
-        let last = 0;
-        requestAnimationFrame(function frame(time) {
+        // 碰撞检测与处理（平方距离优化 + 复用 invDist）
+        for (let i = 0; i < particles.length; i++) {
+            const p1 = particles[i];
+            for (let j = i + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                const distSq = dx * dx + dy * dy;
+                const minDist = p1.size + p2.size;
 
-            const w = options.dw, h = options.dh;
-            const l = (time - last) / 20;
+                if (distSq < minDist * minDist && distSq > 0) {
+                    const dist = Math.sqrt(distSq);
+                    const invDist = 1 / dist;
+                    const avgSize = (p1.size + p2.size) / 3;
 
-            ctx.clearRect(0, 0, w, h);
+                    p1.size = avgSize;
+                    p2.size = avgSize;
 
-            for (let point, i = 0; i < length; i++) {
-                point = arr[i];
+                    const tempVx = p1.vx;
+                    const tempVy = p1.vy;
+                    p1.vx = p2.vx * 0.9;
+                    p1.vy = p2.vy * 0.9;
+                    p2.vx = tempVx * 0.9;
+                    p2.vy = tempVy * 0.9;
 
-                point.draw(ctx, l);
-
-                if (point.x < 0) {
-                    point.dx = 1;
-                } else if (point.x > w) {
-                    point.dx = 0;
-                }
-                if (point.y < 0) {
-                    point.dy = 1;
-                } else if (point.y > h) {
-                    point.dy = 0;
-                }
-
-                for (let point2, j = 0; j < length; j++) {
-                    if (i !== j) {
-                        point2 = arr[j];
-                        const x = point.x - point2.x;
-                        const y = point.y - point2.y;
-                        const juli = Math.sqrt((x ** 2) + (y ** 2));
-
-                        if (juli < 200) {
-                            if (x > 0) {
-                                point.nx = Math.min(point.nx + 0.01, 2);
-                            } else {
-                                point.nx = Math.max(point.nx  -0.01, 0);
-                            }
-                            if (y > 0) {
-                                point.ny = Math.min(point.ny + 0.01, 2);
-                            } else {
-                                point.ny = Math.max(point.ny  -0.01, 0);
-                            }
-
-                            ctx.beginPath();
-                            ctx.lineWidth = Math.max((2 - (juli / 100)), 0.1);
-                            ctx.strokeStyle = "#FFF";
-                            ctx.moveTo(point.x, point.y);
-                            ctx.lineTo(point2.x, point2.y);
-                            ctx.stroke();
-
-                            // 靠近会排斥，避免扎堆
-                            if (juli <= 10) {
-                                if (point.dx != point2.dx) {
-                                    point.dx ^= 1;
-                                    point2.dx ^= 1;
-                                }
-                                if (point.dy != point2.dy) {
-                                    point.dy ^= 1;
-                                    point2.dy ^= 1;
-                                }
-                            }
-                        }
+                    if (p1.size < 3) {
+                        p1.init(Math.random() * options.dw, Math.random() * options.dh);
                     }
+                    if (p2.size < 3) {
+                        p2.init(Math.random() * options.dw, Math.random() * options.dh);
+                    }
+
+                    const overlap = (p1.size + p2.size - dist) / 2;
+                    const sepX = dx * invDist * overlap;
+                    const sepY = dy * invDist * overlap;
+                    p1.x += sepX;
+                    p1.y += sepY;
+                    p2.x -= sepX;
+                    p2.y -= sepY;
                 }
             }
+        }
 
-            last = time;
-            requestAnimationFrame(frame);
-        });
+        // 绘制所有粒子
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].draw(ctx);
+        }
+
+        requestAnimationFrame(animate);
     }
-}());
+
+    requestAnimationFrame(animate);
+};

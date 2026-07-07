@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+
+        // 我发现C# 的webview调用是统一的Promise链，而Android的webview却不是，于是我写了一个辅助方法：
+
+        function promisify(options) {
+            const pending = new Map();
+            let index = 0;
+
+            // window.addEventListener("message", function(event) {
+            //     const {code, status, data} = event.data;
+            //     const entry = pending.get(code);
+            //     if (!entry) return;
+            //     pending.delete(code);
+            //     clearTimeout(entry.timer);
+            //     status === 'error' ? entry.reject(new Error(data)) : entry.resolve(data);
+            // }, false);
+
+            window.asyncMessage = function (code, status, data) {
+                const entry = pending.get(code);
+                if (!entry) return;
+                pending.delete(code);
+                clearTimeout(entry.timer);
+                status === 'error' ? entry.reject(new Error(data)) : entry.resolve(data);
+            };
+
+            return new Proxy(options, {
+                get(target, property, receiver) {
+                    return function (...args) {
+                        let resolve, reject;
+                        const promise = new Promise((a, b) => void (resolve = a, reject = b));
+                        const value = Reflect.get(target, property, receiver);
+                        if (typeof value === "function") {
+                            try {
+                                const code = index++;
+                                const timer = setTimeout(() => reject(new Error('任务超时')), 10 * 60 * 1000);
+                                pending.set(code, { promise, resolve, reject, timer });
+                                value.call(null, code, ...args);
+                            } catch (e) {
+                                reject(e)
+                            }
+                        } else {
+                            resolve(value)
+                        }
+                        return promise;
+                    }
+                }
+            })
+        }
+
+        const p = promisify(window)
+
+        p.open(123)
+
+
+    </script>
+</body>
+
+</html>
