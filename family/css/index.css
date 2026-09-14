@@ -50,7 +50,10 @@ body .hide {
 
 #table td {
 	min-width: 1.5rem;
+	/* writing-mode: vertical-rl; */
 	border: 1px solid var(--border-color);
+	/* word-spacing: 3px; */
+	/* letter-spacing: 3px; */
 }
 
 td.has {
@@ -59,7 +62,7 @@ td.has {
 }
 
 #table td.sign {
-	width: 2rem;
+	width: 1.4rem;
 }
 
 .full {
@@ -151,6 +154,7 @@ a.button {
 	padding: 0;
 	list-style-type: none;
 	overflow: hidden scroll;
+	font-size: 0.8rem;
 }
 
 #find-list li {
@@ -179,6 +183,7 @@ a.button {
 	width: 4rem;
 	height: 4rem;
 	border-radius: 2rem;
+	margin: 0.5rem;
 }
 
 #rotate {

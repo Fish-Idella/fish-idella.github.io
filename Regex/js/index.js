@@ -65,7 +65,7 @@ const MainObj = {
 
 
     pp: function () {
-        const text = _text.value || _text.textContent;
+        const text = _text.value || _text.innerText;
         // console.log(text)
         if (text && MainObj.pattern) try {
             const result = [];

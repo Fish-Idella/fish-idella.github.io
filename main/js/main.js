@@ -62,6 +62,22 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             _body.setAttribute("theme", theme);
         }
     }, settings.string_theme);
+    defineAndCall('showWeather', function (bool) {
+        const w = document.getElementById("weather");
+        if (!bool) return w.textContent = '';
+
+        ParseWeather.then(function (fn) {
+            fn().then(obj => {
+                const weather = obj.weather.data;
+                const a = document.createElement("a");
+
+                a.textContent = fn.parseWeatherObj(weather);
+                w.appendChild(a);
+            }).catch(function (e) {
+                w.textContent = e.message
+            })
+        })
+    }, settings.boolean_show_weather);
 
     const _first_submit = _search.querySelector("[type=submit]"); // 默认的搜索引擎
     //const // _quickdelete = _search.querySelector("input#word+a.quickdelete");

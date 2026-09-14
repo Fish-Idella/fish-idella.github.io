@@ -614,7 +614,7 @@ const PuSetPlayer = (function () {
 
 (function 控制器() {
     const player = new PuSetPlayer(document.getElementById("player-video-layer"));
-    player.play("https://localhost/av/Videos/%E6%9E%AB%E8%8A%B1%E6%81%8B%EF%BC%88%E6%A5%93%E3%82%AB%E3%83%AC%E3%83%B3-Kaede%20Karen%EF%BC%89/IPX-776/[G211.cc]IPX-776%E6%9B%BF%E8%BA%AB%E8%82%89%E4%BE%BF%E5%99%A8,%E5%8D%B3%E4%BD%BF%E5%B0%84%E7%B2%BE%E4%BE%9D%E6%97%A7%E4%B8%8D%E5%81%9C%E6%81%AF%E6%BD%AE%E5%90%B9%E5%87%8C%E8%BE%B1,10%E6%97%A5%E7%9B%91%E7%A6%81%E7%94%9F%E6%B4%BB..%E6%9E%AB%E5%8F%AF%E6%80%9C.mp4")
+    player.play("https://localhost/av/Videos/%E3%80%90%E6%9C%80%E6%96%B0%20%E7%9C%9F%E6%97%A0%E7%A0%81%E6%B5%81%E5%87%BA%E3%80%91%E5%A4%84%E5%A5%B3%E5%87%BA%E9%81%93%E7%8E%89%E5%A5%B3%E3%80%8E%E6%88%B7%E7%94%B0%E7%9C%9F%E7%90%B4%E3%80%8F%E8%BD%AE%E5%A5%B8%E4%BF%B1%E4%B9%90%E9%83%A8%20%E8%B6%85%E9%AB%98%E7%BA%A7%E8%BF%9E%E7%BB%AD%E4%B8%AD%E5%87%BA35%E5%8F%91%20%E5%BC%BA%E7%95%AASTAR-140%20%E8%B6%85%E6%B8%85%E6%97%A0%E7%A0%81%E6%AF%8D%E5%B8%A6/STAR-140%20%E6%88%B7%E7%94%B0%E7%9C%9F%E7%90%B4-%E5%89%8D%E5%8D%8A%E6%AE%B5%20%E8%B6%85%E6%B8%85%E6%97%A0%E7%A0%81.mp4")
 
     const dashboard = document.querySelector("div.dashboard");
     const urlInput = dashboard.querySelector(".url-box>input[type=url]");
@@ -677,7 +677,7 @@ const PuSetPlayer = (function () {
     })
 
     function getList(path) {
-        fetch("/api/directory_content_fetcher.php", {
+        fetch("/api/files", {
             method: "POST",
             body: new URLSearchParams({ path })
         }).then(r => r.json()).then(json => {

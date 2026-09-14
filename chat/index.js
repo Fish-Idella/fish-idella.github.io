@@ -10,25 +10,10 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
     let gameState = {
         // 初始视频播放列表
         "videos": ["title_b", "title_a"],
-        "behavior_and_chat": "（默认以乳交开场，女仆邀约男主人，脱掉内衣 …… 屏幕一闪，男主人已坐在沙发上，女仆跪在主人身前，乳房夹着男主人的阴茎，手指把玩着主人龟头）主人，人家的奶子是不是超软超舒服呢？", // AI生成的对话和行为描述文本
         "index": 1 // 当前播放的视频在列表中的索引
     };
 
-    // 构造发送给AI模型的请求体
-    const aiRequestBody = {
-        "model": selectedModel,
-        "stream": true, // 启用流式响应
-        "temperature": 0.7,
-        "messages": [
-            {
-                "role": "system",
-                "content": systemPromptText // 主要的系统指令
-            }, {
-                "role": "system",
-                "content": posture.paizuri // 初始的姿势/行为指令
-            }
-        ]
-    };
+    let openAI;
 
     // 获取页面上的DOM元素
     const apiPathInput = document.getElementById("api-path");
@@ -49,7 +34,7 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
      * 将换行符转换为<br>，并将括号内的内容（如旁白、动作描述）用特定样式包裹
      */
     function updateChatDisplay() {
-        chatOutput.innerHTML = gameState.behavior_and_chat
+        chatOutput.innerHTML = openAI.requestConfig.messages.at(-1).content
             .replace(/[\r\n]/g, "<br>")
             .replace(/(\uff08[^\uff09]*\uff09)|(\([^\)]*\))/g, "<span class='dd'>$1</span>");
     }
@@ -101,19 +86,82 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
         window.localStorage.setItem("api-key", apiSecretKey);
         window.localStorage.setItem("api-model-name", (selectedModel = modelSelect.value));
 
-        // 设置正式的游戏视频列表和初始状态
-        gameState.videos = ["op_e_01", "op_e_02", "paizuri_a_02", "paizuri_a_03"];
-        gameState.index = 0;
-        updateChatDisplay();
-        getPlayableVideoPath(gameState, 0).then(path => videoElement.src = path);
+        openAI = new OpenAIStream({
+            "api-url": apiBaseUrl,
+            "api-key": apiSecretKey
+        }).setToolFunctions({
+            async get_video_list(args) {
+                return args.types.map(type => posture[type]).join("\n\n");
+            },
+            async set_video_list(args) {
+                gameState.videos = args.keys;
+                gameState.index = 0;
+                getPlayableVideoPath(gameState, 0).then(path => videoElement.src = path);
+                return "成功"
+            }
+        }).setRequestConfig({
+            "model": selectedModel,
+            "stream": true,
+            "temperature": 0.8,
+            "thinking": {
+                "type": "enabled"
+            },
+            "tools": [
+                {
+                    type: "function",
+                    function: {
+                        name: "get_video_list",
+                        description: "获取一个或多个类型场景的全部视频列表",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                types: {
+                                    type: "array",
+                                    items: { type: "string" },
+                                    enum: Object.keys(posture),
+                                    description: "类型，只允许枚举中的类型",
+                                }
+                            },
+                            required: ["types"]
+                        }
+                    }
+                },
+                {
+                    type: "function",
+                    function: {
+                        name: "set_video_list",
+                        description: "与对话场景匹配的视频列表",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                keys: {
+                                    type: "array",
+                                    description: "视频 ID",
+                                    items: { type: "string" }
+                                }
+                            },
+                            required: ["keys"]
+                        }
+                    }
+                },
+            ],
+            "tool_choice": "auto",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": systemPromptText // 主要的系统指令
+                }, {
+                    "role": "assistant",
+                    "content": "（默认以乳交开场，女仆邀约男主人，脱掉内衣 …… 屏幕一闪，男主人已坐在沙发上，女仆跪在主人身前，乳房夹着男主人的阴茎，手指把玩着主人龟头）主人，人家的奶子是不是超软超舒服呢？"
+                }
+            ]
+        })
 
-        // 更新AI请求参数
-        aiRequestBody.model = selectedModel;
-        // 将初始游戏状态作为AI的首次助理消息，提供上下文
-        aiRequestBody.messages.push({
-            "role": "assistant",
-            "content": JSON.stringify(gameState)
-        });
+        // 设置正式的游戏视频列表和初始状态
+        openAI.functions.set_video_list({
+            keys: ["op_e_01", "op_e_02", "paizuri_a_02", "paizuri_a_03"]
+        })
+        updateChatDisplay();
 
         // 获取并设置自动推进间隔
         autoAdvanceInterval = Math.ceil(document.getElementById("auto-advance").value);
@@ -137,7 +185,7 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
         autoHideDialog.cancelLast(); // 取消上一次设置的计时器
 
         // 根据文本长度动态计算隐藏延迟（约300ms/字符），确保阅读时间
-        hide.timer = setTimeout(() => chatDialog.classList.add("hide"), 300 * gameState.behavior_and_chat.length);
+        hide.timer = setTimeout(() => chatDialog.classList.add("hide"), 9000);
     };
     // 为自动隐藏函数附加一个取消上次计时的方法
     autoHideDialog.cancelLast = function () {
@@ -193,89 +241,6 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
         });
     }
 
-    /**
-     * 处理AI模型的流式响应
-     * @param {Response} response - fetch API的响应对象
-     */
-    const handleAIResponseStream = async function (response) {
-        const contentChunks = [], reasoningChunks = [];
-        try {
-            const reader = response.body.getReader();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    break;
-                }
-                const decoder = new TextDecoder("UTF-8");
-                const chunk = decoder.decode(value, { stream: true });
-
-                const lines = chunk.split('\n');
-                inner_lines: for (const l of lines) {
-                    const line = l.trim();
-                    // 跳过非数据行或结束标记
-                    if (!line.startsWith('data: ') || line === "data: [DONE]") {
-                        continue inner_lines;
-                    }
-
-                    const data = JSON.parse(line.substring(6)); // 去掉"data: "前缀后解析JSON
-                    reasoningChunks.push(data.choices[0].delta.reasoning); // 收集推理内容（如果有）
-                    const content = data.choices[0].delta.content;
-                    contentChunks.push(content); // 收集回复内容
-                }
-            }
-            // 在控制台输出完整的推理过程（用于调试）
-            console.log(reasoningChunks.join(''));
-            console.log(contentChunks.join(''));
-
-        } catch (error) {
-            chatOutput.textContent = error;
-            // 出错时，从消息历史中移除最后一次（即本次）的用户消息，以便重试
-            aiRequestBody.messages.pop();
-            endRequest();
-            return;
-        }
-
-        // 尝试从AI的完整回复中提取JSON对象（即新的游戏状态指令）
-        const jsonMatch = contentChunks.join('').match(/(\{[^\}]+\})/);
-        if (Array.isArray(jsonMatch)) {
-            const newGameState = JSON.parse(jsonMatch[1]);
-            getPlayableVideoPath(newGameState, 0).then(function (path) {
-                // 成功获取到新状态
-                gameState = newGameState;
-                gameState.index = 0; // 重置为播放列表的第一个视频
-                videoElement.src = path; // 播放新视频
-
-                updateChatDisplay(); // 更新显示的文本
-
-                // 根据新视频列表中的视频ID前缀（如"paizuri"），更新AI的“姿势”系统提示
-                const postureKeys = new Set(gameState.videos.map(id => String(id).split("_").at(0)));
-                const allPostureContent = [];
-                postureKeys.forEach(key => {
-                    if (posture[key]) {
-                        allPostureContent.push(posture[key]);
-                    }
-                });
-                aiRequestBody.messages[1].content = allPostureContent.join(''); // 更新第二个系统消息
-
-                // 将AI本次的完整回复（即新状态）追加到消息历史中，作为上下文
-                aiRequestBody.messages.push({
-                    "role": "assistant",
-                    "content": JSON.stringify(gameState)
-                });
-                console.log(aiRequestBody); // 调试用，打印当前请求体
-            }).catch(function () {
-                // 如果新状态指定的视频无法播放，报错并回滚消息历史
-                chatOutput.textContent = "Error";
-                aiRequestBody.messages.pop();
-            });
-        } else {
-            console.log("无法从AI回复中识别JSON: " + contentChunks.join(''));
-        }
-        // 无论成功失败，都进行收尾工作（启用发送按钮、启动自动隐藏和空闲计时）
-        endRequest();
-    };
-
     // 用户输入时，重置空闲计时器
     chatInput.addEventListener("input", function () {
         startIdleTimer();
@@ -310,16 +275,6 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
         videoElement.play();
     });
 
-    /**
-     * 单次AI请求结束后的清理与重置工作
-     */
-    function endRequest() {
-        submitButton.thinking = false;
-        submitButton.textContent = "Send";
-        autoHideDialog(); // 启动对话框自动隐藏
-        startIdleTimer(); // 重新启动空闲计时器
-    }
-
     // 鼠标在视频区域移动时，显示并延时隐藏对话框
     videoElement.parentElement.addEventListener("pointermove", function () {
         if (submitButton.thinking) return; // 如果AI正在思考，则不干扰
@@ -344,37 +299,27 @@ fetch("system.txt").then(response => response.text()).then(function (systemPromp
     // 发送消息给AI
     submitButton.addEventListener('click', function sendMessage() {
 
-        if (submitButton.thinking) {
-            sendMessage.controller.abort();
-            return;
-        }
-
         const userMessage = chatInput.value.trim();
         if (userMessage === "") return;
 
         submitButton.thinking = true;
-        sendMessage.controller = new AbortController();
         submitButton.textContent = "Thinking...";
         autoHideDialog.cancelLast(); // 发送时取消自动隐藏
         clearTimeout(startIdleTimer.timer); // 发送时重置空闲计时
 
         // 将用户消息添加到请求历史中
-        aiRequestBody.messages.push({ "role": "user", "content": userMessage });
+        openAI
+            .addMessage({ "role": "user", "content": userMessage })
+            .send(function (type, string) {
+                if (type === "finish") {
 
-        // 简单的历史消息长度控制：如果消息太多，删除早期的一些消息（保留系统消息）
-        if (aiRequestBody.messages.length > 14) {
-            aiRequestBody.messages.splice(2, 3); // 从索引2开始删除3条消息
-        }
-        // 向AI API发送请求
-        fetch(new URL('chat/completions', apiBaseUrl).href, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                "Authorization": `Bearer ${apiSecretKey}`
-            },
-            body: JSON.stringify(aiRequestBody),
-            signal: sendMessage.controller.signal
-        }).then(handleAIResponseStream).catch(endRequest); // 出错时也执行清理
+                    updateChatDisplay();
+
+                    submitButton.thinking = false;
+                    submitButton.textContent = "Send";
+                    autoHideDialog(); // 启动对话框自动隐藏
+                    startIdleTimer(); // 重新启动空闲计时器
+                }
+            });
     });
 });

@@ -1,5 +1,8 @@
-/mediae/video/
-/mediae/local/
+/mediae/*
+!/mediae/fonts
+!/mediae/icons
+!/mediae/images
+!/mediae/svg
 
 /moban7158/
 
@@ -8,3 +11,4 @@
 /TeachingFeeling
 /chat
 /JPM
+/asmr

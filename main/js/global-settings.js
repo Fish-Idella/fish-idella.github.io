@@ -111,7 +111,7 @@ const MainUI = (function (attrs, list) {
     loadBackground() { },
 
     boolean_show_weather(type, value) {
-        MainUI.GS.boolean_show_weather = value
+        MainUI.showWeather(MainUI.GS.boolean_show_weather = value);
     },
 
     boolean_main_show_links(type, value) {
@@ -214,7 +214,8 @@ const MainUI = (function (attrs, list) {
             "links",           // 链接
             "search_history",  // 搜索历史
             "icp",             // ICP
-            "add_button"       // 添加按钮
+            "add_button",      // 添加按钮
+            "weather"
         ],
         fn: function (type) {
             switch ("" + type) {
@@ -229,6 +230,9 @@ const MainUI = (function (attrs, list) {
                 }
                 case "add_button": {
                     return MainUI.onchange("boolean_main_show_add_button", "checkbox", !MainUI.GS.boolean_main_show_add_button);
+                }
+                case "weather": {
+                    return MainUI.onchange("boolean_show_weather", "checkbox", !MainUI.GS.boolean_show_weather);
                 }
             }
         }

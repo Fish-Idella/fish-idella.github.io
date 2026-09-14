@@ -1,4 +1,4 @@
-let PuSet = (function (getPuSet) {
+const PuSet = (function (getPuSet) {
     "use strict";
 
     const PuSet = (globalThis || window).PuSet || {};
@@ -75,7 +75,7 @@ let PuSet = (function (getPuSet) {
         },
 
         gcd: function gcd(a, b) {
-            return b === 0 ? a : this.gcd(b, a % b);  // 修复递归调用
+            return b === 0 ? a : gcd(b, a % b);  // 修复递归调用
         },
 
         fraction(num) {

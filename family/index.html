@@ -20,7 +20,7 @@
 
 </head>
 
-<body link="#0000cc" oncontextmenu="return false">
+<body link="#0000cc">
 	<section class="view box-h">
 		<div class="relative full">
 			<table id="table">
@@ -43,7 +43,22 @@
 				<div id="detail">
 					<p>暂时未收录此人生平，功能完善后，你可以选择为他<a href="">撰写生平</a>。</p>
 				</div>
-				<ul id="find-list" class=""></ul>
+				<ul id="find-list" class="">
+					<li class="flex-horizontal" data-id="id">
+						<img src="/mediae/icons/timg.jfif" alt="photos">
+						<div class="fill">
+							<span class="name">name</span>
+							<div>
+								<b>字辈：</b><span class="sign">字</span>
+								<b>祖父：</b><span class="grampa">三个字</span>
+								<b>父亲：</b><span class="father">三个字</span>
+								<b>母亲：</b><span class="mother">三个字</span><br />
+								<b>生日：</b><span class="birthday"></span><br />
+								<b>居住地：</b><span class="residence"></span>
+							</div>
+						</div>
+					</li>
+				</ul>
 			</li>
 		</ul>
 	</section>
@@ -59,8 +74,8 @@
 		</tbody>
 	</table>
 
-	<script type="text/javascript" src="/js/jquery/jquery-3.5.1.js"></script>
-	<script type="text/javascript" src="js/family_members.js"></script>
+	<script type="text/javascript" src="/js/puset/puset-3.0.0.js"></script>
+	<script type="text/javascript" src="js/family-store.js"></script>
 	<script type="text/javascript" src="js/index.js"></script>
 
 </body>

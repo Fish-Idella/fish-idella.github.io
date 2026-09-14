@@ -100,6 +100,8 @@ body>.view {
 
 #weather {
 	grid-area: 1/1/2/2;
+	place-content: center;
+	padding: 0 1rem;
 }
 
 #menu {

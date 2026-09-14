@@ -55,12 +55,12 @@
 				<tr>
 					<td><label class="box-v"><span class="title red">字辈：*</span><input id="sign" type="text"
 								name=""></label></td>
-					<td><label class="box-v"><span class="title">生日：</span><input id="birthday" type="text"
-								name=""></label></td>
+					<td><label class="box-v"><span class="title">祖父：</span><input id="grampa" type="text"
+								name="" readonly=""></label></td>
 				</tr>
 				<tr>
-					<td colspan="2"><label class="box-v"><span class="title">居住地：</span><input id="residence"
-								type="text" name=""></label></td>
+					<td colspan="2"><label class="box-v"><span class="title">生日：</span><input id="birthday" type="text"
+								name=""></label></td>
 				</tr>
 				<tr>
 					<td colspan="3" id="spouses"><span class="title">配偶：</span><input class="add" type="button"
@@ -74,6 +74,10 @@
 					<td colspan="3" id="siblings"><span class="title">兄弟姐妹：</span><input class="add" type="button"
 							value="添加" /></td>
 				</tr>
+				<tr>
+					<td colspan="3"><label class="box-v"><span class="title">居住地：</span><input id="residence"
+								type="text" name=""></label></td>
+				</tr>
 				<tr class="life">
 					<td colspan="3"><label class="box-v"><span class="title">生平事迹：</span><textarea id="life"
 								readonly></textarea></label></td>
@@ -83,6 +87,15 @@
 						<div class="box-h box-r">
 							<input id="reset" type="reset" value="清空" />
 							<input id="submit" type="button" value="提交" />
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						<div class="box-h box-r">
+							<ul>
+								<li>夫妻同是家族成员，孩子登记在一边，两边同时登记会导致表格显示错乱</li>
+							</ul>
 						</div>
 					</td>
 				</tr>
@@ -136,10 +149,8 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="/js/jquery/jquery-3.5.1.js"></script>
-	<script type="text/javascript" src="/js/puset/puset-2.1.2.js"></script>
-	<script type="text/javascript" src="/js/puset/puset.view.js"></script>
-	<script type="text/javascript" src="js/family_members.js"></script>
+	<script type="text/javascript" src="/js/puset/puset-3.0.0.js"></script>
+	<script type="text/javascript" src="js/family-store.js"></script>
 	<script type="text/javascript" src="js/add.js"></script>
 
 </body>

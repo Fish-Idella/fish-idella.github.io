@@ -23,7 +23,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     if (xhr.status === 200) {
                         resolve(xhr.responseText);
                     } else {
-                        reject(new Error("请求失败"))
+                        reject(new Error("请求失败，网址：" + xhr.responseURL || url))
                     }
                 }
             };
@@ -52,54 +52,110 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     /** 星期几映射 */
     const WEEK_MAP = ['日', '一', '二', '三', '四', '五', '六'];
 
-    const reservedWords = new Set(["book-index", "current-datetime", "user-profile", "user-cosplay", "self-profile"]);
-
-
     function promisify(options) {
         const pending = new Map();
+        const timeout = 10 * 60 * 1000;
         let index = 0;
 
+        // 1. 保存可能存在的原有回调，避免直接覆盖导致功能丢失
+        const originalAsyncMessage = options.asyncMessage;
+
         options.asyncMessage = function (code, status, data) {
+            // 先调用原有回调（如果有），保证兼容性
+            if (typeof originalAsyncMessage === 'function') {
+                originalAsyncMessage.call(this, code, status, data);
+            }
+
             const entry = pending.get(code);
             if (!entry) return;
-            pending.delete(code);
+
+            // 2. 收到回调后立即清理定时器并从 Map 中删除，防止内存泄漏
             clearTimeout(entry.timer);
-            status === 'error' ? entry.reject(new Error(data)) : entry.resolve(data);
+            pending.delete(code);
+
+            if (status === 'error') {
+                entry.reject(new Error(data));
+            } else {
+                entry.resolve(data);
+            }
         };
+
+        // 3. 为旧环境补充 Promise.withResolvers
+        if (typeof Promise.withResolvers !== 'function') {
+            Promise.withResolvers = function () {
+                let resolve, reject;
+                const promise = new Promise((res, rej) => {
+                    resolve = res;
+                    reject = rej;
+                });
+                return { promise, resolve, reject };
+            };
+        }
+
+        // 4. 安全生成唯一 code，避免无限递增和冲突
+        function generateCode() {
+            const MAX_SAFE = Number.MAX_SAFE_INTEGER;
+            let code;
+            do {
+                code = index;
+                index = (index + 1) % MAX_SAFE;
+                // 若 code 因某种原因仍在 pending 中，则跳过（极少出现）
+            } while (pending.has(code));
+            return code;
+        }
 
         return new Proxy(options, {
             get(target, property, receiver) {
                 return function (...args) {
-                    let resolve, reject;
-                    const promise = new Promise((a, b) => void (resolve = a, reject = b));
+                    const { promise, resolve, reject } = Promise.withResolvers();
                     const value = Reflect.get(target, property, receiver);
-                    if (typeof value === "function") {
-                        try {
-                            const code = index++;
-                            const timer = setTimeout(() => reject(new Error('任务超时')), 10 * 60 * 1000);
-                            pending.set(code, { promise, resolve, reject, timer });
 
-                            // 与Java通信，必须参数数量和类型一致，否则找不到方法
-                            const nntw = value.call(target, code, ...args); // boolean: no need to wait
-                            if (nntw) {
-                                clearTimeout(timer);
-                                resolve(nntw);
-                            }
-                        } catch (e) {
-                            reject(e)
-                        }
-                    } else {
+                    // 5. 对非函数属性的处理保持不变（无参返回属性值，有参报错）
+                    if (typeof value !== 'function') {
                         if (args.length === 0) {
-                            resolve(value)
+                            resolve(value);
                         } else {
-                            // 调用函数但不存在函数
-                            reject(new Error(`应用层功能出错`))
+                            reject(new Error(`当前环境无法调用此函数`));
                         }
+                        return promise;
                     }
+
+                    let code;
+                    let timer;
+                    try {
+                        code = generateCode();
+
+                        // 6. 超时回调中主动删除 pending 条目，避免内存泄漏
+                        timer = setTimeout(() => {
+                            if (pending.has(code)) {
+                                pending.delete(code);
+                                reject(new Error('任务超时'));
+                            }
+                        }, timeout);
+
+                        pending.set(code, { resolve, reject, timer });
+
+                        // 7. 调用原始方法，第一个参数固定为 code
+                        const nntw = value.call(target, code, ...args);
+
+                        // 8. 严格判断返回值：只有显式返回 true 才表示同步完成
+                        if (nntw === true) {
+                            clearTimeout(timer);
+                            pending.delete(code);
+                            resolve(nntw);
+                        }
+                        // 返回 false / undefined / 其他值 均视为需要异步等待 asyncMessage
+                    } catch (e) {
+                        // 9. 异常时清理定时器和 Map，避免残留
+                        if (timer) clearTimeout(timer);
+                        if (code !== undefined) pending.delete(code);
+                        reject(e);
+                    }
+
                     return promise;
-                }
+                };
             }
-        })
+        });
     }
 
     /**
@@ -195,7 +251,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 const fn = OpenAIFunctionCalling[name];
                 let result;
                 try {
-                    result = fn(data, informations, args);
+                    result = fn(data, information_map, args);
                     if (result instanceof Promise) {
                         result = await result;
                     }
@@ -207,7 +263,9 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     role: "tool",
                     tool_call_id: toolCall.id,
                     branch: [],
-                    content: typeof result === "object" ? JSON.stringify(result, null, 4) : String(result)
+                    content: typeof result === "object"
+                        ? "```json\n" + JSON.stringify(result, null, 2) + "\n```"
+                        : String(result)
                 };
 
                 const lastAssistantMsg = messages.at(-1);
@@ -218,7 +276,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             }
         },
 
-        async open_browser(data, informations, args) {
+        async open_browser(data, information_map, args) {
             if (!currentAgentConfig.settings["use-browser"]) {
                 return { "message": "用户已禁用" };
             }
@@ -227,76 +285,66 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             return { "message": "已打开浏览器" };
         },
 
-        get_browser_content(data, informations, args) {
+        async get_browser_content(data, information_map, args) {
             if (!currentAgentConfig.settings["use-browser"]) {
                 return { "message": "用户已禁用" }
             }
-            if (args.type === "text") {
-                return AndroidObject.getWebViewTEXT(args.selector);
-            } else {
-                return AndroidObject.getWebViewHTML(args.selector);
-            }
+            const result = await AndroidObject.getWebViewContent(args.type, args.selector);
+            return { result };
         },
 
-        close_browser() {
-            return AndroidObject.closeWebView(true);
+        async get_browser_url() {
+            const url = await AndroidObject.getWebViewURL();
+            return { url };
+        },
+
+        async close_browser() {
+            await AndroidObject.closeWebView(true);
+            return { "message": "已关闭浏览器" };
         },
 
         // ========================
         // Ⅳ. 实际工具函数
         // ========================
 
-        /**
-         * 获取真实世界天气（带缓存）
-         * @param {Object} data - 全局数据对象
-         * @param {Object} informations - 信息库（未使用）
-         * @param {Object} args - { province, city, county, type }
-         * @returns {Promise<Object>} 天气数据
-         */
-        async query_weather(data, informations, args) {
-            const { province, city, county = '', type } = args;
-            if (!province || !city || !type) {
-                return Promise.resolve({ error: "缺少省份、城市或天气类型参数" });
-            }
-
-            let cached = storage?.getItem?.("weather");
-
-            if (cached &&
-                cached.province === province &&
-                cached.city === city &&
-                cached.county === county &&
-                cached.timestamp && (Date.now() - cached.timestamp) < 3 * 60 * 60 * 1000) {
-                const value = cached.result?.data?.[type];
-                if (value) {
-                    return Promise.resolve(value);
+        reset_key(data, information_map, args) {
+            const { oldKey, newKey } = args;
+            if (Object.hasOwn(information_map, oldKey)) {
+                information_map[newKey] = information_map[oldKey];
+                information_map[newKey].key = newKey;
+                if (Reflect.deleteProperty(information_map, oldKey)) {
+                    return { message: "成功修改，并删除原始键" }
+                } else {
+                    return { message: "成功修改,但不能删除原始键" }
                 }
+            } else {
+                return { message: "不存在的原始键" }
             }
-
-            const responseText = await XMLHttpRequestGetTextPromise(`https://i.news.qq.com/weather/common?source=pc&weather_type=observe%7Cforecast_1h%7Cforecast_24h%7Cindex%7Calarm%7Climit%7Ctips%7Crise&province=${encodeURIComponent(province)}&city=${encodeURIComponent(city)}&county=${encodeURIComponent(county)}`);
-            const result = JSON.parse(responseText);
-            const weatherData = { province, city, county, timestamp: Date.now(), result };
-            storage?.setItem?.("weather", weatherData);
-            return (result.data?.[type] ?? { error: "未找到指定天气类型数据" });
         },
 
         /**
          * 创建或更新词条
          * @param {Object} data - 全局数据对象
-         * @param {Object} informations - 信息库
+         * @param {Object} information_map - 信息库
          * @param {Object} args - { summary, information, key, tags }
          * @returns {Object}
          */
-        save_information(data, informations, args) {
+        save_information(data, information_map, args) {
             try {
-                const { summary, information, key, tags } = args;
-                const isUpdate = key && (reservedWords.has(key) || informations.hasOwnProperty(key));
-                const uuid = isUpdate ? key : crypto.randomUUID();
+                const { type, key, summary, information, tags } = args;
+                const isUpdate = key && type === "update";
 
-                if (uuid === "book-index") {
+                if (key === "book-index") {
                     return { error: 'book-index 为保留键，不可写入' };
                 }
 
-                const obj = PuSet.ensureObjectProperty(informations, uuid, Information, uuid);
+                if (!isUpdate && Object.hasOwn(information_map, key)) {
+                    return {
+                        error: "创建失败，键名冲突"
+                    }
+                }
+
+                const obj = PuSet.ensureObjectProperty(information_map, key, Information, key);
 
                 if (summary) obj.summary = summary;
                 if (information) obj.information = information;
@@ -307,7 +355,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     obj.updated_at = formatDate();
                 }
 
-                return { message: `已${isUpdate ? "更新" : "创建"}词条到 key='${uuid}'` };
+                return { message: `已${isUpdate ? "更新" : "创建"}词条到 key='${key}'` };
             } catch (err) {
                 return { error: err.message };
             }
@@ -316,28 +364,28 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         /**
          * 按 key 查询词条详细信息（返回格式化字符串）
          * @param {Object} data - 全局数据对象
-         * @param {Object} informations - 信息库
+         * @param {Object} information_map - 信息库
          * @param {Object} args - { keys }
          * @returns {string} 多个词条用 '---\n' 分隔
          */
-        query_information_by_key(data, informations, args) {
+        query_information_by_key(data, information_map, args) {
             const results = [];
             const keys = args.keys || [];
 
             for (const key of keys) {
-                const infoObj = informations?.[key];
+                const infoObj = information_map?.[key];
                 if (infoObj && infoObj.information) {
-                    results.push(`**${key}**\n${infoObj.information}`);
+                    results.push(`●${key}●  \n${infoObj.information}`);
                 } else {
                     switch (key) {
                         case "book-index":
-                            results.push(`**${key}**\n${Object.values(informations).map(entry => `${entry.key}：${entry.summary}`).join('\n')}`);
+                            results.push(`●${key}●  \n${Object.values(information_map).map(entry => `\`${entry.key}\`：${entry.summary}  `).join('\n')}`);
                             break;
                         case "current-datetime":
-                            results.push(`**${key}**\n${formatDate()}`);
+                            results.push(`●${key}●  \n${formatDate()}`);
                             break;
                         default:
-                            results.push(`**${key}**\nabsent`);
+                            results.push(`●${key}●  \n  `);
                     }
                 }
             }
@@ -347,24 +395,24 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         /**
          * 建立词条之间的双向关联（可同时关联多个词条）
          * @param {Object} data - 全局数据对象（未使用）
-         * @param {Object} informations - 信息库
+         * @param {Object} information_map - 信息库
          * @param {Object} args - { keys }
          * @returns {Object}
          */
-        associate_information(data, informations, args) {
+        associate_information(data, information_map, args) {
             const keys = args.keys || [];
             if (keys.length < 2) {
                 return { error: "至少需要两个词条的 key 才能建立关联" };
             }
 
             // 过滤出实际存在的词条
-            const existingKeys = keys.filter(k => informations.hasOwnProperty(k));
+            const existingKeys = keys.filter(k => information_map.hasOwnProperty(k));
             if (existingKeys.length < 2) {
                 return { error: "至少需要两个存在的词条才能建立关联" };
             }
 
             // 获取所有存在的词条对象
-            const items = existingKeys.map(k => informations[k]);
+            const items = existingKeys.map(k => information_map[k]);
 
             // 为每对词条建立双向关联（去重）
             for (let i = 0; i < items.length; i++) {
@@ -381,37 +429,37 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         /**
          * 查询指定词条的所有关联词条（返回摘要列表）
          * @param {Object} data - 全局数据对象（未使用）
-         * @param {Object} informations - 信息库
+         * @param {Object} information_map - 信息库
          * @param {Object} args - { key }
-         * @returns {string} 每行格式 "key summary"
+         * @returns {Object}
          */
-        query_associated(data, informations, args) {
+        query_associated(data, information_map, args) {
             const targetKey = args.key;
             if (!targetKey) return '';
-            const info = informations?.[targetKey];
+            const info = information_map?.[targetKey];
             if (!info || !Array.isArray(info.associated) || info.associated.length === 0) {
                 return '';
             }
-            const lines = [];
+            const lines = {};
             for (const assocKey of info.associated) {
-                const assocInfo = informations[assocKey];
+                const assocInfo = information_map[assocKey];
                 if (assocInfo) {
-                    lines.push(`${assocKey} ${assocInfo.summary || '(无摘要)'}`);
+                    lines[assocKey] = (`${assocInfo.summary || '(无摘要)'}  `);
                 } else {
-                    lines.push(`${assocKey} (词条已删除)`);
+                    lines[assocKey] = (`(词条已删除)  `);
                 }
             }
-            return lines.join('\n');
+            return lines;
         },
 
         /**
          * 全文检索（摘要/内容/标签）
          * @param {Object} data - 全局数据对象（未使用）
-         * @param {Object} informations - 信息库
+         * @param {Object} information_map - 信息库
          * @param {Object} args - { keyword }
          * @returns {Object} key → summary 的映射
          */
-        query_information_by_keyword(data, informations, args) {
+        query_information_by_keyword(data, information_map, args) {
             const keywordsRaw = args.keyword || [];
             if (keywordsRaw.length === 0) return {};
 
@@ -421,7 +469,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             const regex = new RegExp(keywords.join('|'), "i");
             const result = {};
 
-            for (const [key, obj] of Object.entries(informations)) {
+            for (const [key, obj] of Object.entries(information_map)) {
                 const summaryMatch = regex.test(obj.summary);
                 const infoMatch = regex.test(obj.information);
                 const tagMatch = obj.tags?.some(tag => keywordsSet.has(tag)) || false;
@@ -436,11 +484,11 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         /**
          * 删除词条（不可逆，需谨慎）
          * @param {Object} data - 全局数据对象
-         * @param {Object} informations - 信息库
+         * @param {Object} information_map - 信息库
          * @param {Object} args - { keys }
          * @returns {Object}
          */
-        delete_information(data, informations, args) {
+        delete_information(data, information_map, args) {
             const result = {};
             const keys = args.keys || [];
 
@@ -453,15 +501,15 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 }
 
                 // 1. 先从其他词条的 associated 数组中移除该 key
-                for (const otherKey in informations) {
-                    const other = informations[otherKey];
+                for (const otherKey in information_map) {
+                    const other = information_map[otherKey];
                     if (other.associated && other.associated.includes(key)) {
                         other.associated = other.associated.filter(k => k !== key);
                     }
                 }
 
                 // 2. 删除词条本身
-                result[key] = `从世界书移除${hasOwnProperty.call(informations, key) ? Reflect.deleteProperty(informations, key) ? "成功" : "失败" : "不存在"}`;
+                result[key] = `从世界书移除${hasOwnProperty.call(information_map, key) ? Reflect.deleteProperty(information_map, key) ? "成功" : "失败" : "不存在"}`;
             }
             return result;
         },
@@ -471,6 +519,27 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         // ========================
 
         tools: [
+            {
+                type: "function",
+                function: {
+                    name: "reset_key",
+                    description: "只改词条的key",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            oldKey: {
+                                type: "string",
+                                description: "原始键名",
+                            },
+                            newKey: {
+                                type: "string",
+                                description: "新键名",
+                            }
+                        }
+                    },
+                    required: ["oldKey", "newKey"]
+                }
+            },
             {
                 type: "function",
                 function: {
@@ -511,38 +580,22 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             {
                 type: "function",
                 function: {
-                    name: "query_weather",
-                    description: "【真实世界天气查询】获取指定省市区的实时天气信息。参数示例：province='广东省', city='深圳市', county='南山区'",
-                    parameters: {
-                        type: "object",
-                        properties: {
-                            province: { type: "string", description: "省份名称" },
-                            city: { type: "string", description: "城市名称" },
-                            county: { type: "string", description: "区县名称，可忽略或传空字符串表示查询市级天气" },
-                            type: {
-                                type: "string",
-                                description: "天气类型，observe=实况天气，forecast_1h=1小时预报，forecast_24h=24小时预报，rise=日出日落",
-                                enum: ["observe", "forecast_1h", "forecast_24h", "rise"]
-                            }
-                        },
-                        required: ["province", "city", "type"]
-                    }
-                }
-            },
-            {
-                type: "function",
-                function: {
                     name: "save_information",
                     description: "【创建/更新词条】保存或修改一个词条。更新某一条属性其他属性保持不变时，可只传入key和要更新的属性，不必传入相同的属性。",
                     parameters: {
                         type: "object",
                         properties: {
-                            summary: { type: "string", description: "一句话概括此文档，以主体名开头，例如：“张三的基础信息”、“飞机的定义及常见类型”" },
+                            type: {
+                                type: "string",
+                                description: "指定是创建新词条，或者更新老词条",
+                                enum: ["create", "update"]
+                            },
+                            key: { type: "string", description: "语义键，作为存储的唯一标识符" },
+                            summary: { type: "string", description: "简短精炼概括此文档，以主体名开头，例如：“张三的基础信息”、“飞机的定义及常见类型”" },
                             information: { type: "string", description: "维护为 Markdown 文档，记录词条的详细信息" },
-                            key: { type: "string", description: "创建时不传key，会自动生成UUID；更新时必须传入原key。" },
                             tags: { type: "array", items: { type: "string" }, description: "标签数组，方便分类管理" }
                         },
-                        required: []
+                        required: ["type", "key"]
                     }
                 }
             },
@@ -614,18 +667,28 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 type: "function",
                 function: {
                     name: "get_browser_content",
-                    description: "读取已打开的网页的可视文档，常规读取文档使用这个工具",
+                    description: "读取已打开的网页的可视文档，没有用户明确允许禁止读取网页",
                     parameters: {
                         type: "object",
                         properties: {
-                            type: {
-                                type: "string",
-                                description: "读取类型，可选值：text=innerTEXT、html=innerHTML",
-                                enum: ["text", "html"]
-                            },
-                            selector: { type: "string", description: "CSS选择器，全局传`*`" }
+                            selector: { 
+                                type: "string", 
+                                description: "CSS选择器，全局传`*`" 
+                            }
                         },
-                        required: ["type", "selector"]
+                        required: ["selector"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "get_browser_url",
+                    description: "读取已打开的网页的网址",
+                    parameters: {
+                        type: "object",
+                        properties: {},
+                        required: []
                     }
                 }
             },
@@ -633,7 +696,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 type: "function",
                 function: {
                     name: "close_browser",
-                    description: "关闭浏览器窗口，完成对话前一定要关闭窗口，不然还得用户手动关闭",
+                    description: "关闭浏览器窗口，使用结束应该主动关闭",
                     parameters: {
                         type: "object",
                         properties: {},
@@ -676,7 +739,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         "apiList": {},
         "agents": {},
         "currentModel": "",
-        "informations": {},
+        "information_map": {},
         "branch": []
     };
 
@@ -707,7 +770,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         image.src = `image/${1 + i}.png`;
     }
 
-    const informations = PuSet.ensureObjectProperty(data, "informations", Object);
+    const information_map = PuSet.ensureObjectProperty(data, "information_map", Object);
     const agents = PuSet.ensureObjectProperty(data, "agents", Object);
     const dabai = agents[0] ?? (agents[0] = {
         id: '0',
@@ -716,17 +779,6 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             thinking: true
         }
     });
-
-    const EscapeSequenceHTML = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-        escape(text) {
-            return text.replace(/[&<>"']/g, c => this[c]);
-        }
-    };
 
     // ============================ MessageBox 类 ============================
     class MessageBox {
@@ -813,6 +865,15 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         branch: data.branch
     }
 
+    const worker = new Worker('./js/worker.js', { type: 'module' });
+    const workerMap = {};
+    worker.onmessage = function (e) {
+        const { uuid, value } = e.data;
+        workerMap[uuid].innerHTML = value;
+        Prism.highlightAllUnder(workerMap[uuid])
+        Reflect.deleteProperty(workerMap, uuid)
+    }
+
     // 视图管理器（消息列表）
     const vm_message = PuSet.mvvm({
         target: messageList,
@@ -848,13 +909,14 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 ? '工具返回'
                 : message.state;
 
-            box.querySelector('.think').textContent = message.reasoner;
-            // 安全渲染（转义HTML后再替换括号样式）
-            let safeContent = EscapeSequenceHTML.escape(message.content)
-                .replace(/\n|\r\n/g, '<br>')
-                .replace(/(\uff08[^\uff09]*(\uff09|$))/g, '<span class="dd">$1</span>')
-                .replace(/(\([^\)]*(\)|$))/g, '<span class="dd">$1</span>');
-            box.querySelector('.message').innerHTML = safeContent;
+            [
+                { selector: '.think', value: message.reasoner },
+                { selector: '.message', value: message.content }
+            ].forEach(({ selector, value }) => {
+                const uuid = crypto.randomUUID();
+                workerMap[uuid] = box.querySelector(selector);
+                worker.postMessage({ uuid, value });
+            });
 
             if (autoScroll) {
                 this.target.scrollTo(0, this.target.scrollHeight);
@@ -877,6 +939,11 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     // ============================ 辅助函数 ============================
 
     class ModalDialog {
+
+        static #instance = null;
+
+        template = null;
+
         constructor() {
             const container = document.createElement('dialog');
             container.className = 'unselect';
@@ -929,13 +996,21 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             this.template = container;
         }
 
+        static singleInstance() {
+            if (ModalDialog.#instance == null) {
+                return ModalDialog.#instance = new ModalDialog();
+            } else {
+                return ModalDialog.#instance;
+            }
+        }
+
         /**
          * 显示对话框
          * @param {string|object} options - 消息文本或配置对象
          * @param {...string} buttons - 按钮文本（兼容旧用法）
          * @returns {Promise<{which: number, value: any, selected: any[]}> & { close: Function }}
          */
-        show(options, ...buttons) {
+        static show(options, ...buttons) {
             // 参数归一化
             if (arguments.length > 1) {
                 return this.show({ type: 'message', message: options, buttons });
@@ -953,7 +1028,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             } = options;
 
             // 克隆新实例
-            const container = this.template.cloneNode(true);
+            const container = this.singleInstance().template.cloneNode(true);
             const content = container.querySelector('.dialog-content-a');
             const messageEl = content.querySelector('.dialog-message');
             const inputEl = content.querySelector('.dialog-input');
@@ -993,7 +1068,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                             cb.type = 'checkbox';
                             cb.value = item.value !== undefined ? item.value : item.text || '';
                             cb.checked = !!item.checked;
-                            const text = document.createTextNode(item.text || item.value || '');
+                            const text = document.createElement("span");
+                            text.textContent = (item.text || item.value || '');
                             wrap.appendChild(cb);
                             wrap.appendChild(text);
                             customContainer.appendChild(wrap);
@@ -1123,16 +1199,6 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             return promise;
         }
     }
-
-    // 导出单例
-    const modalDialog = new ModalDialog();
-
-    // modalDialog.show({
-    //     type: 'progress',
-    //     progress: 0,
-    //     message: '正在加载全局提示词…'
-    // })
-
 
     function messagePurifying(messages) {
         aiRequestConfig.messages = messages.map(m => ({
@@ -1330,7 +1396,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             callApi();
         } catch (e) {
             console.error(e)
-            modalDialog.show('sendMessage' + e.message, "确定");
+            ModalDialog.show('sendMessage' + e.message, "确定");
         }
     }
 
@@ -1455,11 +1521,11 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     }
 
     function getSortedCharacters() {
-        return Object.values(informations).sort((a, b) => b.summary.localeCompare(a.summary));
+        return Object.values(information_map).sort((a, b) => b.summary.localeCompare(a.summary));
     }
 
     // 资料卡列表视图
-    const vm_informations = PuSet.mvvm({
+    const vm_information_map = PuSet.mvvm({
         target: characterList.querySelector('ul'),
         selector: 'li',
         data: getSortedCharacters(),
@@ -1468,10 +1534,10 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         }
     }).on('click', function (e, character) {
         if (nodeName(e.target, BUTTON)) {
-            return modalDialog.show('确定要删除【' + character.summary + '】吗？', '确定', '取消').then((result) => {
+            return ModalDialog.show('确定要删除【' + character.summary + '】吗？', '确定', '取消').then((result) => {
                 if (result.which != 0) return;
-                OpenAIFunctionCalling.delete_information(data, informations, { keys: [character.key] });
-                vm_informations.update(getSortedCharacters());
+                OpenAIFunctionCalling.delete_information(data, information_map, { keys: [character.key] });
+                vm_information_map.update(getSortedCharacters());
                 saveData();
             });
         }
@@ -1512,10 +1578,10 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         }
     }).on('click', function (e, value) {
 
-        if (value === dabai) return modalDialog.show("不可修改大白的提示词", "确定");
+        if (value === dabai) return ModalDialog.show("不可修改大白的提示词", "确定");
 
         if (nodeName(e.target, BUTTON)) {
-            return modalDialog.show('确定要删除【' + value.name + '】吗？', '确定', '取消').then(result => {
+            return ModalDialog.show('确定要删除【' + value.name + '】吗？', '确定', '取消').then(result => {
                 if (result.which != 0) return;
                 Reflect.deleteProperty(agents, value.id);
                 vm_agent.update(Object.values(agents))
@@ -1545,13 +1611,13 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     case 'character': {
                         const config = Object.assign({
                             "key": id
-                        }, informations[id] || {}, {
+                        }, information_map[id] || {}, {
                             "summary": characterName.value,
                             "information": characterPrompt.value,
                             "tags": characterKeys.value.trim().split(/\s*,\s*|\s*\uff0c\s*/)
                         });
-                        informations[config.key] = config;
-                        vm_informations.update(getSortedCharacters());
+                        information_map[config.key] = config;
+                        vm_information_map.update(getSortedCharacters());
                         break;
                     }
                     case 'agent': {
@@ -1573,7 +1639,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 PuSet.show(loginView, false);
                 saveData();
             } catch (e) {
-                modalDialog.show('保存失败：' + e.message, "确定");
+                ModalDialog.show('保存失败：' + e.message, "确定");
             }
         }
     }
@@ -1590,7 +1656,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     });
 
     document.getElementById('gotomain').addEventListener('click', () => {
-        vm_informations.update(getSortedCharacters());
+        vm_information_map.update(getSortedCharacters());
         PuSet.show(drawer, true);
     });
     drawer.addEventListener('click', (ev) => {
@@ -1615,7 +1681,9 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             // behavior: "smooth"
         });
     });
-    document.getElementById('current').addEventListener("click", () => { });
+    document.getElementById('current').addEventListener("click", () => {
+        AndroidObject.openWebView("");
+    });
     document.getElementById("exit-edit").addEventListener("click", () => PuSet.show(loginView, false));
 
     // 编辑历史消息
@@ -1678,11 +1746,11 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 div.className = 'toast';
                 document.body.appendChild(div);
                 setTimeout(() => div.remove(), 1000);
-            }).catch(() => modalDialog.show("复制失败", "确定"));
+            }).catch(() => ModalDialog.show("复制失败", "确定"));
         },
         delete(btn, parentBox, idx) {
             // 删除当前消息及之后所有消息
-            modalDialog.show("将删除此消息及之后所有最新消息", "确定", "取消").then(function (result) {
+            ModalDialog.show("将删除此消息及之后所有最新消息", "确定", "取消").then(function (result) {
                 if (result.which != 0) return;
                 const role = parentBox.dataset.persona;
 
@@ -1724,7 +1792,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         usage(btn, parentBox, idx) {
             const usage = messages[idx]?.usage || {};
             usage['命中率'] = usage.prompt_cache_hit_tokens / usage.total_tokens;
-            modalDialog.show(JSON.stringify(usage, null, 2), "确定");
+            ModalDialog.show(JSON.stringify(usage, null, 2), "确定");
         }
     };
 
@@ -1736,7 +1804,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         action(this, parentBox, dataIndex);
     }).on('scroll', function () {
         const bottom = messageList.scrollHeight - messageList.clientHeight - 50;
-        autoScroll = bottom.scrollTop >= bottom;
+        autoScroll = messageList.scrollTop >= bottom;
     });
 
     // 管理 API 设置
@@ -1745,7 +1813,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         if (this.name === "save") {
             const baseUrl = apiUrlInput.value.trim();
             const baseKey = apiKeyInput.value.trim();
-            if (!baseUrl) return modalDialog.show("请填写API地址", "确定");
+            if (!baseUrl) return ModalDialog.show("请填写API地址", "确定");
             fetch(concatURL(baseUrl, "models"), {
                 method: 'GET',
                 headers: {
@@ -1771,7 +1839,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 }
                 saveData();
                 PuSet.show(apiModal, false);
-            }).catch(e => modalDialog.show(`测试链接失败：${e.message}`, "确定"));
+            }).catch(e => ModalDialog.show(`测试链接失败：${e.message}`, "确定"));
             return;
         }
         PuSet.show(apiModal, false);
@@ -1786,12 +1854,12 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 break;
             }
             case 'export': {
-                modalDialog.show({
+                ModalDialog.show({
                     type: "list",
                     list: [
                         { value: "apiList", text: "API 配置" },
                         { value: "agents", text: "所有智能体" },
-                        { value: "informations", text: "所有词条" },
+                        { value: "information_map", text: "所有词条" },
                         { value: "branch", text: "与大白的聊天记录" }
                     ]
                 }).then(function (res) {
@@ -1820,7 +1888,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     fr.addEventListener('load', function () {
                         try {
                             const json = JSON.parse(fr.result)
-                            modalDialog.show("文件已读取", "合并", "覆盖", "取消").then(function (res) {
+                            ModalDialog.show("文件已读取", "合并", "覆盖", "取消").then(function (res) {
                                 switch (res.which) {
                                     case 0: {
                                         Object.keys(data).forEach(key => Object.assign(data[key], json[key]));
@@ -1838,7 +1906,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                                 }
                             });
                         } catch {
-                            modalDialog.show("无法解析文件", "确定")
+                            ModalDialog.show("无法解析文件", "确定")
                         }
                     })
                     fr.readAsText(files[0])

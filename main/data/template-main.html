@@ -282,7 +282,7 @@
                 // 2. 获取并更新最新的 Bing 壁纸
                 try {
                     // 获取图片 URL
-                    const response = await fetch(`/api/domain_whitelist_proxy.php?url=${encodeURIComponent(MainUI.bing_background)}`);
+                    const response = await fetch(`/api/proxy?url=${encodeURIComponent(MainUI.bing_background)}`);
                     const json = await response.json();
                     const imageUrl = new URL(json?.images?.[0]?.url, MainUI.bing_background).href;
 
@@ -310,7 +310,8 @@
                     try {
                         const fd = new FormData();
                         fd.append('file', localFile);
-                        const uploadRes = await fetch('/api/upload.php', { method: 'POST', body: fd });
+                        fd.append('path', 'images');
+                        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
                         const uploadJson = await uploadRes.json();
                         console.log(uploadJson.message);
                     } catch (uploadError) {
@@ -354,7 +355,7 @@
                     }
 
                     if (contentType.startsWith("random")) {
-                        await loadImageBackground('/api/random_wallpaper_provider.php');
+                        await loadImageBackground('/api/random_wallpaper_provider');
                         return;
                     }
 
