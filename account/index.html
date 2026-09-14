@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>个人中心</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 460px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+            padding: 36px 32px 28px;
+            animation: fade .35s ease;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* 加载态 */
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            padding: 30px 0;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            margin: 0 auto 16px;
+            border: 3px solid #e6e6f2;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 资料卡 */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 26px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex: 0 0 auto;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header .who {
+            min-width: 0;
+        }
+
+        .header .name {
+            font-size: 19px;
+            color: #222;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header .uname {
+            font-size: 13px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #eef0fe;
+            color: #667eea;
+        }
+
+        .badge.ok {
+            background: #eafaf1;
+            color: #1e874b;
+        }
+
+        .badge.warn {
+            background: #fdecea;
+            color: #c0392b;
+        }
+
+        .badge.role {
+            background: #fff4e5;
+            color: #b06a00;
+        }
+
+        .list {
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 2px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .item .k {
+            color: #888;
+            flex: 0 0 auto;
+        }
+
+        .item .v {
+            color: #333;
+            text-align: right;
+            word-break: break-all;
+            min-width: 0;
+        }
+
+        .item .v.empty {
+            color: #bbb;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: opacity .15s, transform .05s;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: .92;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(.99);
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: #f4f4f8;
+            color: #555;
+        }
+
+        .msg {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            word-break: break-all;
+        }
+
+        .msg.err {
+            display: block;
+            background: #fdecea;
+            color: #c0392b;
+            border: 1px solid #f5c6c0;
+        }
+
+        .msg.ok {
+            display: block;
+            background: #eafaf1;
+            color: #1e874b;
+            border: 1px solid #b7e6c8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 加载中 -->
+    <div class="card" id="loadingCard">
+        <div class="loading">
+            <div class="spinner"></div>
+            正在验证登录状态…
+        </div>
+    </div>
+
+    <!-- 资料卡 -->
+    <div class="card" id="profileCard" style="display:none">
+        <div class="header">
+            <div class="avatar" id="avatar"></div>
+            <div class="who">
+                <div class="name" id="displayName">-</div>
+                <div class="uname" id="displayUsername">@-</div>
+            </div>
+        </div>
+
+        <div class="badges" id="badges"></div>
+
+        <div class="list">
+            <div class="item"><span class="k">用户 ID</span><span class="v" id="fId">-</span></div>
+            <div class="item"><span class="k">邮箱</span><span class="v" id="fEmail">-</span></div>
+            <div class="item"><span class="k">手机号</span><span class="v" id="fPhone">-</span></div>
+            <div class="item"><span class="k">昵称</span><span class="v" id="fNickname">-</span></div>
+            <div class="item"><span class="k">登录次数</span><span class="v" id="fLoginCount">-</span></div>
+            <div class="item"><span class="k">最后登录</span><span class="v" id="fLastLogin">-</span></div>
+            <div class="item"><span class="k">注册时间</span><span class="v" id="fCreatedAt">-</span></div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-ghost" id="refreshBtn">刷新资料</button>
+            <button class="btn-primary" id="logoutBtn">退出登录</button>
+        </div>
+        <div class="msg" id="msg"></div>
+    </div>
+
+    <script>
+        (function () {
+            // ==== 配置，按需修改 ====
+            const API_ME = '/api/account/me';
+            const API_LOGOUT = '/api/account/logout';
+            const LOGIN_PAGE = './login.html';       // 登录页路径
+            const TOKEN_KEY = 'account_token';
+            const USER_KEY = 'account_user';
+
+            const ROLE_TEXT = { 1: '普通用户', 2: '管理员', 3: '超级管理员' };
+            const STATUS_TEXT = { 0: '已禁用', 1: '正常', 2: '已锁定' };
+
+            const loadingCard = document.getElementById('loadingCard');
+            const profileCard = document.getElementById('profileCard');
+            const msgBox = document.getElementById('msg');
+
+            function showErr(t) { msgBox.className = 'msg err'; msgBox.textContent = t; }
+            function showOk(t) { msgBox.className = 'msg ok'; msgBox.textContent = t; }
+
+            function getToken() {
+                return localStorage.getItem(TOKEN_KEY) || '';
+            }
+
+            function clearAuth() {
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(USER_KEY);
+            }
+
+            function toLogin(reason) {
+                clearAuth();
+                if (reason) sessionStorage.setItem('login_notice', reason);
+                location.replace(LOGIN_PAGE);
+            }
+
+            // 格式化时间（后端返回 RFC3339 或 "2006-01-02 15:04:05" 都能兜住）
+            function fmtTime(s) {
+                if (!s) return '';
+                const d = new Date(s);
+                if (isNaN(d.getTime())) return s;
+                const p = n => String(n).padStart(2, '0');
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+                    ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+            }
+
+            function setText(id, val) {
+                const el = document.getElementById(id);
+                if (val === null || val === undefined || val === '') {
+                    el.textContent = '—';
+                    el.classList.add('empty');
+                } else {
+                    el.textContent = val;
+                    el.classList.remove('empty');
+                }
+            }
+
+            // ===== 渲染 =====
+            function render(user) {
+                const name = user.nickname || user.username || '用户';
+                document.getElementById('displayName').textContent = name;
+                document.getElementById('displayUsername').textContent = '@' + (user.username || '-');
+
+                // 头像：有 URL 用图片，否则用首字母
+                const avatarEl = document.getElementById('avatar');
+                avatarEl.innerHTML = '';
+                if (user.avatar) {
+                    const img = document.createElement('img');
+                    img.src = user.avatar;
+                    img.alt = name;
+                    img.onerror = function () {
+                        avatarEl.textContent = (name[0] || 'U').toUpperCase();
+                    };
+                    avatarEl.appendChild(img);
+                } else {
+                    avatarEl.textContent = (name[0] || 'U').toUpperCase();
+                }
+
+                // 徽章
+                const badges = document.getElementById('badges');
+                badges.innerHTML = '';
+                const addBadge = (text, cls) => {
+                    const b = document.createElement('span');
+                    b.className = 'badge' + (cls ? ' ' + cls : '');
+                    b.textContent = text;
+                    badges.appendChild(b);
+                };
+                addBadge(ROLE_TEXT[user.role_level] || ('等级 ' + user.role_level), 'role');
+
+                const st = Number(user.status);
+                if (st === 1) addBadge('账号正常', 'ok');
+                else addBadge(STATUS_TEXT[st] || '状态异常', 'warn');
+
+                // 明细
+                setText('fId', user.id);
+                setText('fEmail', user.email);
+                setText('fPhone', user.phone);
+                setText('fNickname', user.nickname);
+                setText('fLoginCount', user.login_count);
+                setText('fLastLogin', fmtTime(user.last_login_at));
+                setText('fCreatedAt', fmtTime(user.created_at));
+
+                loadingCard.style.display = 'none';
+                profileCard.style.display = 'block';
+                document.title = name + ' · 个人中心';
+            }
+
+            // ===== 请求资料 =====
+            async function loadMe(opts) {
+                opts = opts || {};
+                const token = getToken();
+                if (!token) {
+                    toLogin('请先登录');
+                    return;
+                }
+
+                loadingCard.style.display = 'block';
+                profileCard.style.display = 'none';
+
+                let resp;
+                try {
+                    resp = await fetch(API_ME, {
+                        method: 'GET',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                } catch (err) {
+                    loadingCard.style.display = 'none';
+                    profileCard.style.display = 'block';
+                    showErr('网络错误：' + err.message);
+                    return;
+                }
+
+                let data = null;
+                try { data = await resp.json(); } catch (_) { }
+
+                // 未认证 / token 失效 → 跳登录页
+                if (resp.status === 401 || (data && data.code === 1004)) {
+                    toLogin('登录已失效，请重新登录');
+                    return;
+                }
+
+                // 账号被禁用 / 锁定 → 停在页面提示，不跳转
+                if (data && (data.code === 1005 || data.code === 1006)) {
+                    loadingCard.style.display = 'none';
+                    profileCard.style.display = 'block';
+                    showErr(data.message || '账号状态异常');
+                    return;
+                }
+
+                if (!data || data.code !== 0 || !data.data) {
+                    loadingCard.style.display = 'none';
+                    profileCard.style.display = 'block';
+                    showErr((data && data.message) || ('获取资料失败（HTTP ' + resp.status + '）'));
+                    return;
+                }
+
+                // 顺带刷新本地缓存
+                localStorage.setItem(USER_KEY, JSON.stringify(data.data));
+                render(data.data);
+
+                if (opts.silent !== true) {
+                    // 首次进入不打扰，只有点「刷新资料」才提示
+                    if (opts.fromRefresh) showOk('资料已刷新');
+                }
+            }
+
+            // ===== 退出 =====
+            async function doLogout() {
+                const btn = document.getElementById('logoutBtn');
+                btn.disabled = true;
+                btn.textContent = '退出中…';
+
+                const token = getToken();
+                try {
+                    if (token) {
+                        await fetch(API_LOGOUT, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                    }
+                } catch (_) { /* 忽略网络错误，本地照清 */ }
+
+                clearAuth();
+                location.replace(LOGIN_PAGE);
+            }
+
+            // ===== 事件 =====
+            document.getElementById('refreshBtn').addEventListener('click', function () {
+                loadMe({ fromRefresh: true });
+            });
+            document.getElementById('logoutBtn').addEventListener('click', doLogout);
+
+            // 登录页跳过来时带的一次性提示
+            const notice = sessionStorage.getItem('login_notice');
+            if (notice) {
+                sessionStorage.removeItem('login_notice');
+                // 稍后展示，等资料渲染完成
+                setTimeout(function () {
+                    if (profileCard.style.display !== 'none') showErr(notice);
+                }, 300);
+            }
+
+            // 页面加载即尝试 token 登录
+            loadMe({ silent: true });
+        })();
+    </script>
+</body>
+
+</html>

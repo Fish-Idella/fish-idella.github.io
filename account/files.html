@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>资源文件管理</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f5f6f8;
+      color: #222;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e3e6eb;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 16px;
+      margin: 0 8px 0 0;
+      font-weight: 600;
+      color: #333;
+    }
+
+    button {
+      border: 1px solid #d0d5dd;
+      background: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #f0f2f5;
+      border-color: #b0b7c3;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: #1677ff;
+      color: #fff;
+      border-color: #1677ff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: #0e5fd8;
+    }
+
+    button.danger {
+      color: #d4380d;
+      border-color: #ffccc7;
+    }
+
+    button.danger:hover:not(:disabled) {
+      background: #fff2f0;
+    }
+
+    .breadcrumb {
+      flex: 1;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .breadcrumb a {
+      color: #1677ff;
+      text-decoration: none;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .breadcrumb a:hover {
+      background: #e6f4ff;
+    }
+
+    .breadcrumb .sep {
+      color: #b0b7c3;
+      user-select: none;
+    }
+
+    .breadcrumb .current {
+      color: #333;
+      padding: 2px 6px;
+      font-weight: 500;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 16px;
+      background: #fafbfc;
+      border-bottom: 1px solid #e3e6eb;
+      font-weight: 500;
+      color: #666;
+      font-size: 13px;
+    }
+
+    tbody td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: #fafbfc;
+    }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .name-link {
+      color: #1677ff;
+      cursor: pointer;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .name-link:hover {
+      text-decoration: underline;
+    }
+
+    .name-text {
+      word-break: break-all;
+    }
+
+    .actions {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .status {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #fff;
+      background: #333;
+      opacity: 0;
+      transition: opacity .25s;
+      pointer-events: none;
+      z-index: 100;
+      max-width: 80vw;
+    }
+
+    .status.show {
+      opacity: 1;
+    }
+
+    .status.error {
+      background: #d4380d;
+    }
+
+    .status.ok {
+      background: #389e0d;
+    }
+
+    .status.info {
+      background: #1677ff;
+    }
+
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 119, 255, .1);
+      border: 3px dashed #1677ff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #1677ff;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .drop-overlay.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>资源文件管理</h1>
+    <button id="btnUp">↑ 上级</button>
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <button id="btnRefresh">刷新</button>
+    <button id="btnUpload" class="primary">上传图片</button>
+  </header>
+
+  <main>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th style="width:100px">大小</th>
+            <th style="width:180px">修改时间</th>
+            <th style="width:100px"></th>
+          </tr>
+        </thead>
+        <tbody id="fileList"></tbody>
+      </table>
+      <div class="empty" id="emptyTip" style="display:none">此目录为空</div>
+    </div>
+  </main>
+
+  <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+  <div class="status" id="status"></div>
+  <div class="drop-overlay" id="dropOverlay">松开鼠标上传图片</div>
+
+  <script>
+    // ==================== 状态 ====================
+    let currentPath = '';
+    let loading = false;
+
+    const el = {
+      fileList: document.getElementById('fileList'),
+      emptyTip: document.getElementById('emptyTip'),
+      breadcrumb: document.getElementById('breadcrumb'),
+      btnUp: document.getElementById('btnUp'),
+      btnRefresh: document.getElementById('btnRefresh'),
+      btnUpload: document.getElementById('btnUpload'),
+      fileInput: document.getElementById('fileInput'),
+      status: document.getElementById('status'),
+      dropOverlay: document.getElementById('dropOverlay'),
+    };
+
+    // ==================== 工具 ====================
+    function formatSize(n) {
+      if (n == null) return '-';
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
+      return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+    }
+
+    function joinPath(dir, name) {
+      return dir ? dir + '/' + name : name;
+    }
+
+    function parentPath(p) {
+      if (!p) return '';
+      const i = p.lastIndexOf('/');
+      return i < 0 ? '' : p.slice(0, i);
+    }
+
+    let statusTimer = null;
+    function showStatus(msg, type) {
+      el.status.textContent = msg;
+      el.status.className = 'status show ' + (type || 'info');
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => el.status.classList.remove('show'), 3000);
+    }
+
+    // ==================== 面包屑 ====================
+    function renderBreadcrumb(path) {
+      el.breadcrumb.innerHTML = '';
+      const root = document.createElement('a');
+      root.textContent = '根目录';
+      root.onclick = () => loadDir('');
+      el.breadcrumb.appendChild(root);
+
+      if (!path) return;
+
+      const parts = path.split('/');
+      let acc = '';
+      parts.forEach((p, idx) => {
+        acc = acc ? acc + '/' + p : p;
+
+        const sep = document.createElement('span');
+        sep.className = 'sep';
+        sep.textContent = ' / ';
+        el.breadcrumb.appendChild(sep);
+
+        if (idx === parts.length - 1) {
+          const cur = document.createElement('span');
+          cur.className = 'current';
+          cur.textContent = p;
+          el.breadcrumb.appendChild(cur);
+        } else {
+          const a = document.createElement('a');
+          a.textContent = p;
+          const target = acc;
+          a.onclick = () => loadDir(target);
+          el.breadcrumb.appendChild(a);
+        }
+      });
+    }
+
+    // ==================== 列表渲染 ====================
+    function fileIcon(name) {
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) return '🖼️';
+      if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) return '🎬';
+      if (['mp3', 'wav', 'ogg', 'flac'].includes(ext)) return '🎵';
+      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return '📦';
+      if (ext === 'pdf') return '📕';
+      if (['txt', 'md', 'log'].includes(ext)) return '📄';
+      return '📄';
+    }
+
+    function openFile(path) {
+      console.log(path)
+      window.open('/mediae/' + path, '_blank');
+    }
+
+    function renderFiles(items) {
+      el.fileList.innerHTML = '';
+
+      if (!items || items.length === 0) {
+        el.emptyTip.style.display = 'block';
+        return;
+      }
+      el.emptyTip.style.display = 'none';
+
+      // 目录在前、文件在后，各自按名称排序
+      const dirs = items.filter(x => x.type === 'directory').sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+      const files = items.filter(x => x.type !== 'directory').sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+
+      [...dirs, ...files].forEach(item => {
+        const tr = document.createElement('tr');
+        const isDir = item.type === 'directory';
+        const childPath = joinPath(currentPath, item.name);
+
+        // 名称列
+        const tdName = document.createElement('td');
+        const wrap = document.createElement('div');
+        wrap.className = 'name-cell';
+
+        const icon = document.createElement('span');
+        icon.className = 'icon';
+        icon.textContent = isDir ? '📁' : fileIcon(item.name);
+        wrap.appendChild(icon);
+
+        if (isDir) {
+          const link = document.createElement('a');
+          link.className = 'name-link';
+          link.textContent = item.name;
+          link.onclick = () => loadDir(childPath);
+          wrap.appendChild(link);
+        } else {
+          const link = document.createElement('a');
+          link.className = 'name-text';
+          link.textContent = item.name;
+          link.onclick = () => openFile(childPath);
+          wrap.appendChild(link);
+        }
+        tdName.appendChild(wrap);
+
+        // 大小列
+        const tdSize = document.createElement('td');
+        tdSize.textContent = isDir ? '-' : formatSize(item.size);
+
+        // 时间列
+        const tdTime = document.createElement('td');
+        tdTime.textContent = item.modified || '-';
+
+        // 操作列
+        const tdAct = document.createElement('td');
+        tdAct.className = 'actions';
+        if (isDir) {
+          const openBtn = document.createElement('button');
+          openBtn.textContent = '打开';
+          openBtn.onclick = () => loadDir(childPath);
+          tdAct.appendChild(openBtn);
+        } else {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'danger';
+          delBtn.textContent = '删除';
+          delBtn.onclick = () => deleteFile(childPath);
+          tdAct.appendChild(delBtn);
+        }
+
+        tr.append(tdName, tdSize, tdTime, tdAct);
+        el.fileList.appendChild(tr);
+      });
+    }
+
+    // ==================== 加载目录 ====================
+    async function loadDir(path) {
+      if (loading) return;
+      loading = true;
+      el.btnUp.disabled = true;
+
+      try {
+        const res = await fetch('/api/files?path=' + encodeURIComponent(path));
+        const data = await res.json();
+
+        if (!data.success) {
+          showStatus(data.message || '加载失败', 'error');
+          return;
+        }
+
+        currentPath = path;
+        renderBreadcrumb(path);
+        renderFiles(data.data);
+        el.btnUp.disabled = !path;
+      } catch (e) {
+        showStatus('请求失败: ' + e.message, 'error');
+      } finally {
+        loading = false;
+      }
+    }
+
+    // ==================== 删除 ====================
+    async function deleteFile(relPath) {
+      if (!confirm('确认删除以下文件？\n\n' + relPath + '\n\n此操作不可恢复。')) return;
+
+      try {
+        const res = await fetch('/api/files?path=' + encodeURIComponent(relPath), {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showStatus('删除成功', 'ok');
+          loadDir(currentPath);
+        } else {
+          showStatus(data.message || '删除失败', 'error');
+        }
+      } catch (e) {
+        showStatus('请求失败: ' + e.message, 'error');
+      }
+    }
+
+    // ==================== 上传 ====================
+    const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    function isImageFile(file) {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      return (file.type && file.type.startsWith('image/')) || IMAGE_EXTS.includes(ext);
+    }
+
+    async function uploadFiles(fileList) {
+      const all = Array.from(fileList);
+      const files = all.filter(isImageFile);
+      const rejected = all.length - files.length;
+
+      if (files.length === 0) {
+        showStatus('没有可上传的图片文件', 'error');
+        return;
+      }
+
+      let ok = 0, skip = 0, fail = 0;
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        showStatus(`上传中 ${i + 1}/${files.length}：${f.name}`, 'info');
+
+        try {
+          const fd = new FormData();
+          fd.append('file', f);
+          fd.append('path', currentPath);
+
+          const res = await fetch('/api/upload', { method: 'POST', body: fd });
+          const data = await res.json();
+
+          if (data.ok) {
+            if (data.existed) skip++; else ok++;
+          } else {
+            fail++;
+            console.warn('上传失败', f.name, data.message);
+          }
+        } catch (e) {
+          fail++;
+          console.error('上传异常', f.name, e);
+        }
+      }
+
+      let msg = `上传完成：成功 ${ok}`;
+      if (skip) msg += `，已存在 ${skip}`;
+      if (fail) msg += `，失败 ${fail}`;
+      if (rejected) msg += `，跳过非图片 ${rejected}`;
+      showStatus(msg, fail ? 'error' : 'ok');
+
+      loadDir(currentPath);
+    }
+
+    // ==================== 事件绑定 ====================
+    el.btnUp.onclick = () => loadDir(parentPath(currentPath));
+    el.btnRefresh.onclick = () => loadDir(currentPath);
+    el.btnUpload.onclick = () => el.fileInput.click();
+
+    el.fileInput.onchange = (e) => {
+      if (e.target.files && e.target.files.length) {
+        uploadFiles(e.target.files);
+        e.target.value = '';
+      }
+    };
+
+    // 拖拽上传
+    let dragCount = 0;
+    window.addEventListener('dragenter', (e) => {
+      if (!e.dataTransfer || !Array.from(e.dataTransfer.types).includes('Files')) return;
+      e.preventDefault();
+      dragCount++;
+      el.dropOverlay.classList.add('show');
+    });
+    window.addEventListener('dragover', (e) => {
+      if (!e.dataTransfer || !Array.from(e.dataTransfer.types).includes('Files')) return;
+      e.preventDefault();
+    });
+    window.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dragCount--;
+      if (dragCount <= 0) {
+        dragCount = 0;
+        el.dropOverlay.classList.remove('show');
+      }
+    });
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dragCount = 0;
+      el.dropOverlay.classList.remove('show');
+      if (e.dataTransfer && e.dataTransfer.files.length) {
+        uploadFiles(e.dataTransfer.files);
+      }
+    });
+
+    // ==================== 初始 ====================
+    loadDir('');
+  </script>
+</body>
+
+</html>

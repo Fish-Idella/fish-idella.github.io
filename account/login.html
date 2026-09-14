@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+            padding: 36px 32px 28px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            color: #222;
+            text-align: center;
+        }
+
+        .sub {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 26px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid #ddd;
+            border-radius: 9px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+        }
+
+        .pwd-wrap {
+            position: relative;
+        }
+
+        .pwd-wrap input {
+            padding-right: 54px;
+        }
+
+        .toggle {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #667eea;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 记住登录 */
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: -4px 0 4px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: #667eea;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .remember .txt {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .remember-hint {
+            font-size: 12px;
+            color: #999;
+            margin: 2px 0 0 24px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 9px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            transition: opacity .15s, transform .05s;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: .92;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(.99);
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .msg {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            word-break: break-all;
+        }
+
+        .msg.ok {
+            display: block;
+            background: #eafaf1;
+            color: #1e874b;
+            border: 1px solid #b7e6c8;
+        }
+
+        .msg.err {
+            display: block;
+            background: #fdecea;
+            color: #c0392b;
+            border: 1px solid #f5c6c0;
+        }
+
+        .links {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .links .divider {
+            color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <form class="card" id="form" autocomplete="off">
+        <h1>欢迎回来</h1>
+        <div class="sub">登录你的账号</div>
+
+        <div class="field">
+            <label>账号</label>
+            <input type="text" name="account" id="account" placeholder="用户名 / 邮箱 / 手机号" required>
+        </div>
+
+        <div class="field">
+            <label>密码</label>
+            <div class="pwd-wrap">
+                <input type="password" name="password" id="password" placeholder="请输入密码" required>
+                <span class="toggle" id="toggle">显示</span>
+            </div>
+        </div>
+
+        <label class="remember" for="remember">
+            <input type="checkbox" id="remember">
+            <span class="txt">记住登录状态</span>
+        </label>
+        <div class="remember-hint" id="rememberHint">当前为临时登录，7 天后自动失效</div>
+
+        <button type="submit" id="btn">登 录</button>
+        <div class="msg" id="msg"></div>
+
+        <div class="links">
+            <a href="/register.html">注册新账号</a>
+            <span class="divider">|</span>
+            <a href="/forgot.html">忘记密码？</a>
+        </div>
+    </form>
+
+    <script>
+        (function () {
+            const API = '/api/account/login';
+            const REDIRECT_AFTER_LOGIN = '';
+
+            const form = document.getElementById('form');
+            const btn = document.getElementById('btn');
+            const msgBox = document.getElementById('msg');
+            const toggle = document.getElementById('toggle');
+            const pwd = document.getElementById('password');
+            const remember = document.getElementById('remember');
+            const hint = document.getElementById('rememberHint');
+
+            function show(type, text) {
+                msgBox.className = 'msg ' + type;
+                msgBox.textContent = text;
+            }
+            function hide() {
+                msgBox.className = 'msg';
+                msgBox.textContent = '';
+            }
+
+            toggle.addEventListener('click', function () {
+                const isPwd = pwd.type === 'password';
+                pwd.type = isPwd ? 'text' : 'password';
+                toggle.textContent = isPwd ? '隐藏' : '显示';
+            });
+
+            // 提示文案随勾选变化
+            remember.addEventListener('change', function () {
+                hint.textContent = remember.checked
+                    ? '勾选后长期有效；不勾选则 7 天后自动失效'
+                    : '当前为临时登录，7 天后自动失效';
+            });
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                hide();
+
+                const account = document.getElementById('account').value.trim();
+                const password = pwd.value;
+
+                if (!account) return show('err', '请输入账号');
+                if (!password) return show('err', '请输入密码');
+
+                btn.disabled = true;
+                btn.textContent = '登录中…';
+                try {
+                    const resp = await fetch(API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            account: account,
+                            password: password,
+                            day: remember.checked ? 0 : 7
+                        })
+                    });
+
+                    let data = null;
+                    try { data = await resp.json(); } catch (_) { }
+
+                    if (data && data.code === 0 && data.data && data.data.token) {
+                        const token = data.data.token;
+                        const expiresAt = data.data.expires_at; // 可能是 null
+
+                        localStorage.setItem('account_token', token);
+                        // 登录接口现在只返回 id / username，缓存的也只有这些
+                        localStorage.setItem('account_user', JSON.stringify({
+                            id: data.data.id,
+                            username: data.data.username,
+                            expires_at: expiresAt
+                        }));
+
+                        const name = data.data.username || account;
+                        const tail = expiresAt
+                            ? '（有效期至 ' + expiresAt + '）'
+                            : '（长期有效）';
+                        show('ok', '登录成功，欢迎 ' + name + '！' + tail);
+
+                        if (REDIRECT_AFTER_LOGIN) {
+                            setTimeout(function () { location.href = REDIRECT_AFTER_LOGIN; }, 600);
+                        }
+                    } else if (data && data.message) {
+                        show('err', data.message);
+                    } else {
+                        show('err', '登录失败（HTTP ' + resp.status + '）');
+                    }
+                } catch (err) {
+                    show('err', '网络错误：' + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '登 录';
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>
