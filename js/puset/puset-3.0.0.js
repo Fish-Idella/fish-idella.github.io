@@ -93,7 +93,7 @@ const PuSet = (function () {
         // 对于对象/函数类型，使用OBJECT_PROTO.toString做精准判断
         if (type === TYPES.Object || type === TYPES.Function) {
             const key = toString.call(test);
-            return TYPES.hasOwnProperty(key) ? TYPES[key] : TYPES.Object;
+            return Object.hasOwn(TYPES, key) ? TYPES[key] : TYPES.Object;
         }
         return type; // 基础类型直接返回typeof结果
     };
@@ -161,7 +161,7 @@ const PuSet = (function () {
          */
         setProperty(property, value, priority = false) {
             // 只有当 priority 为 true 且属性已存在时，才不设置值
-            if (!(priority === true && this.hasOwnProperty(property))) {
+            if (!(priority === true && Object.hasOwn(this, property))) {
                 Reflect.set(this, property, value);
             }
             return this;
@@ -941,6 +941,10 @@ const PuSet = (function () {
         #hasResize = false; // 是否有尺寸变化回调
         #isArrayData = false; // 数据是否为数组
 
+        get isArrayData() {
+            return this.#isArrayData
+        }
+
         instanceId = 0;
         target = null; // 根容器元素
         selector = ""; // 子元素选择器
@@ -949,7 +953,7 @@ const PuSet = (function () {
         source = null; // 原始数据
         data = null; // 代理后的数据
         template = null; // 模板（元素/字符串/函数）
-        layout = null; // 布局函数（node, value, property）
+        layout = null; // 布局函数（node, value, property, this）
         onresize = null; // 数组长度变化回调
 
         /**
@@ -962,7 +966,7 @@ const PuSet = (function () {
             this.source = this.data ?? this.source ?? {}; // 原始数据兜底
             // 映射子元素到数据键
             if (this.selector) {
-                this.selector = String(this.selector).replace(/\&/g, ":scope");
+                this.selector = String(this.selector).replace(/&/g, ":scope");
                 PuSetFactory.each(this.target.querySelectorAll(this.selector), (element, index, keys) => {
                     this.#setChild(keys[index] || String(index), element);
                 }, Object.keys(this.source));
@@ -1056,15 +1060,15 @@ const PuSet = (function () {
                     if (property === 'length') {
                         return void this.#handleLengthChange(value);
                     } else {
-                        node = this.#getChild(node, property, value);
+                        node = this.#getChild(node, property, value, receiver);
                     }
                 } else {
                     // 对象：处理属性
-                    node = this.#getChild(node, property, value);
+                    node = this.#getChild(node, property, value, receiver);
                 }
             }
             // 普通属性变更
-            this.#handlePropertyChange(node, value, property);
+            this.#handlePropertyChange(node, value, property, receiver);
         }
 
         /**
@@ -1092,7 +1096,7 @@ const PuSet = (function () {
             PuSetFactory.show(node, true); // 显示元素
             // 执行布局函数
             if (this.#hasLayout) {
-                this.layout(node, value, property);
+                this.layout(node, value, property, this);
             }
         }
 
@@ -1161,14 +1165,14 @@ const PuSet = (function () {
          */
         update(newData) {
             Object.assign(this.data, newData);
-            if (this.#isArrayData) {
+            if (this.isArrayData) {
                 this.data.length = newData.length;
             }
         }
 
         relayout(key, value = this.data[key]) {
             const child = this.#getChild(this.target, String(key), value);
-            this.#handlePropertyChange(child, value, key);
+            this.#handlePropertyChange(child, value, key, this.data);
         }
 
         /**
@@ -1194,6 +1198,175 @@ const PuSet = (function () {
             return this.#children.size;
         }
     }
+
+    // ===================== 配对绑定 PairedBuilder =====================
+    /**
+     * 配对绑定构建器
+     * - 链式声明 "数据键 → DOM 操作" 的映射
+     * - build() 返回 (node, value, key) => void，可直接当 layout 用
+     */
+    class PairedBuilder {
+
+        #stop = false;
+
+        #entries = new Map();
+
+        #push(op, key, selector, arg = key) {
+            if (this.#stop) {
+                throw new Error('PairedBuilder 已 build()，不能再添加操作');
+            }
+            if (typeof key !== 'string' || key === '') {
+                throw new TypeError('PuSet.paired: key 必须是非空字符串');
+            }
+            // selector 为 null/undefined → 默认 .key
+            const sel = selector ?? ('.' + key);
+            if (typeof sel !== 'string' || sel === '') {
+                throw new TypeError('PuSet.paired: selector 必须是非空字符串');
+            }
+            const entry = { op, selector: sel, key, arg };
+            if (this.#entries.has(key)) {
+                this.#entries.get(key).push(entry)
+            } else {
+                this.#entries.set(entry.key, [entry])
+            }
+            return this;
+        }
+
+        // ---- 快捷方法（拼错立刻报错） ----
+        text(key, selector) { return this.#push('text', key, selector); }
+        html(key, selector) { return this.#push('html', key, selector); }
+        value(key, selector) { return this.#push('value', key, selector); }
+        attr(key, selector, name) { return this.#push('attr', key, selector, name); }
+        prop(key, selector, name) { return this.#push('prop', key, selector, name); }
+        data(key, selector, name) { return this.#push('data', key, selector, name); }
+        class(key, selector, name) { return this.#push('class', key, selector, name); }
+        css(key, selector, name) { return this.#push('css', key, selector, name); }
+        show(key, selector) { return this.#push('show', key, selector); }
+        hide(key, selector) { return this.#push('hide', key, selector); }
+
+        // ---- 通用入口 ----
+        // 用 op 操作 将 obj[key] 赋值给 selector 选中元素 name
+        // op 是内置操作名 → 走内置；否则一律当作属性名（setAttribute）
+        append(op, key, selector, name = null) { return this.#push(op, key, selector, name); }
+
+        /**
+         * 构建布局函数
+         * @returns {(node: HTMLElement, value: any, key: string) => void}
+         */
+        build() {
+            this.#stop = true;
+
+            const entries = this.#entries;
+
+            const xxx = function (node, value, key) {
+                const actions = entries.get(key);
+                if (!actions) return;
+
+                for (let i = 0; i < actions.length; i++) {
+                    const { op, selector, arg } = actions[i];
+                    // 约定自身选择器
+                    if (selector === "&" || selector === ":scope") {
+                        applyPairedOp(node, op, value, arg);
+                    } else {
+                        node.querySelectorAll(selector).forEach(target => applyPairedOp(target, op, value, arg));
+                    }
+                }
+            }
+
+            return function pairedLayout(node, value, key, vm) {
+                if (!node) return;
+                if (vm.isArrayData) {
+                    if (value == null) return;
+                    for (const k of entries.keys()) {
+                        xxx(node, value[k], k)
+                    }
+                } else xxx(node, value, key)
+            };
+        }
+    }
+
+    /**
+     * 单条操作映射表
+     * 每个 handler 签名：(el, value, arg) => void
+     */
+    const PAIRED_OPS = {
+        text(el, value) {
+            el.textContent = value == null ? '' : String(value);
+        },
+
+        html(el, value) {
+            el.innerHTML = value == null ? '' : String(value);
+        },
+
+        value(el, value) {
+            // 兼容 checkbox / radio
+            if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!value;
+            else el.value = value == null ? '' : String(value);
+        },
+
+        attr(el, value, arg) {
+            if (value == null || value === false) el.removeAttribute(arg);
+            else el.setAttribute(arg, value === true ? '' : String(value));
+        },
+
+        prop(el, value, arg) {
+            el[arg] = value;
+        },
+
+        data(el, value, arg) {
+            el.dataset[arg] = value
+        },
+
+        css(el, value, arg) {
+            if (arg.includes('-')) {
+                // kebab-case
+                if (value == null || value === false) el.style.removeProperty(arg);
+                else el.style.setProperty(arg, String(value));
+            } else {
+                // camelCase，用驼峰键
+                if (value == null || value === false) el.style[arg] = '';
+                else el.style[arg] = String(value);
+            }
+        },
+
+        class(el, value, arg) {
+            el.classList.toggle(arg, !!value);
+        },
+
+        show(el, value) {
+            PuSetFactory.show(el, !!value);      // ← 直接复用
+        },
+
+        hide(el, value) {
+            PuSetFactory.show(el, !value);       // ← 直接复用
+        },
+    };
+
+    /**
+     * 应用单条操作
+     */
+    function applyPairedOp(el, op, value, arg) {
+        // 用 hasOwn 判定，避免命中原型链上的 constructor / toString 等
+        if (Object.hasOwn(PAIRED_OPS, op)) {
+            PAIRED_OPS[op](el, value, arg);
+            return;
+        }
+
+        // 非内置 op：当作属性名处理（setAttribute）
+        if (value == null || value === false) el.removeAttribute(op);
+        else el.setAttribute(op, value === true ? '' : String(value));
+    }
+
+    // 挂到工厂上
+    Object.assign(PuSetFactory, {
+        /**
+         * 创建配对绑定构建器
+         * @returns {PairedBuilder}
+         */
+        paired() {
+            return new PairedBuilder();
+        }
+    });
 
     // 暴露ViewManager创建方法
     PuSetFactory.mvvm = PuSetFactory.ViewManager = options => new ViewModel(options);

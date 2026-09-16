@@ -124,3 +124,11 @@ ul.fc.scroll li:nth-child(even) {
     padding: 0;
     background-color: white;
 }
+
+.scroll-x {
+    overflow-x: scroll;
+}
+
+.scroll-y {
+    overflow-y: scroll;
+}

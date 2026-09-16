@@ -141,48 +141,48 @@
                         "list": [
                             {
                                 "t": "image/png",
-                                "p": "/mediae/images/background-image-light.avif",
-                                "s": "/mediae/images/background-image-light.avif"
+                                "p": "/media/images/background-image-light.avif",
+                                "s": "/media/images/background-image-light.avif"
                             },
                             {
                                 "t": "image/png",
-                                "p": "/mediae/images/2b.JPG",
-                                "s": "/mediae/images/2b.JPG"
+                                "p": "/media/images/2b.JPG",
+                                "s": "/media/images/2b.JPG"
                             },
                             {
                                 "t": "image/png",
-                                "p": "/mediae/images/5ff86b7c37fbe15dae262fd75bbba305.jpg",
-                                "s": "/mediae/images/5ff86b7c37fbe15dae262fd75bbba305.jpg"
+                                "p": "/media/images/5ff86b7c37fbe15dae262fd75bbba305.jpg",
+                                "s": "/media/images/5ff86b7c37fbe15dae262fd75bbba305.jpg"
                             },
                             {
                                 "t": "image/png",
-                                "p": "/mediae/images/6ceb79738048d730f037e836a97ac3b7.jpg",
-                                "s": "/mediae/images/6ceb79738048d730f037e836a97ac3b7.jpg"
+                                "p": "/media/images/6ceb79738048d730f037e836a97ac3b7.jpg",
+                                "s": "/media/images/6ceb79738048d730f037e836a97ac3b7.jpg"
                             },
                             {
                                 "t": "video/mp4",
-                                "p": "/mediae/local/a6287f74-46f0-42f9-b5d9-997f00585696.mp4.jpg",
-                                "s": "/mediae/local/a6287f74-46f0-42f9-b5d9-997f00585696.mp4"
+                                "p": "/media/local/a6287f74-46f0-42f9-b5d9-997f00585696.mp4.jpg",
+                                "s": "/media/local/a6287f74-46f0-42f9-b5d9-997f00585696.mp4"
                             },
                             {
                                 "t": "video/mp4",
-                                "p": "/mediae/local/d5a4b96f-01b4-4519-8470-62484e0b1b5b.mp4.jpg",
-                                "s": "/mediae/local/d5a4b96f-01b4-4519-8470-62484e0b1b5b.mp4"
+                                "p": "/media/local/d5a4b96f-01b4-4519-8470-62484e0b1b5b.mp4.jpg",
+                                "s": "/media/local/d5a4b96f-01b4-4519-8470-62484e0b1b5b.mp4"
                             },
                             {
                                 "t": "video/mp4",
-                                "p": "/mediae/local/doax_vv.mp4.jpg",
-                                "s": "/mediae/local/doax_vv.mp4"
+                                "p": "/media/local/doax_vv.mp4.jpg",
+                                "s": "/media/local/doax_vv.mp4"
                             },
                             {
                                 "t": "video/mp4",
-                                "p": "/mediae/local/fin.mp4.jpg",
-                                "s": "/mediae/local/fin.mp4"
+                                "p": "/media/local/fin.mp4.jpg",
+                                "s": "/media/local/fin.mp4"
                             },
                             {
                                 "t": "video/mp4",
-                                "p": "/mediae/local/inthesnow_2_1.mp4.jpg",
-                                "s": "/mediae/local/inthesnow_2_1.mp4"
+                                "p": "/media/local/inthesnow_2_1.mp4.jpg",
+                                "s": "/media/local/inthesnow_2_1.mp4"
                             }
                         ],
                         "hide": [
@@ -262,8 +262,9 @@
                         "type": "file",
                         "psid": "import_configuration",
                         "text": "导入配置",
-                        "long_text": "从本地JSON文件恢复数据\uff0c配置文件由下面“导出配置”功能生成\uff0c<b>使用错误的文件可能会使当前的数据丢失</b>并可能导致网页功能错误。",
-                        "accept": ".json"
+                        "long_text": "从本地JSON文件恢复数据\uff0c配置文件由下面“导出配置”功能生成\uff0c<br><b>使用错误的文件可能会使当前的数据丢失</b>并可能导致网页功能错误。",
+                        "accept": ".json",
+                        "value": "选择文件"
                     },
                     {
                         "type": "button",

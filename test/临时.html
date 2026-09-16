@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>列表</div>
+    <ul>
+        <li>2</li>
+    </ul>
+    <div>块</div>
+    <div id="block">
+        <div>姓名：<span class="name"></span></div>
+        <div>性别：<span class="name"></span></div>
+        <div>年龄：<span class="name"></span></div>
+        <div>职位：<span class="name"></span></div>
+    </div>
+
+    <script src="/js/puset/puset-3.0.0.js"></script>
+    <script>
+        const a = PuSet.mvvm({
+            target: document.querySelector('ul'),
+            selector: 'li',
+            data: new Array(10).fill(0).map((v, i) => {
+                return { v, i }
+            }),
+            layout: PuSet.paired()
+                .text("&", 'i')
+                .build()
+        });
+
+        const b = PuSet.mvvm({
+            target: document.querySelector('#block'),
+            data: {
+                name: '张三'
+            },
+            layout: PuSet.paired()
+                .text(".name", 'name')
+                .build()
+        })
+        console.log(a)
+    </script>
+</body>
+
+</html>

@@ -1,15 +1,33 @@
 
-PuSet.load("data/template.html").then(function () {
+PuSet.load("data/template.html", "widget").then(function () {
 
-
-    PuSet.get("settings").init(true, function (root, options) {
+    PuSet.get("settings", "widget").init(true, function (root, options) {
         document.body.appendChild(root);
         options.exec(root, MainUI, options);
 
-        const _settings = document.getElementById("settings");
+        const _settings = root.querySelector(".settings");
         const _left_ul = _settings.querySelector(".menu-list");
         const _menu_title_title = _settings.querySelector(".menu-title>.title");
-        const _right_scroll_content = _settings.querySelector(".view.content");
+        const _right_scroll_content = _settings.querySelector(".template-content");
+
+        PuSet(_right_scroll_content).on("change", 'input', function (ev) {
+            ev.stopPropagation();
+            const psid = getPsId(this)
+            const type = this.type;
+            switch (type) {
+                case 'radio':
+                case 'checkbox':
+                    MainUI.onchange(psid, type, this.checked)
+                    break;
+                default:
+                    MainUI.onchange(psid, type, this.value)
+            }
+
+            const set = map.get(psid);
+            if (set) {
+                set.forEach(arr => MainUI.autoShow(...arr));
+            }
+        });
 
         // 初始化交叉观察器（监听元素是否进入容器中间区域）
         const observer = new IntersectionObserver((entries) => {
@@ -26,7 +44,7 @@ PuSet.load("data/template.html").then(function () {
                 return
             }
         }, {
-            root: _right_scroll_content
+            root: _right_scroll_content, threshold: 0.5 // 元素50%可见时才触发
         });
 
 
@@ -85,40 +103,20 @@ PuSet.load("data/template.html").then(function () {
         }
 
 
-        PuSet.populateContent = function populateContent(target, settings, options) {
-            try {
-                // 缓存DOM查询结果
-                const templateEl = target.querySelector(".template");
-                const textEl = target.querySelector(".text");
-                const longTextEl = target.querySelector(".long_text");
-
-                // 只在必要时设置属性
-                if (templateEl && options.psid) {
-                    templateEl.dataset.psid = options.psid;
-                }
-
-                // 使用对象解构和条件赋值简化逻辑
-                const { text, long_text } = options;
-                if (text && textEl) {
-                    textEl.textContent = text;
-                }
-                if (long_text && longTextEl) {
-                    longTextEl.innerHTML = long_text;
-                }
-            } catch (error) {
-                console.error("PopulateContent error:", error.message, options);
-            }
-        };
+        PuSet.populateContent = PuSet.paired()
+            .data('psid','.template')
+            .text('text')
+            .html('long_text')
+            .build();
 
         function renderSettings(node, settings, options) {
-            return PuSet.get(options.type).init(true, function (a, view) {
+            return PuSet.get(options.type, "widget").init(true, function (a, view) {
                 const root = view.exec(a, settings, options) || a;
-                PuSet.populateContent(root, settings, options);
+                PuSet.populateContent(root, options, '', { isArrayData: true });
                 if (Array.isArray(options.inner)) {
                     const content = root.querySelector(".content");
                     options.inner.forEach(item => renderSettings(content, settings, item));
                 }
-                console.log(root)
                 putItem(root, options);
                 MainUI.autoShow(root, options);
                 root.dataset.psid = options.psid;
@@ -127,15 +125,18 @@ PuSet.load("data/template.html").then(function () {
             });
         }
 
-        const vm_menu_list = PuSet.ViewManager({
+        const vm_menu_list = PuSet.mvvm({
             target: _left_ul,
             selector: ":scope>li",
             data: [],
-            layout: function (target, obj, key) {
-                target.dataset.psid = obj.psid;
-                target.dataset.title = obj.text;
-                target.querySelector(".icon").innerHTML = obj.icon;
-                target.querySelector(".text").textContent = obj.text;
+            paired: PuSet.paired()
+                .data('text', '&', 'title')
+                .data('psid', '&')
+                .html('icon')
+                .text('text')
+                .build(),
+            layout: function (target, obj, key, vm) {
+                this.paired(target, obj, key, vm);
                 if (key === 0) {
                     target.classList.add("light");
                     _menu_title_title.textContent = obj.text;
@@ -154,12 +155,13 @@ PuSet.load("data/template.html").then(function () {
             const _menu = PuSet.show(document.getElementById("menu"), true);
             _menu.addEventListener("click", function updateUI() {
                 // 首次点击更新 UI
-                vm_menu_list.update(json), _settings.showModal();
+                vm_menu_list.update(json), PuSet.show(_settings, true);
                 _menu.removeEventListener("click", updateUI);
                 // 后续不再更新 UI
-                _menu.addEventListener("click", () => _settings.showModal());
+                _menu.addEventListener("click", () => PuSet.show(_settings, true));
             });
         });
     });
 
 });
+

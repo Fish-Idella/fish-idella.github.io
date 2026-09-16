@@ -230,7 +230,7 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             button.dataset.id = value;
             button.title = list.title;
 
-            const src = list.local_icon || list.icon || "/mediae/svg/search.svg";
+            const src = list.local_icon || list.icon || "/media/svg/search.svg";
 
             if (src.startsWith("data:")) {
                 target.querySelector("button").innerHTML = '<img src="' + src + '">';

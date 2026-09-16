@@ -2,150 +2,245 @@
 <html lang="zh-CN">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>资源文件管理</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件管理器</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #dc2626;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --border-light: #f0f0f0;
     }
 
     body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: #f5f6f8;
-      color: #222;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 6px;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    /* ============ 登录页 ============ */
+    #login-view {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--card);
+      padding: 40px 36px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .06);
+    }
+
+    .login-card h1 {
+      font-size: 22px;
+      margin-bottom: 28px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .login-card label {
+      display: block;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .login-card input {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .login-card input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+    }
+
+    .login-card button[type=submit] {
+      width: 100%;
+      padding: 11px;
+      margin-top: 6px;
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .login-card button[type=submit]:hover:not(:disabled) {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .login-error {
+      min-height: 20px;
+      margin-top: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--danger);
+    }
+
+    /* ============ 主界面 ============ */
+    #file-view {
+      display: none;
+      min-height: 100vh;
     }
 
     header {
-      background: #fff;
-      border-bottom: 1px solid #e3e6eb;
-      padding: 12px 20px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
+      flex-wrap: wrap;
       position: sticky;
       top: 0;
       z-index: 10;
     }
 
-    header h1 {
-      font-size: 16px;
-      margin: 0 8px 0 0;
-      font-weight: 600;
-      color: #333;
-    }
-
-    button {
-      border: 1px solid #d0d5dd;
-      background: #fff;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all .15s;
-    }
-
-    button:hover:not(:disabled) {
-      background: #f0f2f5;
-      border-color: #b0b7c3;
-    }
-
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    button.primary {
-      background: #1677ff;
-      color: #fff;
-      border-color: #1677ff;
-    }
-
-    button.primary:hover:not(:disabled) {
-      background: #0e5fd8;
-    }
-
-    button.danger {
-      color: #d4380d;
-      border-color: #ffccc7;
-    }
-
-    button.danger:hover:not(:disabled) {
-      background: #fff2f0;
-    }
-
-    .breadcrumb {
-      flex: 1;
-      font-size: 14px;
+    .header-left {
       display: flex;
       align-items: center;
+      gap: 20px;
       flex-wrap: wrap;
-      gap: 2px;
     }
 
-    .breadcrumb a {
-      color: #1677ff;
-      text-decoration: none;
-      padding: 2px 6px;
-      border-radius: 4px;
+    .header-left h1 {
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    #breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    #breadcrumb .crumb {
+      color: var(--primary);
       cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
     }
 
-    .breadcrumb a:hover {
-      background: #e6f4ff;
+    #breadcrumb .crumb:hover {
+      background: #eff6ff;
     }
 
-    .breadcrumb .sep {
-      color: #b0b7c3;
-      user-select: none;
-    }
-
-    .breadcrumb .current {
-      color: #333;
-      padding: 2px 6px;
-      font-weight: 500;
+    #breadcrumb .sep {
+      color: #cbd5e1;
     }
 
     main {
-      padding: 20px;
       max-width: 1200px;
       margin: 0 auto;
-    }
-
-    .panel {
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+      padding: 24px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      background: var(--card);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
     }
 
-    thead th {
+    th,
+    td {
+      padding: 12px 16px;
       text-align: left;
-      padding: 10px 16px;
-      background: #fafbfc;
-      border-bottom: 1px solid #e3e6eb;
-      font-weight: 500;
-      color: #666;
-      font-size: 13px;
+      border-bottom: 1px solid var(--border-light);
     }
 
-    tbody td {
-      padding: 10px 16px;
-      border-bottom: 1px solid #f0f2f5;
+    th {
+      background: #fafafa;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
     }
 
-    tbody tr:last-child td {
+    tr:last-child td {
       border-bottom: none;
     }
 
-    tbody tr:hover {
+    tbody tr:hover td {
       background: #fafbfc;
     }
 
@@ -153,435 +248,911 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
 
-    .icon {
+    .name-cell .icon {
       font-size: 16px;
-      width: 20px;
-      text-align: center;
       flex-shrink: 0;
     }
 
-    .name-link {
-      color: #1677ff;
+    .name-cell .link {
+      color: var(--primary);
       cursor: pointer;
-      text-decoration: none;
-      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .name-link:hover {
+    .name-cell .link:hover {
       text-decoration: underline;
     }
 
-    .name-text {
-      word-break: break-all;
+    td.size {
+      color: var(--muted);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
-    .actions {
-      text-align: right;
+    td.modified {
+      color: var(--muted);
       white-space: nowrap;
+    }
+
+    td.actions {
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 5px;
+      margin-left: 4px;
+      background: var(--card);
+    }
+
+    .btn-sm.danger {
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .btn-sm.danger:hover:not(:disabled) {
+      background: #fef2f2;
+      border-color: #fca5a5;
     }
 
     .empty {
       text-align: center;
       padding: 60px 20px;
-      color: #999;
+      color: var(--muted);
       font-size: 14px;
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
     }
 
-    .status {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 13px;
-      color: #fff;
-      background: #333;
-      opacity: 0;
-      transition: opacity .25s;
-      pointer-events: none;
-      z-index: 100;
-      max-width: 80vw;
-    }
-
-    .status.show {
-      opacity: 1;
-    }
-
-    .status.error {
-      background: #d4380d;
-    }
-
-    .status.ok {
-      background: #389e0d;
-    }
-
-    .status.info {
-      background: #1677ff;
-    }
-
+    /* ============ 拖拽覆盖层 ============ */
     .drop-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(22, 119, 255, .1);
-      border: 3px dashed #1677ff;
+      z-index: 900;
+      background: rgba(59, 130, 246, .08);
+      border: 3px dashed var(--primary);
       display: none;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      color: #1677ff;
-      z-index: 50;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--primary);
       pointer-events: none;
     }
 
-    .drop-overlay.show {
+    .drop-overlay.active {
       display: flex;
+    }
+
+    /* ============ 上传进度 ============ */
+    .upload-progress {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(480px, calc(100vw - 48px));
+      background: var(--card);
+      border-radius: 10px;
+      padding: 16px 18px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .12);
+      z-index: 800;
+    }
+
+    .upload-progress .bar {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .upload-progress .fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width .15s;
+    }
+
+    .upload-progress .text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ============ 模态框 ============ */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, .45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+    }
+
+    .modal-content h2 {
+      font-size: 17px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .modal-content .msg {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      word-break: break-all;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      margin-bottom: 18px;
+    }
+
+    .modal-content input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* ============ Toast ============ */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 2000;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .2);
+      max-width: 90vw;
+      word-break: break-all;
+      display: none;
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    .toast.success {
+      background: #059669;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 12px 16px;
+      }
+
+      .header-left h1 {
+        display: none;
+      }
+
+      main {
+        padding: 16px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+      }
+
+      th.size-col,
+      td.size {
+        display: none;
+      }
+
+      td.actions {
+        text-align: left;
+      }
+
+      .btn-sm {
+        padding: 4px 8px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>资源文件管理</h1>
-    <button id="btnUp">↑ 上级</button>
-    <div class="breadcrumb" id="breadcrumb"></div>
-    <button id="btnRefresh">刷新</button>
-    <button id="btnUpload" class="primary">上传图片</button>
-  </header>
+  <!-- ============ 登录页 ============ -->
+  <div id="login-view">
+    <div class="login-card">
+      <h1>文件管理器</h1>
+      <form id="login-form" autocomplete="on">
+        <label>用户名
+          <input type="text" id="login-username" autocomplete="username" required>
+        </label>
+        <label>密码
+          <input type="password" id="login-password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" id="login-submit">登录</button>
+      </form>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
 
-  <main>
-    <div class="panel">
-      <table>
+  <!-- ============ 文件界面 ============ -->
+  <div id="file-view">
+    <header>
+      <div class="header-left">
+        <h1>文件管理器</h1>
+        <nav id="breadcrumb"></nav>
+      </div>
+      <div class="header-right">
+        <button id="btn-upload" class="primary">上传</button>
+        <button id="btn-refresh">刷新</button>
+        <button id="btn-logout">注销</button>
+      </div>
+    </header>
+
+    <main>
+      <table id="file-table">
         <thead>
           <tr>
             <th>名称</th>
-            <th style="width:100px">大小</th>
-            <th style="width:180px">修改时间</th>
-            <th style="width:100px"></th>
+            <th class="size-col">大小</th>
+            <th>修改时间</th>
+            <th style="text-align:right">操作</th>
           </tr>
         </thead>
-        <tbody id="fileList"></tbody>
+        <tbody id="file-tbody"></tbody>
       </table>
-      <div class="empty" id="emptyTip" style="display:none">此目录为空</div>
-    </div>
-  </main>
+      <div class="empty" id="empty-hint" style="display:none">此文件夹为空</div>
+    </main>
 
-  <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
-  <div class="status" id="status"></div>
-  <div class="drop-overlay" id="dropOverlay">松开鼠标上传图片</div>
+    <input type="file" id="file-input" multiple hidden>
+  </div>
+
+  <!-- 拖拽覆盖层 -->
+  <div class="drop-overlay" id="drop-overlay">松开鼠标上传文件</div>
+
+  <!-- 上传进度 -->
+  <div class="upload-progress" id="upload-progress" style="display:none">
+    <div class="bar">
+      <div class="fill" id="upload-fill"></div>
+    </div>
+    <div class="text" id="upload-text"></div>
+  </div>
+
+  <!-- 模态框 -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2 id="modal-title">标题</h2>
+      <div class="msg" id="modal-msg"></div>
+      <input type="text" id="modal-input" hidden>
+      <div class="modal-actions">
+        <button id="modal-cancel">取消</button>
+        <button id="modal-confirm" class="primary">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
   <script>
-    // ==================== 状态 ====================
-    let currentPath = '';
-    let loading = false;
+    (function () {
+      'use strict';
 
-    const el = {
-      fileList: document.getElementById('fileList'),
-      emptyTip: document.getElementById('emptyTip'),
-      breadcrumb: document.getElementById('breadcrumb'),
-      btnUp: document.getElementById('btnUp'),
-      btnRefresh: document.getElementById('btnRefresh'),
-      btnUpload: document.getElementById('btnUpload'),
-      fileInput: document.getElementById('fileInput'),
-      status: document.getElementById('status'),
-      dropOverlay: document.getElementById('dropOverlay'),
-    };
+      // ==================== 配置 ====================
+      // 如果你的登录端点不同，只改这里即可。
+      // 期望返回：{success:true, token:"..."} 或 {success:true, data:{token:"..."}}
+      const CONFIG = {
+        loginEndpoint: '/api/account/login',
+        filesEndpoint: '/api/files',
+        tokenKey: 'fm_token',
+      };
 
-    // ==================== 工具 ====================
-    function formatSize(n) {
-      if (n == null) return '-';
-      if (n < 1024) return n + ' B';
-      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-      if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
-      return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
-    }
+      // ==================== 工具 ====================
+      const $ = (id) => document.getElementById(id);
 
-    function joinPath(dir, name) {
-      return dir ? dir + '/' + name : name;
-    }
+      function normalizePath(p) {
+        if (!p) return '';
+        p = String(p).replace(/\\/g, '/');
+        const stack = [];
+        for (const part of p.split('/')) {
+          if (!part || part === '.') continue;
+          if (part === '..') stack.pop();
+          else stack.push(part);
+        }
+        return stack.join('/');
+      }
 
-    function parentPath(p) {
-      if (!p) return '';
-      const i = p.lastIndexOf('/');
-      return i < 0 ? '' : p.slice(0, i);
-    }
+      function joinPath(dir, name) {
+        return dir ? dir + '/' + name : name;
+      }
 
-    let statusTimer = null;
-    function showStatus(msg, type) {
-      el.status.textContent = msg;
-      el.status.className = 'status show ' + (type || 'info');
-      clearTimeout(statusTimer);
-      statusTimer = setTimeout(() => el.status.classList.remove('show'), 3000);
-    }
+      function formatSize(bytes) {
+        if (bytes == null || bytes < 0) return '-';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+      }
 
-    // ==================== 面包屑 ====================
-    function renderBreadcrumb(path) {
-      el.breadcrumb.innerHTML = '';
-      const root = document.createElement('a');
-      root.textContent = '根目录';
-      root.onclick = () => loadDir('');
-      el.breadcrumb.appendChild(root);
+      let toastTimer = null;
+      function toast(msg, type) {
+        const el = $('toast');
+        el.textContent = msg;
+        el.className = 'toast' + (type ? ' ' + type : '');
+        el.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3200);
+      }
 
-      if (!path) return;
+      // ==================== 状态 ====================
+      let token = localStorage.getItem(CONFIG.tokenKey) || '';
+      let currentPath = '';
+      let currentEntries = [];
+      let loadSeq = 0;
 
-      const parts = path.split('/');
-      let acc = '';
-      parts.forEach((p, idx) => {
-        acc = acc ? acc + '/' + p : p;
+      // ==================== 带认证的请求 ====================
+      async function apiFetch(url, options) {
+        options = options || {};
+        const headers = Object.assign({}, options.headers || {});
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        options.headers = headers;
 
-        const sep = document.createElement('span');
-        sep.className = 'sep';
-        sep.textContent = ' / ';
-        el.breadcrumb.appendChild(sep);
+        const res = await fetch(url, options);
+        if (res.status === 401) {
+          handleAuthFailed();
+          throw new Error('登录已过期，请重新登录');
+        }
+        return res;
+      }
 
-        if (idx === parts.length - 1) {
-          const cur = document.createElement('span');
-          cur.className = 'current';
-          cur.textContent = p;
-          el.breadcrumb.appendChild(cur);
-        } else {
-          const a = document.createElement('a');
-          a.textContent = p;
-          const target = acc;
-          a.onclick = () => loadDir(target);
-          el.breadcrumb.appendChild(a);
+      function handleAuthFailed() {
+        token = '';
+        localStorage.removeItem(CONFIG.tokenKey);
+        currentPath = '';
+        currentEntries = [];
+        showLogin();
+      }
+
+      // ==================== 视图切换 ====================
+      function showLogin() {
+        $('login-view').style.display = 'flex';
+        $('file-view').style.display = 'none';
+        $('login-password').value = '';
+        $('login-error').textContent = '';
+        setTimeout(() => $('login-username').focus(), 30);
+      }
+
+      function showFiles() {
+        $('login-view').style.display = 'none';
+        $('file-view').style.display = 'block';
+        loadFiles('').catch(err => toast(err.message, 'error'));
+      }
+
+      // ==================== 登录 / 注销 ====================
+      $('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = $('login-submit');
+        const errEl = $('login-error');
+        errEl.textContent = '';
+        btn.disabled = true;
+        btn.textContent = '登录中...';
+
+        try {
+          const account = $('login-username').value.trim();
+          const password = $('login-password').value;
+
+          const res = await fetch(CONFIG.loginEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account, password }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (data.code !== 0) throw new Error(data.message || '登录失败');
+
+          const t = data.token || (data.data && data.data.token);
+          if (!t) throw new Error('服务器未返回 token');
+
+          token = t;
+          localStorage.setItem(CONFIG.tokenKey, token);
+          $('login-password').value = '';
+          showFiles();
+        } catch (err) {
+          errEl.textContent = err.message;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '登录';
         }
       });
-    }
 
-    // ==================== 列表渲染 ====================
-    function fileIcon(name) {
-      const ext = (name.split('.').pop() || '').toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) return '🖼️';
-      if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) return '🎬';
-      if (['mp3', 'wav', 'ogg', 'flac'].includes(ext)) return '🎵';
-      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return '📦';
-      if (ext === 'pdf') return '📕';
-      if (['txt', 'md', 'log'].includes(ext)) return '📄';
-      return '📄';
-    }
+      $('btn-logout').addEventListener('click', () => {
+        if (!confirm('确定要注销吗？')) return;
+        token = '';
+        localStorage.removeItem(CONFIG.tokenKey);
+        currentPath = '';
+        currentEntries = [];
+        showLogin();
+      });
 
-    function openFile(path) {
-      console.log(path)
-      window.open('/mediae/' + path, '_blank');
-    }
+      // ==================== 目录列表 ====================
+      async function loadFiles(path) {
+        currentPath = normalizePath(path != null ? path : currentPath);
+        const seq = ++loadSeq;
 
-    function renderFiles(items) {
-      el.fileList.innerHTML = '';
+        const res = await apiFetch(
+          CONFIG.filesEndpoint + '?path=' + encodeURIComponent(currentPath)
+        );
+        const data = await res.json();
 
-      if (!items || items.length === 0) {
-        el.emptyTip.style.display = 'block';
-        return;
+        if (seq !== loadSeq) return; // 已被更新的请求取代
+
+        if (!data.success) throw new Error(data.message || '加载失败');
+
+        currentEntries = Array.isArray(data.data) ? data.data : [];
+        render();
       }
-      el.emptyTip.style.display = 'none';
 
-      // 目录在前、文件在后，各自按名称排序
-      const dirs = items.filter(x => x.type === 'directory').sort((a, b) => a.name.localeCompare(b.name, 'zh'));
-      const files = items.filter(x => x.type !== 'directory').sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+      function render() {
+        renderBreadcrumb();
+        renderTable();
+      }
 
-      [...dirs, ...files].forEach(item => {
+      function renderBreadcrumb() {
+        const bc = $('breadcrumb');
+        bc.innerHTML = '';
+
+        const root = document.createElement('span');
+        root.className = 'crumb';
+        root.textContent = '根目录';
+        root.onclick = () => loadFiles('').catch(e => toast(e.message, 'error'));
+        bc.appendChild(root);
+
+        if (!currentPath) return;
+
+        const parts = currentPath.split('/');
+        let acc = '';
+        parts.forEach((part) => {
+          acc = acc ? acc + '/' + part : part;
+
+          const sep = document.createElement('span');
+          sep.className = 'sep';
+          sep.textContent = '/';
+          bc.appendChild(sep);
+
+          const c = document.createElement('span');
+          c.className = 'crumb';
+          c.textContent = part;
+          const target = acc;
+          c.onclick = () => loadFiles(target).catch(e => toast(e.message, 'error'));
+          bc.appendChild(c);
+        });
+      }
+
+      function renderTable() {
+        const tbody = $('file-tbody');
+        const emptyHint = $('empty-hint');
+        const table = $('file-table');
+
+        tbody.innerHTML = '';
+
+        // 排序：目录在前，然后按名称
+        const entries = currentEntries.slice().sort((a, b) => {
+          if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+          return a.name.localeCompare(b.name, 'zh-CN');
+        });
+
+        if (entries.length === 0) {
+          table.style.display = 'none';
+          emptyHint.style.display = 'block';
+          return;
+        }
+        table.style.display = '';
+        emptyHint.style.display = 'none';
+
+        for (const entry of entries) {
+          tbody.appendChild(buildRow(entry));
+        }
+      }
+
+      function buildRow(entry) {
         const tr = document.createElement('tr');
-        const isDir = item.type === 'directory';
-        const childPath = joinPath(currentPath, item.name);
+        const fullPath = joinPath(currentPath, entry.name);
 
-        // 名称列
-        const tdName = document.createElement('td');
-        const wrap = document.createElement('div');
-        wrap.className = 'name-cell';
+        // ---- 名称 ----
+        const nameTd = document.createElement('td');
+        const nameWrap = document.createElement('div');
+        nameWrap.className = 'name-cell';
 
         const icon = document.createElement('span');
         icon.className = 'icon';
-        icon.textContent = isDir ? '📁' : fileIcon(item.name);
-        wrap.appendChild(icon);
+        icon.textContent = entry.type === 'directory' ? '📁' : '📄';
+        nameWrap.appendChild(icon);
 
-        if (isDir) {
-          const link = document.createElement('a');
-          link.className = 'name-link';
-          link.textContent = item.name;
-          link.onclick = () => loadDir(childPath);
-          wrap.appendChild(link);
+        const link = document.createElement('span');
+        link.className = 'link';
+        link.textContent = entry.name;
+        if (entry.type === 'directory') {
+          link.title = '打开文件夹';
+          link.onclick = () => loadFiles(fullPath).catch(e => toast(e.message, 'error'));
         } else {
-          const link = document.createElement('a');
-          link.className = 'name-text';
-          link.textContent = item.name;
-          link.onclick = () => openFile(childPath);
-          wrap.appendChild(link);
+          link.title = '下载文件';
+          link.onclick = () => downloadFile(fullPath);
         }
-        tdName.appendChild(wrap);
+        nameWrap.appendChild(link);
+        nameTd.appendChild(nameWrap);
+        tr.appendChild(nameTd);
 
-        // 大小列
-        const tdSize = document.createElement('td');
-        tdSize.textContent = isDir ? '-' : formatSize(item.size);
+        // ---- 大小 ----
+        const sizeTd = document.createElement('td');
+        sizeTd.className = 'size';
+        sizeTd.textContent = entry.type === 'directory' ? '-' : formatSize(entry.size);
+        tr.appendChild(sizeTd);
 
-        // 时间列
-        const tdTime = document.createElement('td');
-        tdTime.textContent = item.modified || '-';
+        // ---- 修改时间 ----
+        const modTd = document.createElement('td');
+        modTd.className = 'modified';
+        modTd.textContent = entry.modified || '-';
+        tr.appendChild(modTd);
 
-        // 操作列
-        const tdAct = document.createElement('td');
-        tdAct.className = 'actions';
-        if (isDir) {
+        // ---- 操作 ----
+        const actTd = document.createElement('td');
+        actTd.className = 'actions';
+
+        if (entry.type === 'directory') {
           const openBtn = document.createElement('button');
+          openBtn.className = 'btn-sm';
           openBtn.textContent = '打开';
-          openBtn.onclick = () => loadDir(childPath);
-          tdAct.appendChild(openBtn);
+          openBtn.onclick = () => loadFiles(fullPath).catch(e => toast(e.message, 'error'));
+          actTd.appendChild(openBtn);
         } else {
+          const dlBtn = document.createElement('button');
+          dlBtn.className = 'btn-sm';
+          dlBtn.textContent = '下载';
+          dlBtn.onclick = () => downloadFile(fullPath);
+          actTd.appendChild(dlBtn);
+
+          const mvBtn = document.createElement('button');
+          mvBtn.className = 'btn-sm';
+          mvBtn.textContent = '移动/重命名';
+          mvBtn.onclick = () => openMoveDialog(entry);
+          actTd.appendChild(mvBtn);
+
           const delBtn = document.createElement('button');
-          delBtn.className = 'danger';
+          delBtn.className = 'btn-sm danger';
           delBtn.textContent = '删除';
-          delBtn.onclick = () => deleteFile(childPath);
-          tdAct.appendChild(delBtn);
+          delBtn.onclick = () => confirmDelete(entry);
+          actTd.appendChild(delBtn);
         }
 
-        tr.append(tdName, tdSize, tdTime, tdAct);
-        el.fileList.appendChild(tr);
-      });
-    }
-
-    // ==================== 加载目录 ====================
-    async function loadDir(path) {
-      if (loading) return;
-      loading = true;
-      el.btnUp.disabled = true;
-
-      try {
-        const res = await fetch('/api/files?path=' + encodeURIComponent(path));
-        const data = await res.json();
-
-        if (!data.success) {
-          showStatus(data.message || '加载失败', 'error');
-          return;
-        }
-
-        currentPath = path;
-        renderBreadcrumb(path);
-        renderFiles(data.data);
-        el.btnUp.disabled = !path;
-      } catch (e) {
-        showStatus('请求失败: ' + e.message, 'error');
-      } finally {
-        loading = false;
-      }
-    }
-
-    // ==================== 删除 ====================
-    async function deleteFile(relPath) {
-      if (!confirm('确认删除以下文件？\n\n' + relPath + '\n\n此操作不可恢复。')) return;
-
-      try {
-        const res = await fetch('/api/files?path=' + encodeURIComponent(relPath), {
-          method: 'DELETE',
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          showStatus('删除成功', 'ok');
-          loadDir(currentPath);
-        } else {
-          showStatus(data.message || '删除失败', 'error');
-        }
-      } catch (e) {
-        showStatus('请求失败: ' + e.message, 'error');
-      }
-    }
-
-    // ==================== 上传 ====================
-    const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-    function isImageFile(file) {
-      const ext = (file.name.split('.').pop() || '').toLowerCase();
-      return (file.type && file.type.startsWith('image/')) || IMAGE_EXTS.includes(ext);
-    }
-
-    async function uploadFiles(fileList) {
-      const all = Array.from(fileList);
-      const files = all.filter(isImageFile);
-      const rejected = all.length - files.length;
-
-      if (files.length === 0) {
-        showStatus('没有可上传的图片文件', 'error');
-        return;
+        tr.appendChild(actTd);
+        return tr;
       }
 
-      let ok = 0, skip = 0, fail = 0;
-      for (let i = 0; i < files.length; i++) {
-        const f = files[i];
-        showStatus(`上传中 ${i + 1}/${files.length}：${f.name}`, 'info');
-
+      // ==================== 下载 ====================
+      async function downloadFile(path) {
         try {
-          const fd = new FormData();
-          fd.append('file', f);
-          fd.append('path', currentPath);
+          const res = await apiFetch(
+            CONFIG.filesEndpoint + '?path=' + encodeURIComponent(path)
+          );
 
-          const res = await fetch('/api/upload', { method: 'POST', body: fd });
-          const data = await res.json();
-
-          if (data.ok) {
-            if (data.existed) skip++; else ok++;
-          } else {
-            fail++;
-            console.warn('上传失败', f.name, data.message);
+          const ct = res.headers.get('Content-Type') || '';
+          if (ct.indexOf('application/json') !== -1) {
+            // 服务器以 JSON 形式返回错误（比如文件不存在）
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || '下载失败');
           }
-        } catch (e) {
-          fail++;
-          console.error('上传异常', f.name, e);
+
+          const blob = await res.blob();
+          const filename = path.split('/').pop() || 'download';
+
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+        } catch (err) {
+          toast(err.message, 'error');
         }
       }
 
-      let msg = `上传完成：成功 ${ok}`;
-      if (skip) msg += `，已存在 ${skip}`;
-      if (fail) msg += `，失败 ${fail}`;
-      if (rejected) msg += `，跳过非图片 ${rejected}`;
-      showStatus(msg, fail ? 'error' : 'ok');
-
-      loadDir(currentPath);
-    }
-
-    // ==================== 事件绑定 ====================
-    el.btnUp.onclick = () => loadDir(parentPath(currentPath));
-    el.btnRefresh.onclick = () => loadDir(currentPath);
-    el.btnUpload.onclick = () => el.fileInput.click();
-
-    el.fileInput.onchange = (e) => {
-      if (e.target.files && e.target.files.length) {
-        uploadFiles(e.target.files);
-        e.target.value = '';
+      // ==================== 删除 ====================
+      function confirmDelete(entry) {
+        openModal({
+          title: '删除文件',
+          msg: '确定要删除 “' + entry.name + '” 吗？此操作不可恢复。',
+          showInput: false,
+          confirmText: '删除',
+          danger: true,
+          onConfirm: async () => {
+            const path = joinPath(currentPath, entry.name);
+            const res = await apiFetch(CONFIG.filesEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'delete', path: path }),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || '删除失败');
+            toast('已删除 “' + entry.name + '”', 'success');
+            await loadFiles(currentPath);
+          },
+        });
       }
-    };
 
-    // 拖拽上传
-    let dragCount = 0;
-    window.addEventListener('dragenter', (e) => {
-      if (!e.dataTransfer || !Array.from(e.dataTransfer.types).includes('Files')) return;
-      e.preventDefault();
-      dragCount++;
-      el.dropOverlay.classList.add('show');
-    });
-    window.addEventListener('dragover', (e) => {
-      if (!e.dataTransfer || !Array.from(e.dataTransfer.types).includes('Files')) return;
-      e.preventDefault();
-    });
-    window.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      dragCount--;
-      if (dragCount <= 0) {
-        dragCount = 0;
-        el.dropOverlay.classList.remove('show');
-      }
-    });
-    window.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dragCount = 0;
-      el.dropOverlay.classList.remove('show');
-      if (e.dataTransfer && e.dataTransfer.files.length) {
-        uploadFiles(e.dataTransfer.files);
-      }
-    });
+      // ==================== 移动 / 重命名 ====================
+      function openMoveDialog(entry) {
+        const oldPath = joinPath(currentPath, entry.name);
+        openModal({
+          title: '移动 / 重命名',
+          msg: '修改下方输入框以重命名，或输入完整的新路径以移动文件。',
+          showInput: true,
+          inputValue: oldPath,
+          // 自动选中文件名部分，便于直接改名
+          selectBasename: true,
+          confirmText: '确定',
+          onConfirm: async (value) => {
+            const newPath = normalizePath(value);
+            if (!newPath) throw new Error('新路径不能为空');
+            if (newPath === oldPath) throw new Error('新路径与原路径相同');
 
-    // ==================== 初始 ====================
-    loadDir('');
+            const res = await apiFetch(CONFIG.filesEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'move',
+                'old-path': oldPath,
+                'new-path': newPath,
+              }),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || '移动失败');
+
+            toast('操作成功', 'success');
+            await loadFiles(currentPath);
+          },
+        });
+      }
+
+      // ==================== 上传 ====================
+      $('btn-upload').addEventListener('click', () => $('file-input').click());
+
+      $('file-input').addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = ''; // 允许重复上传同一文件
+        if (files.length) uploadFiles(files);
+      });
+
+      async function uploadFiles(files) {
+        const wrap = $('upload-progress');
+        const fill = $('upload-fill');
+        const text = $('upload-text');
+
+        wrap.style.display = 'block';
+        fill.style.width = '0%';
+
+        let ok = 0, fail = 0;
+        const total = files.length;
+
+        for (let i = 0; i < total; i++) {
+          const file = files[i];
+          text.textContent = '上传中 (' + (i + 1) + '/' + total + ')：' + file.name;
+          fill.style.width = '0%';
+
+          try {
+            await uploadOne(file, (loaded, tot) => {
+              if (tot) fill.style.width = Math.min(100, (loaded / tot) * 100) + '%';
+            });
+            ok++;
+          } catch (err) {
+            fail++;
+            toast('“' + file.name + '” 上传失败：' + err.message, 'error');
+          }
+        }
+
+        fill.style.width = '100%';
+        text.textContent =
+          '上传完成：成功 ' + ok + ' 个' + (fail ? '，失败 ' + fail + ' 个' : '');
+
+        setTimeout(() => { wrap.style.display = 'none'; }, 1800);
+
+        try { await loadFiles(currentPath); } catch (e) { /* ignore */ }
+      }
+
+      // 用 XHR 以获得上传进度
+      function uploadOne(file, onProgress) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', CONFIG.filesEndpoint);
+          if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) onProgress(e.loaded, e.total);
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status === 401) {
+              handleAuthFailed();
+              reject(new Error('登录已过期'));
+              return;
+            }
+            let data;
+            try {
+              data = JSON.parse(xhr.responseText);
+            } catch (_) {
+              reject(new Error('服务器响应异常'));
+              return;
+            }
+            if (!data.success) reject(new Error(data.message || '上传失败'));
+            else resolve(data);
+          });
+
+          xhr.addEventListener('error', () => reject(new Error('网络错误')));
+          xhr.addEventListener('abort', () => reject(new Error('已取消')));
+
+          const fd = new FormData();
+          fd.append('type', 'upload');
+          fd.append('path', currentPath);
+          fd.append('file', file);
+          xhr.send(fd);
+        });
+      }
+
+      // ==================== 拖拽上传 ====================
+      const overlay = $('drop-overlay');
+      let dragDepth = 0;
+
+      document.addEventListener('dragenter', (e) => {
+        if (!e.dataTransfer) return;
+        const types = Array.from(e.dataTransfer.types || []);
+        if (types.indexOf('Files') === -1) return;
+        dragDepth++;
+        overlay.classList.add('active');
+      });
+
+      document.addEventListener('dragleave', () => {
+        dragDepth--;
+        if (dragDepth <= 0) {
+          dragDepth = 0;
+          overlay.classList.remove('active');
+        }
+      });
+
+      document.addEventListener('dragover', (e) => {
+        if (e.dataTransfer) e.preventDefault();
+      });
+
+      document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDepth = 0;
+        overlay.classList.remove('active');
+
+        const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
+        if (files.length) uploadFiles(files);
+      });
+
+      // ==================== 刷新 ====================
+      $('btn-refresh').addEventListener('click', () => {
+        loadFiles(currentPath)
+          .then(() => toast('已刷新'))
+          .catch(e => toast(e.message, 'error'));
+      });
+
+      // ==================== 模态框 ====================
+      let modalHandler = null;
+
+      function openModal(opts) {
+        $('modal-title').textContent = opts.title || '';
+        $('modal-msg').textContent = opts.msg || '';
+        $('modal-msg').style.display = opts.msg ? '' : 'none';
+
+        const input = $('modal-input');
+        if (opts.showInput) {
+          input.style.display = '';
+          input.value = opts.inputValue || '';
+        } else {
+          input.style.display = 'none';
+          input.value = '';
+        }
+
+        const confirmBtn = $('modal-confirm');
+        confirmBtn.textContent = opts.confirmText || '确定';
+        confirmBtn.className = 'primary';
+        if (opts.danger) {
+          confirmBtn.style.background = 'var(--danger)';
+          confirmBtn.style.borderColor = 'var(--danger)';
+        } else {
+          confirmBtn.style.background = '';
+          confirmBtn.style.borderColor = '';
+        }
+
+        modalHandler = opts.onConfirm || null;
+        $('modal').style.display = 'flex';
+
+        if (opts.showInput) {
+          setTimeout(() => {
+            input.focus();
+            if (opts.selectBasename) {
+              const v = input.value;
+              const idx = v.lastIndexOf('/');
+              input.setSelectionRange(idx + 1, v.length);
+            } else {
+              input.select();
+            }
+          }, 30);
+        }
+      }
+
+      function closeModal() {
+        $('modal').style.display = 'none';
+        modalHandler = null;
+      }
+
+      $('modal-cancel').addEventListener('click', closeModal);
+
+      $('modal-confirm').addEventListener('click', async () => {
+        if (!modalHandler) return;
+        const btn = $('modal-confirm');
+        btn.disabled = true;
+        try {
+          await modalHandler($('modal-input').value);
+          closeModal();
+        } catch (err) {
+          toast(err.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      $('modal-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          $('modal-confirm').click();
+        }
+      });
+
+      // ESC 关闭模态框
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && $('modal').style.display === 'flex') {
+          closeModal();
+        }
+      });
+
+      // ==================== 启动 ====================
+      if (token) {
+        showFiles();
+      } else {
+        showLogin();
+      }
+    })();
   </script>
 </body>
 

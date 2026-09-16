@@ -1,8 +1,11 @@
-/mediae/*
-!/mediae/fonts
-!/mediae/icons
-!/mediae/images
-!/mediae/svg
+/media/*
+!/media/fonts
+!/media/icons
+!/media/images
+!/media/svg
+
+/node_modules
+/eslint.config.mjs
 
 /moban7158/
 

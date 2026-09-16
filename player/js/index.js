@@ -665,7 +665,7 @@ const PuSetPlayer = (function () {
         if (value.type === "directory") {
             getList(listData.path + "/" + value.name)
         } else if (value.type === "file") {
-            player.play("/av/" + listData.path + "/" + value.name);
+            player.play("/media/" + listData.path + "/" + value.name);
             c.classList.remove("show")
         }
     });
@@ -679,7 +679,7 @@ const PuSetPlayer = (function () {
     function getList(path) {
         fetch("/api/files", {
             method: "POST",
-            body: new URLSearchParams({ path })
+            body: new URLSearchParams({ path, type: "get" })
         }).then(r => r.json()).then(json => {
             if (json.success) {
                 listData = json;
