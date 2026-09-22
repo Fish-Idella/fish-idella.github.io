@@ -1,0 +1,809 @@
+<hr id="puset-interpreter-template" />
+
+<!-- ============ 设置主窗口 ============ -->
+<template id="settings">
+    <style>
+        .settings {
+            place-content: center;
+            place-items: center;
+            background-color: var(--background-mask, rgba(15, 23, 42, .35));
+            backdrop-filter: blur(3px);
+        }
+
+        .settings .dialog-box {
+            background-color: var(--background-box, #fff);
+            color: var(--color-text, #1f2328);
+            width: min(900px, 92vw);
+            height: min(600px, 88vh);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--value-box-shadow, 0 24px 64px rgba(0, 0, 0, .28));
+        }
+
+        /* ---- 标题栏 ---- */
+        .menu-title {
+            height: 56px;
+            flex-shrink: 0;
+            position: relative;
+            border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, .07));
+        }
+
+        .title {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            place-content: center;
+            place-items: center;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+            color: var(--color-text, #1f2328);
+        }
+
+        .close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 56px;
+            height: 100%;
+            place-content: center;
+            place-items: center;
+        }
+
+        .close>button {
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            line-height: 1;
+            color: var(--color-text, #1f2328);
+            background-color: transparent;
+            cursor: pointer;
+            transition: background-color 150ms ease, color 150ms ease, transform 120ms ease;
+        }
+
+        .close:hover>button {
+            background-color: var(--background-button-hover, rgba(0, 0, 0, .08));
+        }
+
+        .close>button:active {
+            transform: scale(.92);
+        }
+
+        .close>button:focus-visible {
+            outline: 2px solid var(--ps-accent, #3f82ff);
+            outline-offset: 2px;
+        }
+
+        /* ---- 左侧菜单 ---- */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            /* gap: .25rem; */
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            max-width: 50%;
+            min-width: 300px;
+            flex-shrink: 0;
+            background-color: var(--background-menu-list, #f7f8fa);
+            font-weight: 600;
+        }
+
+        @media (max-aspect-ratio: 1/1) {
+            .menu-list {
+                display: none;
+            }
+        }
+
+        .menu-list>li {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            box-sizing: border-box;
+            overflow: hidden;
+            width: 100%;
+            height: 3rem;
+            padding-right: .75rem;
+            font-size: .95rem;
+            cursor: pointer;
+            /* border-radius: 10px; */
+            color: var(--color-text, #1f2328);
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .menu-list>li:hover {
+            background-color: var(--background-menu-list-hover, rgba(0, 0, 0, .06));
+        }
+
+        .menu-list>li.light {
+            background-color: var(--background-menu-list-active, rgba(63, 130, 255, .09));
+            color: var(--ps-accent, #3f82ff);
+        }
+
+        .menu-list>li>.selected {
+            width: 3px;
+            height: 1.25rem;
+            flex-shrink: 0;
+            border-radius: 0 3px 3px 0;
+            background-color: transparent;
+            transition: background-color 150ms ease;
+        }
+
+        .menu-list>li.light>.selected {
+            background-color: var(--background-switch-select, var(--ps-accent, #3f82ff));
+        }
+
+        .menu-list>li>.icon {
+            width: 2rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* ---- 右侧内容 ---- */
+        .template-content {
+            background-color: var(--background-box, #fff);
+        }
+
+        .template-content>.template-layer-host {
+            position: relative;
+            padding: 0 .5rem;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 100%;
+        }
+    </style>
+    <div class="settings view flex-vertical hide">
+        <div class="flex-vertical dialog-box">
+            <div class="menu-title">
+                <div class="title">设置</div>
+                <div class="close flex-vertical">
+                    <button type="button" aria-label="关闭">✕</button>
+                </div>
+            </div>
+            <div class="flex-horizontal fill">
+                <ul class="menu-list">
+                    <li class="flex-horizontal">
+                        <span class="selected"></span>
+                        <span class="icon">⚙️</span>
+                        <span class="text">通用设置</span>
+                    </li>
+                </ul>
+                <div class="fill template-content scroll-y"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        return function (root) {
+            const _settings = root.querySelector(".settings");
+            root.querySelector('.close').addEventListener('click', function () {
+                PuSet.show(_settings, false)
+            })
+        }
+    </script>
+</template>
+
+<!-- ============ 分组容器 ============ -->
+<template id="layer">
+    <style>
+        .layer {
+            padding: .75rem 0;
+            box-sizing: border-box;
+        }
+
+        .title-bar {
+            padding: 0 1rem .5rem;
+            margin-bottom: .25rem;
+            border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, .07));
+        }
+
+        .title-bar>.text {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--color-text, #1f2328);
+        }
+
+        .layer>.content {
+            padding: 0;
+        }
+
+        /* 统一的标题 / 副标题排版（各组件共用） */
+        .long_text {
+            margin-top: .125rem;
+            font-size: .78rem;
+            line-height: 1.45;
+            color: var(--color-long-text, #8a8f98);
+        }
+    </style>
+    <div class="layer">
+        <div class="title-bar">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="content"></div>
+    </div>
+</template>
+
+<!-- ============ 开关 ============ -->
+<template id="switch">
+    <style>
+        .switch {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0;
+            padding: .625rem 1rem;
+            border-radius: 10px;
+            box-sizing: border-box;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 150ms ease;
+        }
+
+        .switch:hover {
+            background-color: var(--background-button-hover, rgba(0, 0, 0, .045));
+        }
+
+        .switch .text {
+            font-size: .95rem;
+            font-weight: 500;
+            line-height: 1.45;
+            color: var(--color-text, #1f2328);
+        }
+
+        .switch .long_text {
+            margin-top: .125rem;
+            font-size: .78rem;
+            line-height: 1.45;
+            color: var(--color-long-text, #8a8f98);
+        }
+
+        /* ---- 开关本体 ---- */
+        .custom-switch {
+            position: relative;
+            flex-shrink: 0;
+            width: 44px;
+            height: 24px;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .custom-switch>input[type="checkbox"] {
+            position: absolute;
+            inset: 0;
+            margin: 0;
+            opacity: 0;
+            z-index: 1;
+            cursor: pointer;
+        }
+
+        .toogle {
+            position: absolute;
+            inset: 0;
+            background-color: var(--background-switch, #ccd4e6);
+            transition: background-color 200ms ease;
+        }
+
+        .toogle::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+            transition: left 200ms cubic-bezier(.4, 0, .2, 1);
+        }
+
+        .custom-switch>input[type="checkbox"]:checked+.toogle {
+            background-color: var(--ps-accent, var(--background-switch-select, #3f82ff));
+        }
+
+        .custom-switch>input[type="checkbox"]:checked+.toogle::after {
+            left: 23px;
+        }
+
+        .custom-switch>input[type="checkbox"]:focus-visible+.toogle {
+            box-shadow: 0 0 0 3px rgba(63, 130, 255, .35);
+        }
+    </style>
+    <label class="switch flex-horizontal">
+        <div class="fill">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="custom-switch">
+            <input type="checkbox">
+            <div class="view toogle"></div>
+        </div>
+    </label>
+    <script>
+        return function layer(root, settings, options) {
+            const a = root.querySelector('input[type=checkbox]');
+            a.dataset.psid = options.psid;
+            a.checked = settings[options.psid];
+        }
+    </script>
+</template>
+
+<!-- ============ 文本输入 ============ -->
+<template id="input">
+    <style>
+        .input-widget {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            padding: .625rem 1rem;
+            border-radius: 10px;
+            box-sizing: border-box;
+            transition: background-color 150ms ease;
+        }
+
+        .input-widget:hover {
+            background-color: var(--background-button-hover, rgba(0, 0, 0, .045));
+        }
+
+        .input-widget .text {
+            font-size: .95rem;
+            font-weight: 500;
+            line-height: 1.45;
+            color: var(--color-text, #1f2328);
+        }
+
+        .input-widget .long_text {
+            margin-top: .125rem;
+            font-size: .78rem;
+            line-height: 1.45;
+            color: var(--color-long-text, #8a8f98);
+        }
+
+        .input-widget input[type="text"] {
+            width: 100%;
+            height: 36px;
+            padding: 0 .75rem;
+            box-sizing: border-box;
+            font: inherit;
+            font-size: .9rem;
+            color: var(--color-text, #1f2328);
+            background-color: var(--background-input, rgba(0, 0, 0, .035));
+            border: 1px solid var(--border-color, rgba(0, 0, 0, .12));
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+        }
+
+        .input-widget input[type="text"]:hover {
+            border-color: rgba(0, 0, 0, .22);
+        }
+
+        .input-widget input[type="text"]:focus {
+            background-color: var(--background-box, #fff);
+            border-color: var(--ps-accent, #3f82ff);
+            box-shadow: 0 0 0 3px rgba(63, 130, 255, .18);
+        }
+
+        .input-widget input[type="text"]::placeholder {
+            color: var(--color-long-text, #a8adb6);
+        }
+    </style>
+    <label class="input-widget flex-vertical">
+        <div class="fill">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div>
+            <input type="text">
+            <datalist></datalist>
+        </div>
+    </label>
+    <script>
+        return function exec_input(root, settings, options) {
+            const uuid = 'uuid-' + crypto.randomUUID();
+            root.querySelector('input').setAttribute('list', uuid);
+            root.querySelector('datalist').setAttribute('id', uuid);
+        }
+    </script>
+</template>
+
+<!-- ============ 按钮 ============ -->
+<template id="button">
+    <style>
+        .button-widget {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0;
+            padding: .625rem 1rem;
+            border-radius: 10px;
+            box-sizing: border-box;
+            transition: background-color 150ms ease;
+        }
+
+        .button-widget:hover {
+            background-color: var(--background-button-hover, rgba(0, 0, 0, .045));
+        }
+
+        .button-widget .text {
+            font-size: .95rem;
+            font-weight: 500;
+            line-height: 1.45;
+            color: var(--color-text, #1f2328);
+        }
+
+        .button-widget .long_text {
+            margin-top: .125rem;
+            font-size: .78rem;
+            line-height: 1.45;
+            color: var(--color-long-text, #8a8f98);
+        }
+
+        .button-widget button {
+            min-width: 88px;
+            height: 34px;
+            padding: 0 1rem;
+            font: inherit;
+            font-size: .875rem;
+            font-weight: 500;
+            color: #fff;
+            background-color: var(--ps-accent, var(--background-switch-select, #3f82ff));
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: filter 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+        }
+
+        .button-widget button:hover {
+            filter: brightness(1.08);
+            box-shadow: 0 2px 10px rgba(63, 130, 255, .35);
+        }
+
+        .button-widget button:active {
+            transform: scale(.97);
+        }
+
+        .button-widget button:focus-visible {
+            outline: 2px solid var(--ps-accent, #3f82ff);
+            outline-offset: 2px;
+        }
+    </style>
+    <label class="button-widget flex-horizontal">
+        <div class="fill">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="content">
+            <button type="button"></button>
+        </div>
+    </label>
+    <script>
+        return function exec_button(root, settings, options) {
+            root.querySelector('button').textContent = options.value;
+        }
+    </script>
+</template>
+
+<!-- ============ 文件选择（按钮的组合） ============ -->
+<template id="file">
+    <style>
+        .wdiget-area {
+            display: block;
+        }
+    </style>
+    <div class="wdiget-area"></div>
+    <script>
+        return function exec_file(root, settings, options) {
+            const b_root = PuSet.get('button', this.namespace).init(root.querySelector('.wdiget-area'), true);
+            const button = b_root.querySelector('button');
+            button.textContent = options.value;
+            button.addEventListener('click', function (event) {
+                event.stopPropagation();
+                MainUI.chooseFile(options.accept).then(file => MainUI.onchange(options.psid, 'file', file));
+                return false;
+            });
+        }
+    </script>
+</template>
+
+<!-- ============ 可排序列表 ============ -->
+<template id="object-list">
+    <style>
+        .object-list {
+            box-sizing: border-box;
+        }
+
+        .object-list .list {
+            display: flex;
+            flex-direction: column;
+            gap: .375rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .object-list li {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            order: attr(--order);
+            list-style: none;
+            height: 2.25rem;
+            padding: 0 .75rem;
+            box-sizing: border-box;
+            font-size: .875rem;
+            color: var(--color-text, #1f2328);
+            cursor: pointer;
+            border-radius: 8px;
+            background-color: var(--background-button, rgba(0, 0, 0, .04));
+            transition: background-color 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+        }
+
+        .object-list li:hover {
+            background-color: var(--background-button-hover, rgba(0, 0, 0, .08));
+        }
+
+        .object-list li:active {
+            transform: scale(.995);
+        }
+
+        .object-list li::before {
+            display: inline-block;
+            box-sizing: border-box;
+            content: attr(data-order);
+            width: 1.4rem;
+            height: 1.4rem;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background-color: var(--ps-accent, var(--background-switch-select, #3f82ff));
+            color: #fff;
+            font-size: .75rem;
+            font-weight: 700;
+            line-height: 1.4rem;
+            text-align: center;
+            transition: background-color 150ms ease, border-color 150ms ease;
+        }
+
+        /* 未选中项：空心虚线圆圈 */
+        .object-list li[data-order=" "]::before {
+            background-color: transparent;
+            border: 1.5px dashed var(--border-color, rgba(0, 0, 0, .22));
+            color: transparent;
+        }
+    </style>
+    <div class="object-list">
+        <div class="wdiget-area"></div>
+        <ul class="list flex-vertical">
+            <li class="flex-horizontal"></li>
+        </ul>
+    </div>
+    <script>
+        return function exec_object_list(root, settings, options) {
+            // 将当前项目中的 'button' 组件实例加入第一个元素中
+            PuSet.get('button', this.namespace).init(root.querySelector('.wdiget-area'), true, function (root, view) {
+                // 执行 'button' 组件的 exec_button() 方法
+                view.exec(root, settings, options);
+            });
+            const selected = settings[options.selected];
+            const vm = PuSet.mvvm({
+                target: root.querySelector('ul.list'),
+                data: Object.entries(settings[options.list]),
+                selector: 'li',
+                layout(li, [key, value], index) {
+                    li.dataset.key = key;
+                    const order = selected.indexOf(key);
+                    li.style.setProperty('order', order >= 0 ? order : this.data.length);
+                    li.dataset.order = order >= 0 ? 1 + order : ' '
+                    li.textContent = value.title;
+                }
+            }).on('click', function (event, [key, value]) {
+                const order = selected.indexOf(key);
+                if (order >= 0) {
+                    selected.splice(order, 1)
+                    this.style.setProperty('order', vm.data.length);
+                    this.dataset.order = ' '
+                } else {
+                    if (selected.length >= options.max) return;
+                    const i = selected.push(key)
+                    this.style.setProperty('order', i);
+                    this.dataset.order = i
+                }
+                MainUI.onchange(options.selected, '', selected)
+            }).on('contextmenu', function (event, [key, value], index) {
+                event.preventDefault();
+                MainUI.openLinkManager(vm, index);
+            });
+        }
+    </script>
+</template>
+
+<!-- ============ 单选项（色块） ============ -->
+<template id="radio-list">
+    <style>
+        .radio-widget {
+            padding: .625rem 1rem;
+            box-sizing: border-box;
+        }
+
+        .radio-widget .text {
+            font-size: .95rem;
+            font-weight: 500;
+            line-height: 1.45;
+            color: var(--color-text, #1f2328);
+        }
+
+        .radio-widget .long_text {
+            margin-top: .125rem;
+            font-size: .78rem;
+            line-height: 1.45;
+            color: var(--color-long-text, #8a8f98);
+        }
+
+        .radio-widget .list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+            gap: .5rem;
+            margin-top: .5rem;
+        }
+
+        .custom-radio {
+            position: relative;
+            min-width: 5rem;
+            height: 2.75rem;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            background-color: var(--background-button, rgba(0, 0, 0, .06));
+            transition: box-shadow 150ms ease, transform 150ms ease;
+        }
+
+        .custom-radio:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .16);
+        }
+
+        .custom-radio:has(> input:checked) {
+            box-shadow: 0 0 0 2px var(--ps-accent, var(--background-switch-select, #3f82ff));
+        }
+
+        .custom-radio>input[type="radio"] {
+            position: absolute;
+            inset: 0;
+            margin: 0;
+            opacity: 0;
+            z-index: 1;
+            cursor: pointer;
+        }
+
+        .custom-radio::after {
+            content: attr(data-title);
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            box-sizing: border-box;
+            padding: 0 .5rem;
+            text-align: center;
+            font-size: .8rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--background, #d8dce3);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, .45);
+            pointer-events: none;
+        }
+    </style>
+    <div class="radio-widget">
+        <div class="fill">
+            <div class="text"></div>
+            <div class="long_text"></div>
+        </div>
+        <div class="list grid-horizontal">
+            <label class="custom-radio">
+                <input type="radio">
+            </label>
+        </div>
+    </div>
+    <script>
+        return function layer(root, settings, options) {
+            PuSet.mvvm({
+                target: root.querySelector('div.list'),
+                data: Object.entries(options.list),
+                selector: '.custom-radio',
+                layout(li, [key, value], index) {
+                    const input = li.querySelector('input')
+                    input.name = options.psid;
+                    input.value = li.dataset.title = key;
+                    li.style.setProperty('--background', value);
+                }
+            })
+        }
+    </script>
+</template>
+
+<!-- ============ 图片 / 视频墙 ============ -->
+<template id="image-list">
+    <style>
+        .image-list {
+            box-sizing: border-box;
+        }
+
+        .image-list .list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: .75rem;
+            margin-top: .5rem;
+            padding: .625rem 1rem;
+        }
+
+        .image-list .video-box {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: var(--background-button, rgba(0, 0, 0, .06));
+            transition: transform 150ms ease, box-shadow 150ms ease;
+        }
+
+        .image-list .video-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .18);
+        }
+
+        .image-list .video-box:active {
+            transform: translateY(0) scale(.985);
+        }
+
+        .image-list video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+    <div class="image-list">
+        <div class="wdiget-area"></div>
+        <div class="list grid-horizontal">
+            <div class="video-box">
+                <video class="view" muted loop></video>
+            </div>
+        </div>
+    </div>
+    <script>
+        return function layer(root, settings, options) {
+            // 将当前项目中的 'file' 组件实例加入第一个元素中
+            PuSet.get('file', this.namespace).init(root.querySelector('.wdiget-area'), true, function (root, view) {
+                // 执行 'file' 组件的 exec_file() 方法
+                view.exec(root, settings, options);
+            });
+            PuSet.mvvm({
+                target: root.querySelector('div.list'),
+                data: options.list,
+                selector: '.video-box',
+                layout: PuSet.paired()
+                    .prop('s', 'video', 'src')
+                    .prop('p', 'video', 'poster')
+                    .build()
+            }).on('click', function (event, value) {
+                MainUI.onchange('boolean_image_wallpaper', value.t, value.s)
+            }).on('pointerenter', function (event, value) {
+                if (!value.t.startsWith('video')) return;
+                /** @type {HTMLMediaElement} */
+                const video = this.querySelector('video');
+                if ((video.ended || video.paused)) {
+                    video.play()
+                }
+            }).on('pointerleave pointercancel', function (event, value) {
+                if (!value.t.startsWith('video')) return;
+                /** @type {HTMLMediaElement} */
+                const video = this.querySelector('video');
+                if (!(video.ended || video.paused)) {
+                    video.pause()
+                }
+            });
+        }
+    </script>
+</template>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>找回密码</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+            padding: 36px 32px 28px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            color: #222;
+            text-align: center;
+        }
+
+        .sub {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
+
+        /* 步骤指示 */
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #bbb;
+            transition: color .2s;
+        }
+
+        .step span {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #eceef2;
+            color: #9aa0a6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            transition: background .2s, color .2s;
+        }
+
+        .step.active {
+            color: #667eea;
+        }
+
+        .step.active span {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .step-line {
+            flex: 0 0 34px;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid #ddd;
+            border-radius: 9px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+        }
+
+        .pwd-wrap {
+            position: relative;
+        }
+
+        .pwd-wrap input {
+            padding-right: 54px;
+        }
+
+        .toggle {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #667eea;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tip {
+            font-size: 12px;
+            color: #999;
+            margin: -6px 0 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 9px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            transition: opacity .15s, transform .05s;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: .92;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(.99);
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .ghost {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 13px;
+            color: #667eea;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .ghost:hover {
+            text-decoration: underline;
+        }
+
+        .msg {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            word-break: break-all;
+        }
+
+        .msg.ok {
+            display: block;
+            background: #eafaf1;
+            color: #1e874b;
+            border: 1px solid #b7e6c8;
+        }
+
+        .msg.err {
+            display: block;
+            background: #fdecea;
+            color: #c0392b;
+            border: 1px solid #f5c6c0;
+        }
+
+        .links {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .links .divider {
+            color: #ddd;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <form class="card" id="form" autocomplete="off">
+        <h1>找回密码</h1>
+        <div class="sub">验证身份后即可重置密码</div>
+
+        <div class="steps">
+            <div class="step active" id="dot1"><span>1</span>验证身份</div>
+            <div class="step-line"></div>
+            <div class="step" id="dot2"><span>2</span>重置密码</div>
+        </div>
+
+        <!-- 第一步：身份验证 -->
+        <div id="stage1">
+            <div class="field">
+                <label>账号</label>
+                <input type="text" id="account" placeholder="用户名 / 邮箱 / 手机号">
+            </div>
+
+            <div class="field">
+                <label>邮箱</label>
+                <input type="text" id="email" placeholder="注册时填写的邮箱">
+            </div>
+
+            <div class="field">
+                <label>手机号</label>
+                <input type="text" id="phone" placeholder="注册时填写的手机号" maxlength="11">
+            </div>
+
+            <button type="submit" id="btn1">验 证 身 份</button>
+        </div>
+
+        <!-- 第二步：重置密码 -->
+        <div id="stage2" hidden>
+            <div class="field">
+                <label>新密码</label>
+                <div class="pwd-wrap">
+                    <input type="password" id="password" placeholder="请输入新密码">
+                    <span class="toggle" id="toggle1">显示</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>确认新密码</label>
+                <div class="pwd-wrap">
+                    <input type="password" id="password2" placeholder="请再次输入新密码">
+                    <span class="toggle" id="toggle2">显示</span>
+                </div>
+            </div>
+
+            <div class="tip">密码长度至少 6 位</div>
+
+            <button type="submit" id="btn2">确 认 修 改</button>
+            <div class="ghost" id="backStep">← 返回上一步</div>
+        </div>
+
+        <div class="msg" id="msg"></div>
+
+        <div class="links">
+            <a href="./login.html">返回登录</a>
+            <span class="divider">|</span>
+            <a href="./register.html">注册新账号</a>
+        </div>
+    </form>
+
+    <script>
+        (function () {
+            // ======= 接口配置（按后端实际路由调整） =======
+            const API_VERIFY = '/api/account/forgot/verify'; // 校验 账号+邮箱+手机号
+            const API_RESET = '/api/account/forgot/reset';   // 提交新密码
+            const LOGIN_URL = './login.html';
+
+            // 状态
+            let step = 1;
+            let resetToken = '';      // 验证通过后后端下发的临时凭证（可选）
+            let verifiedAccount = '';
+
+            // 元素
+            const form = document.getElementById('form');
+            const msgBox = document.getElementById('msg');
+
+            const stage1 = document.getElementById('stage1');
+            const stage2 = document.getElementById('stage2');
+            const dot1 = document.getElementById('dot1');
+            const dot2 = document.getElementById('dot2');
+
+            const accountEl = document.getElementById('account');
+            const emailEl = document.getElementById('email');
+            const phoneEl = document.getElementById('phone');
+            const pwdEl = document.getElementById('password');
+            const pwd2El = document.getElementById('password2');
+
+            const btn1 = document.getElementById('btn1');
+            const btn2 = document.getElementById('btn2');
+            const backStep = document.getElementById('backStep');
+
+            // ======= 通用工具 =======
+            function show(type, text) {
+                msgBox.className = 'msg ' + type;
+                msgBox.textContent = text;
+            }
+
+            function hide() {
+                msgBox.className = 'msg';
+                msgBox.textContent = '';
+            }
+
+            function loading(btn, on, textWhenOn, textWhenOff) {
+                btn.disabled = on;
+                btn.textContent = on ? textWhenOn : textWhenOff;
+            }
+
+            function bindToggle(toggleId, inputEl) {
+                const el = document.getElementById(toggleId);
+                el.addEventListener('click', function () {
+                    const isPwd = inputEl.type === 'password';
+                    inputEl.type = isPwd ? 'text' : 'password';
+                    el.textContent = isPwd ? '隐藏' : '显示';
+                });
+            }
+
+            bindToggle('toggle1', pwdEl);
+            bindToggle('toggle2', pwd2El);
+
+            // 只允许手机号输入数字
+            phoneEl.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 11);
+            });
+
+            // ======= 步骤切换 =======
+            function goStep2() {
+                step = 2;
+                stage1.hidden = true;
+                stage2.hidden = false;
+                dot1.classList.remove('active');
+                dot2.classList.add('active');
+                pwdEl.value = '';
+                pwd2El.value = '';
+                pwdEl.focus();
+            }
+
+            function goStep1() {
+                step = 1;
+                resetToken = '';
+                stage2.hidden = true;
+                stage1.hidden = false;
+                dot2.classList.remove('active');
+                dot1.classList.add('active');
+                hide();
+            }
+
+            backStep.addEventListener('click', goStep1);
+
+            // ======= 提交分发 =======
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                hide();
+                if (step === 1) doVerify();
+                else doReset();
+            });
+
+            // ======= 第一步：验证身份 =======
+            async function doVerify() {
+                const account = accountEl.value.trim();
+                const email = emailEl.value.trim();
+                const phone = phoneEl.value.trim();
+
+                if (!account) return show('err', '请输入账号');
+                if (!email) return show('err', '请输入邮箱');
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('err', '邮箱格式不正确');
+                if (!phone) return show('err', '请输入手机号');
+                if (!/^1\d{10}$/.test(phone)) return show('err', '手机号格式不正确');
+
+                loading(btn1, true, '验证中…', '验 证 身 份');
+                try {
+                    const resp = await fetch(API_VERIFY, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ account: account, email: email, phone: phone })
+                    });
+
+                    let data = null;
+                    try { data = await resp.json(); } catch (_) { }
+
+                    if (data && data.code === 0) {
+                        verifiedAccount = account;
+                        resetToken = (data.data && data.data.reset_token) || '';
+                        goStep2();
+                        show('ok', '身份验证通过，请设置新密码');
+                    } else if (data && data.message) {
+                        show('err', data.message);
+                    } else {
+                        show('err', '验证失败（HTTP ' + resp.status + '）');
+                    }
+                } catch (err) {
+                    show('err', '网络错误：' + err.message);
+                } finally {
+                    loading(btn1, false, '验证中…', '验 证 身 份');
+                }
+            }
+
+            // ======= 第二步：提交新密码 =======
+            async function doReset() {
+                const password = pwdEl.value;
+                const password2 = pwd2El.value;
+
+                if (!password) return show('err', '请输入新密码');
+                if (password.length < 6) return show('err', '密码长度至少 6 位');
+                if (password !== password2) return show('err', '两次输入的密码不一致');
+
+                loading(btn2, true, '提交中…', '确 认 修 改');
+                try {
+                    const resp = await fetch(API_RESET, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            account: verifiedAccount,
+                            reset_token: resetToken || undefined,
+                            password: password
+                        })
+                    });
+
+                    let data = null;
+                    try { data = await resp.json(); } catch (_) { }
+
+                    if (data && data.code === 0) {
+                        show('ok', '密码修改成功，正在跳转登录…');
+                        setTimeout(function () { location.href = LOGIN_URL; }, 1200);
+                    } else if (data && data.message) {
+                        show('err', data.message);
+                    } else {
+                        show('err', '修改失败（HTTP ' + resp.status + '）');
+                    }
+                } catch (err) {
+                    show('err', '网络错误：' + err.message);
+                } finally {
+                    loading(btn2, false, '提交中…', '确 认 修 改');
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

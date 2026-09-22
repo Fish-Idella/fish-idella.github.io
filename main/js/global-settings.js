@@ -141,12 +141,17 @@ const MainUI = (function (attrs, list) {
     },
 
     boolean_image_wallpaper(type, value) {
-        if (type === "checkbox") {
+        if (type === 'file') {
+            storage.setItem("puset-local-wallpaper", value);
+            MainUI.GS.boolean_image_wallpaper = true;
+            MainUI.GS.string_background_type = type;
+        } else if (type === "checkbox") {
             MainUI.GS.boolean_image_wallpaper = value;
             MainUI.GS.string_background_type = value ? 'file' : 'color';
         } else {
             MainUI.GS.boolean_image_wallpaper = true;
             MainUI.GS.string_background_type = type;
+            MainUI.GS.string_background_src = value;
         }
         MainUI.loadBackground(MainUI.GS.string_background_src, MainUI.GS.string_background_type);
     },
@@ -161,6 +166,10 @@ const MainUI = (function (attrs, list) {
 
     string_theme(type, value) {
         MainUI.setUiTheme(MainUI.GS.string_theme = value);
+    },
+
+    map_search_engine_show(type, value) {
+        MainUI.vm_search_engine.update( MainUI.GS.map_search_engine_show = value);
     },
 
     "default_configuration": function () { },
@@ -192,11 +201,19 @@ const MainUI = (function (attrs, list) {
         }
     },
 
+    boolean_auto_ip(type, value) {
+        MainUI.GS.boolean_auto_ip = value
+    },
+    boolean_auto_browser(type,value) {
+        MainUI.GS.boolean_auto_browser = value
+    },
+
     boolean_show_icp(type, value) {
         MainUI.showICP(MainUI.GS.boolean_show_icp = value);
     },
 
     onchange(psid, type, value) {
+        console.log(psid)
         const fn = this[psid] || function not() {
             console.log("未定义的配置项：", psid, type, value);
             return false;

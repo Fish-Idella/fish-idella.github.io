@@ -1,5 +1,5 @@
 
-PuSet.load("data/template.html", "widget").then(function () {
+PuSet.load("data/template-setting.html", "widget").then(function () {
 
     PuSet.get("settings", "widget").init(true, function (root, options) {
         document.body.appendChild(root);
@@ -13,9 +13,9 @@ PuSet.load("data/template.html", "widget").then(function () {
         PuSet(_right_scroll_content).on("change", 'input', function (ev) {
             ev.stopPropagation();
             const psid = getPsId(this)
+            console.log(psid, this)
             const type = this.type;
             switch (type) {
-                case 'radio':
                 case 'checkbox':
                     MainUI.onchange(psid, type, this.checked)
                     break;
@@ -27,6 +27,11 @@ PuSet.load("data/template.html", "widget").then(function () {
             if (set) {
                 set.forEach(arr => MainUI.autoShow(...arr));
             }
+        }).on('click', 'button', function (ev) {
+            ev.stopPropagation();
+            const psid = getPsId(this)
+            console.log(psid, this)
+            MainUI.onchange(psid, this.type, this.value)
         });
 
         // 初始化交叉观察器（监听元素是否进入容器中间区域）
@@ -44,7 +49,9 @@ PuSet.load("data/template.html", "widget").then(function () {
                 return
             }
         }, {
-            root: _right_scroll_content, threshold: 0.5 // 元素50%可见时才触发
+            root: _settings,
+            rootMargin: '-45% 0px -45% 0px',
+            threshold: 0.01
         });
 
 
@@ -104,7 +111,7 @@ PuSet.load("data/template.html", "widget").then(function () {
 
 
         PuSet.populateContent = PuSet.paired()
-            .data('psid','.template')
+            .data('psid', '.template')
             .text('text')
             .html('long_text')
             .build();

@@ -282,7 +282,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             }
             await AndroidObject.openWebView(String(args.url));
             await new Promise(resolve => setTimeout(resolve, 2000));
-            return { "message": "已打开浏览器" };
+            return { "message": "已打开浏览器窗口" };
         },
 
         async get_browser_content(data, information_map, args) {
@@ -300,7 +300,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
 
         async close_browser() {
             await AndroidObject.closeWebView(true);
-            return { "message": "已关闭浏览器" };
+            return { "message": "已关闭浏览器窗口" };
         },
 
         // ========================
@@ -1940,6 +1940,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             });
         }).catch(() => console.warn("无法访问: " + cfg.api));
     });
+
+    PeakTimeDisplay.mount('#peaktime')
 
 });
 

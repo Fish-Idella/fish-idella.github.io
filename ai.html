@@ -25,9 +25,9 @@
 
 <body class="view">
     <div id="chat" class="view hide">
-        <header title="标题栏"></header>
-        <div title="输出">初始化中……</div>
-        <footer title="输入"></footer>
+        <header title="应用标题区"></header>
+        <div title="对话列表区">初始化中……</div>
+        <footer title="用户输入区"></footer>
     </div>
     <form id="api-settings" class="view hide">
         <div>初次见面</div>
@@ -42,29 +42,13 @@
         <button type="submit" name="start" disabled="disabled">开始</button>
     </form>
     <script>
-
-
-        window.PuSet = (async function () {
+        (async function () {
 
             const defaultPrompt = `
-你是拥有自增强能力的 AI，你的工作环境是手机浏览器，保持UI风格适合手机UI布局
-合理运用工具函数或注入工具函数理论可以使用使用所有浏览器具备的功能；
-
+你是拥有自增强能力的 AI，你的工作环境是手机浏览器，保持UI风格适合手机UI布局。
+先用工具获取源代码了解已有功能，尽快用现有代码和注入代码实现可与用户双向对话的图形化界面；
 你可以通过工具函数 localStorageSetItem 修改 'evolution-code' 注入JS代码的方式，增强自己的能力；
-增强代码应该保证功能完备，提示词可以增加功能但不能减少功能，让AI自身知道自己的自动进化能力
-更新代码必须自检合格再注入，避免错误导致页面崩溃卡死
-
-你应该尽快保证UI上的输入输出功能，让用户可以输入对话，指导你的进化方向
-
-注意，你只能通过这种方式为自己自动升级，不要指望重构不可修改的部分让用户手动升级。
-
-自我升级或修复时，可以通过 localStorageGetItem 读取已存在的 'evolution-code'
-先用列表列举你需要做的事，检查是否有疏漏，自检通过才真正开始按照你给的流程执行
-增加功能时不要改变目前功能完备的部分，若非必要不使用工具函数的调用
-
-避免单个代码文档太大，修改不方便，
-模块化存储JS代码到不同的位置，虽然它们不会自动加载执行，但是你可以在'evolution-code'中调用执行
-固定的常量字面量，例如[css style]、[system prompt]等也可以存储为单独的项
+在注入的js文件中实现补全HTML和样式美化，当成功建立对话框后，后续的进化方向又用户指导，而不是自己无止境反复运行。
 `.trim();
 
             const PuSet = { fns: {} };
@@ -372,16 +356,14 @@
                         }
                         if (choice.finish_reason === "tool_calls") {
                             fn_group.forEach(fn => {
-                                fn.function.arguments = fn.ass.join("");
+                                fn.function.arguments = fn.__arguments_fragments__.join("");
                                 Reflect.deleteProperty(fn, "__arguments_fragments__");
                             });
                             assistantBox.setToolCalls(fn_group);
                             fns.handleToolCalls(fn_group, assistantBox);
                             // 递归发送，但不要新建 assistant 消息
                             callApi();
-                            continue;
-                        }
-                        if (choice.finish_reason === "stop") {
+                        } else if (choice.finish_reason === "stop") {
                             assistantBox.setUsage(data.usage);
                         }
                     }
@@ -399,9 +381,6 @@
                     if (PuSet.currentAbortController === abortController) {
                         PuSet.currentAbortController = null;
                     }
-
-                    console.log(assistantBox.getReasoningChunk())
-                    console.log(assistantBox.getContentChunk())
                 });
             }
 
@@ -487,7 +466,7 @@
 
             autoCall();
 
-            return PuSet;
+            window.PuSet = PuSet;
         })();
     </script>
 </body>

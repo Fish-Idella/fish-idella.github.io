@@ -78,9 +78,10 @@
                         "psid": "map_search_engine",
                         "text": "搜索引擎列表",
                         "long_text": "选择1~3个搜索引擎作为常用",
-                        "max": 3,
                         "list": "map_search_engine",
-                        "value": "map_search_engine_show"
+                        "value": "添加",
+                        "max": 3,
+                        "selected": "map_search_engine_show"
                     }
                 ]
             }
@@ -102,6 +103,7 @@
                         "type": "radio-list",
                         "psid": "string_theme",
                         "text": "选择颜色",
+                        "long_text": "主题颜色",
                         "value": "string_theme",
                         "list": {
                             "os": "linear-gradient(-70deg, #fff 0%, #fff 50%, #bbb 50%)",
@@ -137,6 +139,7 @@
                         "text": "推荐图片",
                         "long_text": "选择图片或视频作为壁纸",
                         "accept": "image/*,video/*",
+                        "value": "选择文件",
                         "max": 1,
                         "list": [
                             {

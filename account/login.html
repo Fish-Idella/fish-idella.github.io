@@ -224,16 +224,16 @@
         <div class="msg" id="msg"></div>
 
         <div class="links">
-            <a href="/register.html">注册新账号</a>
+            <a href="./register.html">注册新账号</a>
             <span class="divider">|</span>
-            <a href="/forgot.html">忘记密码？</a>
+            <a href="./forgot.html">忘记密码？</a>
         </div>
     </form>
 
     <script>
         (function () {
             const API = '/api/account/login';
-            const REDIRECT_AFTER_LOGIN = '';
+            const REDIRECT_AFTER_LOGIN = '/account/index.html';
 
             const form = document.getElementById('form');
             const btn = document.getElementById('btn');

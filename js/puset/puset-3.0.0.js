@@ -142,6 +142,10 @@ const PuSet = (function () {
             super(...args);
         }
 
+        isEmpty() {
+            return 0 === this.length;
+        }
+
         /**
          * DOM就绪后执行回调
          * @param {Function} fn - 就绪回调（参数为PuSetFactory）
@@ -892,6 +896,9 @@ const PuSet = (function () {
 
     // 扩展PuSet实例的事件方法
     Object.assign(PuSetConstructor.prototype, {
+
+        ensureObjectProperty,
+
         /**
          * 绑定事件（支持委托）
          * @param {string|Object} types - 事件类型
@@ -923,6 +930,9 @@ const PuSet = (function () {
             return action(this, types, selector, callback, 0);
         }
     });
+
+
+
 
     // ===================== 视图管理类（ViewManager） =====================
     /**
@@ -1164,10 +1174,10 @@ const PuSet = (function () {
          * @param {Object|Array} newData - 新数据
          */
         update(newData) {
-            Object.assign(this.data, newData);
             if (this.isArrayData) {
                 this.data.length = newData.length;
             }
+            Object.assign(this.data, newData);
         }
 
         relayout(key, value = this.data[key]) {
@@ -1199,20 +1209,117 @@ const PuSet = (function () {
         }
     }
 
+    // 暴露ViewManager创建方法
+    PuSetFactory.mvvm = PuSetFactory.ViewManager = options => new ViewModel(options);
+
+
+
     // ===================== 配对绑定 PairedBuilder =====================
     /**
      * 配对绑定构建器
      * - 链式声明 "数据键 → DOM 操作" 的映射
-     * - build() 返回 (node, value, key) => void，可直接当 layout 用
+     * - build() 返回 (node, value, key, vm) => void，可直接当 layout 用
      */
     class PairedBuilder {
 
-        #stop = false;
+        /** build() 后禁止再添加操作 */
+        #locked = false;
 
+        /** key → Array<{ op, selector, arg }> */
         #entries = new Map();
 
-        #push(op, key, selector, arg = key) {
-            if (this.#stop) {
+        /**
+         * 内置操作表：op → (el, value, arg) => void
+         * 未命中的 op 会退回为 setAttribute(op, value)
+         */
+        static OPS = Object.freeze({
+            text(el, value) {
+                el.textContent = value == null ? '' : String(value);
+            },
+
+            html(el, value) {
+                el.innerHTML = value == null ? '' : String(value);
+            },
+
+            value(el, value) {
+                // 兼容 checkbox / radio
+                if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!value;
+                else el.value = value == null ? '' : String(value);
+            },
+
+            attr(el, value, arg) {
+                if (value == null || value === false) el.removeAttribute(arg);
+                else el.setAttribute(arg, value === true ? '' : String(value));
+            },
+
+            prop(el, value, arg) {
+                el[arg] = value;
+            },
+
+            data(el, value, arg) {
+                el.dataset[arg] = value;
+            },
+
+            css(el, value, arg) {
+                if (arg.includes('-')) {
+                    // kebab-case
+                    if (value == null || value === false) el.style.removeProperty(arg);
+                    else el.style.setProperty(arg, String(value));
+                } else {
+                    // camelCase
+                    if (value == null || value === false) el.style[arg] = '';
+                    else el.style[arg] = String(value);
+                }
+            },
+
+            class(el, value, arg) {
+                el.classList.toggle(arg, !!value);
+            },
+
+            show(el, value) {
+                PuSetFactory.show(el, !!value);      // ← 直接复用
+            },
+
+            hide(el, value) {
+                PuSetFactory.show(el, !value);       // ← 直接复用
+            }
+        });
+
+        /** 依 OPS 自动生成快捷方法：builder.op(key, selector?, arg?) */
+        static {
+            for (const action of Object.keys(PairedBuilder.OPS)) {
+                PairedBuilder.prototype[action] = function (key, selector, arg) {
+                    return this.append(action, key, selector, arg);
+                };
+            }
+        }
+
+        /** 将单条操作应用到单个元素（内置 op 走 OPS，否则当属性名） */
+        static applyOp(el, op, value, arg) {
+            // 用 hasOwn 判定，避免命中原型链上的 constructor / toString 等
+            const handler = Object.hasOwn(PairedBuilder.OPS, op)
+                ? PairedBuilder.OPS[op]
+                : null;
+
+            if (handler) {
+                handler(el, value, arg);
+            } else if (value == null || value === false) {
+                el.removeAttribute(op);
+            } else {
+                el.setAttribute(op, value === true ? '' : String(value));
+            }
+        }
+
+        /**
+         * 通用入口
+         * @param {string} op           内置操作名，或自定义属性名
+         * @param {string} key          数据键
+         * @param {string} [selector]   目标元素选择器；默认 ".{key}"，支持 "&" / ":scope" 表示自身
+         * @param {*}      [arg]        操作参数（如 attr 名、class 名、css 属性名）
+         * @returns {this}
+         */
+        append(op, key, selector, arg = key) {
+            if (this.#locked) {
                 throw new Error('PairedBuilder 已 build()，不能再添加操作');
             }
             if (typeof key !== 'string' || key === '') {
@@ -1223,138 +1330,55 @@ const PuSet = (function () {
             if (typeof sel !== 'string' || sel === '') {
                 throw new TypeError('PuSet.paired: selector 必须是非空字符串');
             }
-            const entry = { op, selector: sel, key, arg };
-            if (this.#entries.has(key)) {
-                this.#entries.get(key).push(entry)
-            } else {
-                this.#entries.set(entry.key, [entry])
-            }
+
+            const entry = { op, selector: sel, arg };
+            const list = this.#entries.get(key);
+            if (list) list.push(entry);
+            else this.#entries.set(key, [entry]);
             return this;
         }
 
-        // ---- 快捷方法（拼错立刻报错） ----
-        text(key, selector) { return this.#push('text', key, selector); }
-        html(key, selector) { return this.#push('html', key, selector); }
-        value(key, selector) { return this.#push('value', key, selector); }
-        attr(key, selector, name) { return this.#push('attr', key, selector, name); }
-        prop(key, selector, name) { return this.#push('prop', key, selector, name); }
-        data(key, selector, name) { return this.#push('data', key, selector, name); }
-        class(key, selector, name) { return this.#push('class', key, selector, name); }
-        css(key, selector, name) { return this.#push('css', key, selector, name); }
-        show(key, selector) { return this.#push('show', key, selector); }
-        hide(key, selector) { return this.#push('hide', key, selector); }
+        /** 对指定的 key 应用全部已登记的操作 */
+        #applyKey(node, key, value) {
+            const actions = this.#entries.get(key);
+            if (!actions) return;
 
-        // ---- 通用入口 ----
-        // 用 op 操作 将 obj[key] 赋值给 selector 选中元素 name
-        // op 是内置操作名 → 走内置；否则一律当作属性名（setAttribute）
-        append(op, key, selector, name = null) { return this.#push(op, key, selector, name); }
+            for (let i = 0; i < actions.length; i++) {
+                const { op, selector, arg } = actions[i];
+                // 约定自身选择器
+                if (selector === "&" || selector === ":scope") {
+                    PairedBuilder.applyOp(node, op, value, arg);
+                } else {
+                    node.querySelectorAll(selector)
+                        .forEach(el => PairedBuilder.applyOp(el, op, value, arg));
+                }
+            }
+        }
 
         /**
          * 构建布局函数
-         * @returns {(node: HTMLElement, value: any, key: string) => void}
+         * @returns {(node: HTMLElement, value: any, key: string, vm?: ViewModel) => void}
          */
         build() {
-            this.#stop = true;
+            this.#locked = true;
 
-            const entries = this.#entries;
-
-            const xxx = function (node, value, key) {
-                const actions = entries.get(key);
-                if (!actions) return;
-
-                for (let i = 0; i < actions.length; i++) {
-                    const { op, selector, arg } = actions[i];
-                    // 约定自身选择器
-                    if (selector === "&" || selector === ":scope") {
-                        applyPairedOp(node, op, value, arg);
-                    } else {
-                        node.querySelectorAll(selector).forEach(target => applyPairedOp(target, op, value, arg));
-                    }
-                }
-            }
+            const self = this;
+            const keys = Array.from(this.#entries.keys());
 
             return function pairedLayout(node, value, key, vm) {
                 if (!node) return;
-                if (vm.isArrayData) {
+
+                if (vm && vm.isArrayData) {
                     if (value == null) return;
-                    for (const k of entries.keys()) {
-                        xxx(node, value[k], k)
+                    for (let i = 0; i < keys.length; i++) {
+                        const k = keys[i];
+                        self.#applyKey(node, k, value[k]);
                     }
-                } else xxx(node, value, key)
+                } else {
+                    self.#applyKey(node, key, value);
+                }
             };
         }
-    }
-
-    /**
-     * 单条操作映射表
-     * 每个 handler 签名：(el, value, arg) => void
-     */
-    const PAIRED_OPS = {
-        text(el, value) {
-            el.textContent = value == null ? '' : String(value);
-        },
-
-        html(el, value) {
-            el.innerHTML = value == null ? '' : String(value);
-        },
-
-        value(el, value) {
-            // 兼容 checkbox / radio
-            if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!value;
-            else el.value = value == null ? '' : String(value);
-        },
-
-        attr(el, value, arg) {
-            if (value == null || value === false) el.removeAttribute(arg);
-            else el.setAttribute(arg, value === true ? '' : String(value));
-        },
-
-        prop(el, value, arg) {
-            el[arg] = value;
-        },
-
-        data(el, value, arg) {
-            el.dataset[arg] = value
-        },
-
-        css(el, value, arg) {
-            if (arg.includes('-')) {
-                // kebab-case
-                if (value == null || value === false) el.style.removeProperty(arg);
-                else el.style.setProperty(arg, String(value));
-            } else {
-                // camelCase，用驼峰键
-                if (value == null || value === false) el.style[arg] = '';
-                else el.style[arg] = String(value);
-            }
-        },
-
-        class(el, value, arg) {
-            el.classList.toggle(arg, !!value);
-        },
-
-        show(el, value) {
-            PuSetFactory.show(el, !!value);      // ← 直接复用
-        },
-
-        hide(el, value) {
-            PuSetFactory.show(el, !value);       // ← 直接复用
-        },
-    };
-
-    /**
-     * 应用单条操作
-     */
-    function applyPairedOp(el, op, value, arg) {
-        // 用 hasOwn 判定，避免命中原型链上的 constructor / toString 等
-        if (Object.hasOwn(PAIRED_OPS, op)) {
-            PAIRED_OPS[op](el, value, arg);
-            return;
-        }
-
-        // 非内置 op：当作属性名处理（setAttribute）
-        if (value == null || value === false) el.removeAttribute(op);
-        else el.setAttribute(op, value === true ? '' : String(value));
     }
 
     // 挂到工厂上
@@ -1368,8 +1392,6 @@ const PuSet = (function () {
         }
     });
 
-    // 暴露ViewManager创建方法
-    PuSetFactory.mvvm = PuSetFactory.ViewManager = options => new ViewModel(options);
 
     // ===================== 文档解析工具 =====================
     // 扩展HTML/XHTML/XML/SVG解析方法
@@ -1386,6 +1408,9 @@ const PuSet = (function () {
          */
         PuSetFactory["parse" + name] = text => (new window.DOMParser).parseFromString(text, mimetype);
     });
+
+
+
 
     // ===================== 组件化模板管理（ViewComponent） =====================
     const HOST_CLASS_NAME = "template-layer-host"; // 组件宿主元素类名
@@ -1493,9 +1518,6 @@ const PuSet = (function () {
 
     // 扩展组件管理方法
     Object.assign(PuSetFactory, {
-
-        ensureObjectProperty,
-
         /**
          * 获取组件实例
          * @param {string} [name=DEFAULT_NAME] - 组件名
@@ -1582,15 +1604,9 @@ const PuSet = (function () {
                     }
                 }
 
-                const { style, script } = $elements;
-                // 无视图元素则跳过
-                if (!$elements.length) {
-                    console.warn(`模板${id}缺少视图元素，已跳过`);
-                    continue;
-                }
-
                 // 解析脚本（初始化函数）
                 let handler = returnFalse;
+                const { style, script } = $elements;
                 if (script && script.innerText) {
                     try {
                         // 执行脚本，传入PuSetFactory

@@ -260,7 +260,7 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
         const _add_link_button = _main.querySelector("#links>#scroll>a#add-link-button");
         _add_link_button.addEventListener("click", function (event) {
             event.preventDefault();
-            MainUI.openLinkManager('-1');
+            MainUI.openLinkManager(MainUI.vm_links, '-1');
         });
 
         // 获取滚动容器元素
@@ -320,7 +320,7 @@ PuSet.load("data/template-main.html").then(() => storage.getItem("puset-local-co
             }
         }).on("contextmenu", function (event) {
             event.preventDefault();
-            MainUI.openLinkManager(this.dataset.key);
+            MainUI.openLinkManager(MainUI.vm_links, this.dataset.key);
         }).on("dragstart", function (event) {
             // 拖动开始事件处理
             // 阻止事件冒泡

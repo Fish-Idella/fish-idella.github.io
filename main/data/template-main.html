@@ -804,7 +804,7 @@
         }
 
         .preview>a>span.bg {
-            background-image: url(/mediae/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);
+            background-image: url(/media/icons/24d2dcee7c1a84a8a889a3ff87f18971.jpeg);
         }
 
         .input-box {
@@ -868,6 +868,8 @@
     <script>
         return function (root, MainUI, options) {
             const _link_manager = root.querySelector(".link-manager");
+            let vmdata = null;
+            let object = null;
 
             const _preview = _link_manager.querySelector(".preview");
             const _preview_background = _preview.querySelector(".preview>.link-button>span.bg");
@@ -955,7 +957,7 @@
                     return
                 }
                 if (confirm("确定要删除吗？")) {
-                    MainUI.vm_links.data.splice(id, 1);
+                    vmdata.splice(id, 1);
                     saveLocalConfigure();
                     _link_manager.close();
                 }
@@ -965,7 +967,7 @@
                 const result = needSaveKeys.reduce(function (acc, key) {
                     acc[key] = _link_manager_input[key].get();
                     return acc;
-                }, {});
+                }, object);
 
                 if (!result.href) {
                     return alert("网址不能为空！")
@@ -973,9 +975,9 @@
 
                 const id = Number(_link_manager.dataset.id);
                 if (id < 0) {
-                    MainUI.vm_links.data.push(result);
+                    vmdata.push(result);
                 } else {
-                    MainUI.vm_links.data.splice(id, 1, result);
+                    vmdata.splice(id, 1, result);
                 }
 
                 saveLocalConfigure();
@@ -1005,14 +1007,16 @@
                 _preview_background.style.setProperty("background-color", _link_manager_input.background_color.e.value);
             });
 
-            MainUI.openLinkManager = function openLinkManager(index = "-1") {
+            MainUI.openLinkManager = function openLinkManager(vm, index = "-1") {
+                vmdata = vm.data;
                 if ((_link_manager.dataset.id = index) >= 0) {
-                    if (index >= MainUI.vm_links.data.length) {
+                    if (index >= vmdata.length) {
                         return console.warn("IndexOutOfBoundsException");
                     }
-                    const obj = MainUI.vm_links.data[index];
+                    const obj = vmdata[index];
+                    object = (Array.isArray(obj) ? obj[1] : obj) ?? {};
                     needSaveKeys.forEach(key => {
-                        _link_manager_input[key]?.set(obj[key]);
+                        _link_manager_input[key]?.set(object[key]);
                     });
                 }
                 _link_manager.showModal();
