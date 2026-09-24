@@ -672,13 +672,16 @@ const PuSet = (function () {
      */
     const ensureObjectProperty = function ensureObjectProperty(target, property, Constructor = Object, ...args) {
         if (target !== Object(target)) return null;
-        const value = target[property];
-        if (value) {
-            return value;
+        if (Object.hasOwn(target, property)) {
+            return target[property];
         }
         // 对象可扩展：创建新实例
-        if (typeof Constructor === "function" && Object.isExtensible(target)) {
-            return target[property] = new Constructor(...args);
+        if (Object.isExtensible(target)) {
+            if (typeof Constructor === "function") {
+                return target[property] = new Constructor(...args);
+            } else {
+                return target[property] = Constructor;
+            }
         }
         return null;
     };
@@ -896,9 +899,6 @@ const PuSet = (function () {
 
     // 扩展PuSet实例的事件方法
     Object.assign(PuSetConstructor.prototype, {
-
-        ensureObjectProperty,
-
         /**
          * 绑定事件（支持委托）
          * @param {string|Object} types - 事件类型
@@ -1383,6 +1383,9 @@ const PuSet = (function () {
 
     // 挂到工厂上
     Object.assign(PuSetFactory, {
+
+        ensureObjectProperty,
+
         /**
          * 创建配对绑定构建器
          * @returns {PairedBuilder}

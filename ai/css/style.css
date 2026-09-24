@@ -20,8 +20,8 @@ th {
 }
 
 .logo {
-    inline-size: 1rem;
-    text-align: center;
+	inline-size: 1rem;
+	text-align: center;
 }
 
 :root {
@@ -332,6 +332,10 @@ header button,
 	font-weight: 300;
 }
 
+.image-list>img {
+	max-width: 100%;
+}
+
 .buttons {
 	opacity: 0;
 	gap: 0.4rem;
@@ -553,4 +557,20 @@ label.checkbox-button>.outlay {
 	background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
 	background-size: 36px 36px;
 	animation: 1s linear 0s infinite normal none running moveStripes;
+}
+
+#image-list {
+	gap: 1rem;
+	margin: 0.4rem 0;
+	grid-template-columns: repeat(auto-fill, 5rem);
+}
+
+.image-item {
+	width: 5rem;
+	height: 5rem;
+	aspect-ratio: 1;
+	border: 1px solid #ddd;
+	background-color: #ddd;
+	background-size: cover;
+	border-radius: 15%;
 }
