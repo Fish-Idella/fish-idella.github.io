@@ -1,481 +1,298 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>找回密码</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            padding: 20px;
-        }
-
-        .card {
-            width: 100%;
-            max-width: 420px;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
-            padding: 36px 32px 28px;
-        }
-
-        h1 {
-            margin: 0 0 6px;
-            font-size: 22px;
-            color: #222;
-            text-align: center;
-        }
-
-        .sub {
-            text-align: center;
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 22px;
-        }
-
-        /* 步骤指示 */
-        .steps {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #bbb;
-            transition: color .2s;
-        }
-
-        .step span {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #eceef2;
-            color: #9aa0a6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            transition: background .2s, color .2s;
-        }
-
-        .step.active {
-            color: #667eea;
-        }
-
-        .step.active span {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-        }
-
-        .step-line {
-            flex: 0 0 34px;
-            height: 1px;
-            background: #e5e7eb;
-        }
-
-        .field {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 6px;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            width: 100%;
-            padding: 11px 13px;
-            border: 1px solid #ddd;
-            border-radius: 9px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
-        }
-
-        .pwd-wrap {
-            position: relative;
-        }
-
-        .pwd-wrap input {
-            padding-right: 54px;
-        }
-
-        .toggle {
-            position: absolute;
-            top: 50%;
-            right: 12px;
-            transform: translateY(-50%);
-            font-size: 12px;
-            color: #667eea;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .tip {
-            font-size: 12px;
-            color: #999;
-            margin: -6px 0 4px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 9px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            transition: opacity .15s, transform .05s;
-        }
-
-        button:hover:not(:disabled) {
-            opacity: .92;
-        }
-
-        button:active:not(:disabled) {
-            transform: scale(.99);
-        }
-
-        button:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-
-        .ghost {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 13px;
-            color: #667eea;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .ghost:hover {
-            text-decoration: underline;
-        }
-
-        .msg {
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            display: none;
-            word-break: break-all;
-        }
-
-        .msg.ok {
-            display: block;
-            background: #eafaf1;
-            color: #1e874b;
-            border: 1px solid #b7e6c8;
-        }
-
-        .msg.err {
-            display: block;
-            background: #fdecea;
-            color: #c0392b;
-            border: 1px solid #f5c6c0;
-        }
-
-        .links {
-            margin-top: 20px;
-            padding-top: 18px;
-            border-top: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .links a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        .links .divider {
-            color: #ddd;
-        }
-
-        [hidden] {
-            display: none !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>找回密码 · Go Web Server</title>
+  <link rel="stylesheet" href="theme.css">
 </head>
-
 <body>
-    <form class="card" id="form" autocomplete="off">
-        <h1>找回密码</h1>
-        <div class="sub">验证身份后即可重置密码</div>
+  <div class="page-center">
+    <div class="brand">
+      <div class="brand__mark">G</div>
+      <div>
+        <div class="brand__name">Go Web Server</div>
+        <div class="brand__sub">Account Center</div>
+      </div>
+    </div>
 
-        <div class="steps">
-            <div class="step active" id="dot1"><span>1</span>验证身份</div>
-            <div class="step-line"></div>
-            <div class="step" id="dot2"><span>2</span>重置密码</div>
+    <div class="card">
+      <div class="card__head">
+        <h1 class="card__title">重置密码</h1>
+        <p class="card__desc" id="stepDesc">填写两项账号信息以验证身份</p>
+      </div>
+
+      <div class="alert alert--info is-show" id="notice">
+        <span class="alert__icon">&#9432;</span>
+        <span>请提供 <b>用户名、邮箱、手机号</b> 中的任意两项，且两项需属于同一账号。重置成功后所有设备需重新登录。</span>
+      </div>
+
+      <div class="alert alert--error" id="alert" role="alert" aria-live="polite"></div>
+
+      <!-- 步骤一：三选二验证 -->
+      <form class="form" id="verifyForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="username">用户名</label>
+          <input class="input" id="username" type="text"
+                 autocomplete="username" placeholder="与注册时一致">
         </div>
 
-        <!-- 第一步：身份验证 -->
-        <div id="stage1">
-            <div class="field">
-                <label>账号</label>
-                <input type="text" id="account" placeholder="用户名 / 邮箱 / 手机号">
-            </div>
-
-            <div class="field">
-                <label>邮箱</label>
-                <input type="text" id="email" placeholder="注册时填写的邮箱">
-            </div>
-
-            <div class="field">
-                <label>手机号</label>
-                <input type="text" id="phone" placeholder="注册时填写的手机号" maxlength="11">
-            </div>
-
-            <button type="submit" id="btn1">验 证 身 份</button>
+        <div class="field">
+          <label class="field__label" for="email">邮箱</label>
+          <input class="input" id="email" type="email"
+                 autocomplete="email" placeholder="you@example.com">
         </div>
 
-        <!-- 第二步：重置密码 -->
-        <div id="stage2" hidden>
-            <div class="field">
-                <label>新密码</label>
-                <div class="pwd-wrap">
-                    <input type="password" id="password" placeholder="请输入新密码">
-                    <span class="toggle" id="toggle1">显示</span>
-                </div>
-            </div>
-
-            <div class="field">
-                <label>确认新密码</label>
-                <div class="pwd-wrap">
-                    <input type="password" id="password2" placeholder="请再次输入新密码">
-                    <span class="toggle" id="toggle2">显示</span>
-                </div>
-            </div>
-
-            <div class="tip">密码长度至少 6 位</div>
-
-            <button type="submit" id="btn2">确 认 修 改</button>
-            <div class="ghost" id="backStep">← 返回上一步</div>
+        <div class="field">
+          <label class="field__label" for="phone">手机号</label>
+          <input class="input" id="phone" type="tel"
+                 autocomplete="tel" placeholder="纯数字">
         </div>
 
-        <div class="msg" id="msg"></div>
+        <div class="field__hint" id="fillHint">已填写 <b>0</b> / 2 项</div>
 
-        <div class="links">
-            <a href="./login.html">返回登录</a>
-            <span class="divider">|</span>
-            <a href="./register.html">注册新账号</a>
+        <button class="btn btn--block" type="submit" id="verifyBtn">
+          <span class="btn__spinner"></span>
+          <span>下一步</span>
+        </button>
+      </form>
+
+      <!-- 步骤二：设置新密码 -->
+      <form class="form hidden" id="pwdForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="newPwd">新密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="newPwd" type="password" autocomplete="new-password"
+                   placeholder="6~72 位" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="newPwd">显示</button>
+          </div>
+          <div class="strength" id="strength" data-level="0">
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+          </div>
+          <div class="strength__text" id="strengthText">建议混合字母、数字与符号</div>
         </div>
-    </form>
 
-    <script>
-        (function () {
-            // ======= 接口配置（按后端实际路由调整） =======
-            const API_VERIFY = '/api/account/forgot/verify'; // 校验 账号+邮箱+手机号
-            const API_RESET = '/api/account/forgot/reset';   // 提交新密码
-            const LOGIN_URL = './login.html';
+        <div class="field">
+          <label class="field__label" for="confirmPwd">确认新密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="confirmPwd" type="password" autocomplete="new-password"
+                   placeholder="再次输入新密码" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="confirmPwd">显示</button>
+          </div>
+        </div>
 
-            // 状态
-            let step = 1;
-            let resetToken = '';      // 验证通过后后端下发的临时凭证（可选）
-            let verifiedAccount = '';
+        <button class="btn btn--block" type="submit" id="resetBtn">
+          <span class="btn__spinner"></span>
+          <span>重置密码</span>
+        </button>
 
-            // 元素
-            const form = document.getElementById('form');
-            const msgBox = document.getElementById('msg');
+        <button class="btn btn--ghost btn--block" type="button" id="backBtn">返回上一步</button>
+      </form>
 
-            const stage1 = document.getElementById('stage1');
-            const stage2 = document.getElementById('stage2');
-            const dot1 = document.getElementById('dot1');
-            const dot2 = document.getElementById('dot2');
+      <!-- 完成 -->
+      <div class="hidden" id="donePanel">
+        <div class="alert alert--success is-show">
+          <span class="alert__icon">&#10003;</span>
+          <span id="doneText">密码已重置，请使用新密码登录。</span>
+        </div>
+        <a class="btn btn--block mt-16" href="login.html">前往登录</a>
+      </div>
 
-            const accountEl = document.getElementById('account');
-            const emailEl = document.getElementById('email');
-            const phoneEl = document.getElementById('phone');
-            const pwdEl = document.getElementById('password');
-            const pwd2El = document.getElementById('password2');
+      <div class="card__foot" id="footTip">
+        想起密码了？<a href="login.html">返回登录</a>
+      </div>
+    </div>
+  </div>
 
-            const btn1 = document.getElementById('btn1');
-            const btn2 = document.getElementById('btn2');
-            const backStep = document.getElementById('backStep');
+  <script src="common.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-            // ======= 通用工具 =======
-            function show(type, text) {
-                msgBox.className = 'msg ' + type;
-                msgBox.textContent = text;
-            }
+    var App = window.App;
+    var $ = function (id) { return document.getElementById(id); };
 
-            function hide() {
-                msgBox.className = 'msg';
-                msgBox.textContent = '';
-            }
+    var alertEl   = $('alert');
+    var noticeEl  = $('notice');
+    var stepDesc  = $('stepDesc');
+    var footTip   = $('footTip');
 
-            function loading(btn, on, textWhenOn, textWhenOff) {
-                btn.disabled = on;
-                btn.textContent = on ? textWhenOn : textWhenOff;
-            }
+    var verifyForm = $('verifyForm');
+    var pwdForm    = $('pwdForm');
+    var donePanel  = $('donePanel');
 
-            function bindToggle(toggleId, inputEl) {
-                const el = document.getElementById(toggleId);
-                el.addEventListener('click', function () {
-                    const isPwd = inputEl.type === 'password';
-                    inputEl.type = isPwd ? 'text' : 'password';
-                    el.textContent = isPwd ? '隐藏' : '显示';
-                });
-            }
+    var verifyBtn = $('verifyBtn');
+    var resetBtn  = $('resetBtn');
+    var backBtn   = $('backBtn');
 
-            bindToggle('toggle1', pwdEl);
-            bindToggle('toggle2', pwd2El);
+    var usernameEl = $('username');
+    var emailEl    = $('email');
+    var phoneEl    = $('phone');
+    var fillHint   = $('fillHint');
+    var newPwdEl   = $('newPwd');
+    var confirmEl  = $('confirmPwd');
+    var strengthEl = $('strength');
+    var strengthTx = $('strengthText');
 
-            // 只允许手机号输入数字
-            phoneEl.addEventListener('input', function () {
-                this.value = this.value.replace(/\D/g, '').slice(0, 11);
-            });
+    /* 已通过校验的组合，第二步提交时复用 */
+    var verified = null;
 
-            // ======= 步骤切换 =======
-            function goStep2() {
-                step = 2;
-                stage1.hidden = true;
-                stage2.hidden = false;
-                dot1.classList.remove('active');
-                dot2.classList.add('active');
-                pwdEl.value = '';
-                pwd2El.value = '';
-                pwdEl.focus();
-            }
+    App.redirectIfLoggedIn();
 
-            function goStep1() {
-                step = 1;
-                resetToken = '';
-                stage2.hidden = true;
-                stage1.hidden = false;
-                dot2.classList.remove('active');
-                dot1.classList.add('active');
-                hide();
-            }
+    /* 密码显示切换 */
+    document.querySelectorAll('[data-toggle-pwd]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = $(b.getAttribute('data-toggle-pwd'));
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        b.textContent = show ? '隐藏' : '显示';
+      });
+    });
 
-            backStep.addEventListener('click', goStep1);
+    /* 输入清错 */
+    [usernameEl, emailEl, phoneEl, newPwdEl, confirmEl].forEach(function (el) {
+      el.addEventListener('input', function () {
+        App.ui.hideAlert(alertEl);
+        el.removeAttribute('aria-invalid');
+      });
+    });
 
-            // ======= 提交分发 =======
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                hide();
-                if (step === 1) doVerify();
-                else doReset();
-            });
+    /* 已填项计数 */
+    function countFilled() {
+      var n = 0;
+      if (usernameEl.value.trim()) n++;
+      if (emailEl.value.trim())    n++;
+      if (phoneEl.value.trim())    n++;
+      return n;
+    }
+    [usernameEl, emailEl, phoneEl].forEach(function (el) {
+      el.addEventListener('input', function () {
+        var n = countFilled();
+        fillHint.innerHTML = '已填写 <b>' + n + '</b> / 2 项';
+      });
+    });
 
-            // ======= 第一步：验证身份 =======
-            async function doVerify() {
-                const account = accountEl.value.trim();
-                const email = emailEl.value.trim();
-                const phone = phoneEl.value.trim();
+    /* 密码强度 */
+    var STRENGTH_TEXT = ['建议混合字母、数字与符号', '强度：弱', '强度：一般', '强度：较强', '强度：很强'];
+    newPwdEl.addEventListener('input', function () {
+      var lv = App.validate.strength(newPwdEl.value);
+      strengthEl.setAttribute('data-level', String(lv));
+      strengthTx.textContent = STRENGTH_TEXT[lv];
+    });
 
-                if (!account) return show('err', '请输入账号');
-                if (!email) return show('err', '请输入邮箱');
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('err', '邮箱格式不正确');
-                if (!phone) return show('err', '请输入手机号');
-                if (!/^1\d{10}$/.test(phone)) return show('err', '手机号格式不正确');
+    function showStep(n) {
+      verifyForm.classList.toggle('hidden', n !== 1);
+      pwdForm.classList.toggle('hidden', n !== 2);
+      donePanel.classList.toggle('hidden', n !== 3);
+      footTip.classList.toggle('hidden', n === 3);
+      noticeEl.classList.toggle('is-show', n === 1);
+      App.ui.hideAlert(alertEl);
 
-                loading(btn1, true, '验证中…', '验 证 身 份');
-                try {
-                    const resp = await fetch(API_VERIFY, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ account: account, email: email, phone: phone })
-                    });
+      if (n === 1) { stepDesc.textContent = '填写两项账号信息以验证身份'; usernameEl.focus(); }
+      if (n === 2) { stepDesc.textContent = '设置新密码'; newPwdEl.focus(); }
+      if (n === 3) { stepDesc.textContent = '完成'; }
+    }
 
-                    let data = null;
-                    try { data = await resp.json(); } catch (_) { }
+    /* 步骤一：收集两项，前端先做格式校验 */
+    verifyForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.ui.hideAlert(alertEl);
 
-                    if (data && data.code === 0) {
-                        verifiedAccount = account;
-                        resetToken = (data.data && data.data.reset_token) || '';
-                        goStep2();
-                        show('ok', '身份验证通过，请设置新密码');
-                    } else if (data && data.message) {
-                        show('err', data.message);
-                    } else {
-                        show('err', '验证失败（HTTP ' + resp.status + '）');
-                    }
-                } catch (err) {
-                    show('err', '网络错误：' + err.message);
-                } finally {
-                    loading(btn1, false, '验证中…', '验 证 身 份');
-                }
-            }
+      var u = usernameEl.value.trim();
+      var m = emailEl.value.trim();
+      var p = phoneEl.value.trim();
 
-            // ======= 第二步：提交新密码 =======
-            async function doReset() {
-                const password = pwdEl.value;
-                const password2 = pwd2El.value;
+      if (countFilled() < 2) {
+        App.ui.showAlert(alertEl, 'error', '请至少填写两项：用户名 / 邮箱 / 手机号');
+        return;
+      }
 
-                if (!password) return show('err', '请输入新密码');
-                if (password.length < 6) return show('err', '密码长度至少 6 位');
-                if (password !== password2) return show('err', '两次输入的密码不一致');
+      if (u) {
+        var e1 = App.validate.username(u);
+        if (e1) { fail(usernameEl, e1); return; }
+      }
+      if (m) {
+        var e2 = App.validate.email(m);
+        if (e2) { fail(emailEl, e2); return; }
+      }
+      if (p) {
+        var e3 = App.validate.phone(p);
+        if (e3) { fail(phoneEl, e3); return; }
+      }
 
-                loading(btn2, true, '提交中…', '确 认 修 改');
-                try {
-                    const resp = await fetch(API_RESET, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            account: verifiedAccount,
-                            reset_token: resetToken || undefined,
-                            password: password
-                        })
-                    });
+      verified = { username: u, email: m, phone: p };
 
-                    let data = null;
-                    try { data = await resp.json(); } catch (_) { }
+      /* 前端不校验"两项是否匹配"，交由后端统一判定；
+         这里直接进入第二步，重置时一起提交。 */
+      App.ui.showAlert(alertEl, 'success', '信息已记录，请设置新密码');
+      showStep(2);
+    });
 
-                    if (data && data.code === 0) {
-                        show('ok', '密码修改成功，正在跳转登录…');
-                        setTimeout(function () { location.href = LOGIN_URL; }, 1200);
-                    } else if (data && data.message) {
-                        show('err', data.message);
-                    } else {
-                        show('err', '修改失败（HTTP ' + resp.status + '）');
-                    }
-                } catch (err) {
-                    show('err', '网络错误：' + err.message);
-                } finally {
-                    loading(btn2, false, '提交中…', '确 认 修 改');
-                }
-            }
-        })();
-    </script>
+    backBtn.addEventListener('click', function () { showStep(1); });
+
+    /* 步骤二：提交重置 */
+    pwdForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.ui.hideAlert(alertEl);
+
+      var p1 = newPwdEl.value;
+      var p2 = confirmEl.value;
+
+      var err = App.validate.password(p1);
+      if (err) { fail(newPwdEl, err); return; }
+
+      if (p1 !== p2) { fail(confirmEl, '两次输入的密码不一致'); return; }
+
+      if (!verified) {
+        App.ui.showAlert(alertEl, 'error', '请先完成上一步验证');
+        showStep(1);
+        return;
+      }
+
+      App.ui.setLoading(resetBtn, true);
+      App.request('/api/account/reset-password', {
+        method: 'POST',
+        auth: false,
+        silent401: true,
+        body: {
+          username: verified.username,
+          email:    verified.email,
+          phone:    verified.phone,
+          new_password: p1
+        }
+      }).then(function (r) {
+        App.ui.setLoading(resetBtn, false);
+
+        if (r.code === App.CODE.OK) {
+          App.auth.clear();
+          $('doneText').textContent = r.message || '密码已重置，请使用新密码登录。';
+          showStep(3);
+          return;
+        }
+
+        var msg = r.message || '重置失败，请稍后重试';
+        if (r.code === App.CODE.CREDENTIAL_BAD) msg = '账号信息不匹配，无法验证身份';
+        else if (r.code === App.CODE.INVALID_PARAM) msg = msg || '请求参数有误';
+
+        App.ui.showAlert(alertEl, 'error', msg);
+        /* 身份不匹配 → 退回第一步重新填写 */
+        if (r.code === App.CODE.CREDENTIAL_BAD) {
+          setTimeout(function () { showStep(1); }, 1200);
+        }
+      });
+    });
+
+    function fail(el, msg) {
+      App.ui.showAlert(alertEl, 'error', msg);
+      el.setAttribute('aria-invalid', 'true');
+      el.focus();
+    }
+  })();
+  </script>
 </body>
-
 </html>

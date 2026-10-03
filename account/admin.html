@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>账户管理 · Go Web Server</title>
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header class="nav">
+    <div class="nav__inner">
+      <div class="brand">
+        <div class="brand__mark">G</div>
+        <div>
+          <div class="brand__name">Go Web Server</div>
+          <div class="brand__sub">Admin</div>
+        </div>
+      </div>
+
+      <div class="nav__spacer"></div>
+
+      <div class="nav__user">
+        <a class="btn btn--ghost btn--sm" href="index.html">返回控制台</a>
+        <div class="avatar" id="navAvatar">?</div>
+        <span id="navName" class="text-sm">加载中…</span>
+        <button class="btn btn--ghost btn--sm" type="button" id="logoutBtn">退出登录</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap main">
+
+    <section class="hero">
+      <h1 class="hero__title">账户管理</h1>
+      <p class="hero__desc">按用户名或手机号精确查询账户，可将目标账户密码重置为 <b>123456</b>。</p>
+    </section>
+
+    <div class="alert alert--error" id="alert" role="alert" aria-live="polite"></div>
+
+    <!-- 查询表单 -->
+    <h2 class="section-title">查询账户</h2>
+    <div class="card card--wide">
+      <form class="form" id="queryForm" novalidate>
+        <div class="row-between" style="align-items:flex-end;gap:12px">
+          <div class="field" style="flex:0 0 150px">
+            <label class="field__label" for="key">查询方式</label>
+            <select class="input" id="key">
+              <option value="username">用户名</option>
+              <option value="phone">手机号</option>
+            </select>
+          </div>
+
+          <div class="field" style="flex:1 1 220px">
+            <label class="field__label" for="value">查询值<span class="req">*</span></label>
+            <input class="input" id="value" type="text"
+                   placeholder="精确匹配，如 admin 或 13800000000" required autofocus>
+          </div>
+
+          <button class="btn" type="submit" id="queryBtn">
+            <span class="btn__spinner"></span>
+            <span>查询</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 结果 -->
+    <h2 class="section-title" id="resultTitle" style="display:none">查询结果</h2>
+
+    <div class="grid" id="resultGrid"></div>
+
+    <div class="card card--wide hidden" id="emptyPanel">
+      <p class="text-sub mb-0">未找到匹配的账户。</p>
+    </div>
+
+    <!-- 重置密码确认弹层 -->
+    <div class="modal-mask hidden" id="confirmMask">
+      <div class="card" style="max-width:400px">
+        <div class="card__head">
+          <h3 class="card__title" style="font-size:17px">确认重置密码</h3>
+          <p class="card__desc" id="confirmDesc">—</p>
+        </div>
+        <div class="alert alert--info is-show">
+          <span class="alert__icon">&#9432;</span>
+          <span>目标账户密码将被设为 <b>123456</b>，且其所有设备需重新登录。</span>
+        </div>
+        <div class="row-between mt-16">
+          <button class="btn btn--ghost" type="button" id="cancelReset">取消</button>
+          <button class="btn btn--danger" type="button" id="confirmReset">
+            <span class="btn__spinner"></span>
+            <span>确认重置</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var App = window.App;
+    var $ = function (id) { return document.getElementById(id); };
+
+    var alertEl     = $('alert');
+    var queryForm   = $('queryForm');
+    var queryBtn    = $('queryBtn');
+    var keyEl       = $('key');
+    var valueEl     = $('value');
+    var resultTitle = $('resultTitle');
+    var resultGrid  = $('resultGrid');
+    var emptyPanel  = $('emptyPanel');
+    var logoutBtn   = $('logoutBtn');
+
+    var confirmMask = $('confirmMask');
+    var confirmDesc = $('confirmDesc');
+    var cancelReset = $('cancelReset');
+    var confirmReset= $('confirmReset');
+
+    var pendingTarget = null;
+    var me = null;
+
+    /* ---------- 登录 + 管理员权限守卫 ---------- */
+    App.requireLogin().then(function (ok) {
+      if (!ok) return;
+
+      App.request('/api/account/me', { method: 'GET' }).then(function (r) {
+        if (!(r.code === App.CODE.OK && r.data)) {
+          App.ui.showAlert(alertEl, 'error', r.message || '获取用户信息失败');
+          return;
+        }
+        me = r.data;
+
+        if (me.role_level < 2) {
+          App.ui.showAlert(alertEl, 'error', '当前账户没有管理员权限，3 秒后返回控制台');
+          setTimeout(function () { location.replace(App.PAGE.home); }, 3000);
+          return;
+        }
+
+        var name = me.nickname || me.username || '管理员';
+        $('navAvatar').textContent = App.ui.initials(name);
+        $('navName').textContent = name;
+      });
+    });
+
+    /* ---------- 查询 ---------- */
+    valueEl.addEventListener('input', function () {
+      App.ui.hideAlert(alertEl);
+      valueEl.removeAttribute('aria-invalid');
+    });
+
+    queryForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.ui.hideAlert(alertEl);
+
+      var key = keyEl.value;
+      var value = valueEl.value.trim();
+
+      if (!value) {
+        App.ui.showAlert(alertEl, 'error', '请输入查询值');
+        valueEl.setAttribute('aria-invalid', 'true');
+        valueEl.focus();
+        return;
+      }
+      if (key === 'phone' && !/^\d{6,20}$/.test(value)) {
+        App.ui.showAlert(alertEl, 'error', '手机号应为 6~20 位数字');
+        valueEl.setAttribute('aria-invalid', 'true');
+        valueEl.focus();
+        return;
+      }
+
+      App.ui.setLoading(queryBtn, true);
+      App.request('/api/account/admin/query', {
+        method: 'POST',
+        body: { key: key, value: value }
+      }).then(function (r) {
+        App.ui.setLoading(queryBtn, false);
+
+        if (!(r.code === App.CODE.OK && r.data)) {
+          App.ui.showAlert(alertEl, 'error', r.message || '查询失败');
+          return;
+        }
+
+        renderResults(r.data.list || []);
+      });
+    });
+
+    function renderResults(list) {
+      resultGrid.innerHTML = '';
+      resultTitle.style.display = '';
+      emptyPanel.classList.toggle('hidden', list.length > 0);
+
+      list.forEach(function (u) {
+        resultGrid.appendChild(buildCard(u));
+      });
+    }
+
+    function buildCard(u) {
+      var card = document.createElement('div');
+      card.className = 'tile';
+      card.style.cursor = 'default';
+
+      var name = u.nickname || u.username;
+      var isSelf = me && u.id === me.id;
+      var canOperate = me && u.role_level < me.role_level;
+
+      var rows = [
+        ['ID', u.id],
+        ['用户名', u.username],
+        ['昵称', u.nickname || '—'],
+        ['邮箱', u.email || '未绑定'],
+        ['手机号', u.phone || '未绑定'],
+        ['权限', roleText(u.role_level)],
+        ['状态', statusText(u.status)],
+        ['最后登录', fmtTime(u.last_login_at)],
+        ['登录次数', u.login_count != null ? u.login_count + ' 次' : '—']
+      ];
+
+      var dl = document.createElement('dl');
+      dl.className = 'kv';
+      dl.style.gridTemplateColumns = '78px 1fr';
+      rows.forEach(function (pair) {
+        var dt = document.createElement('dt');
+        dt.textContent = pair[0];
+        var dd = document.createElement('dd');
+        dd.textContent = pair[1];
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      });
+      card.appendChild(dl);
+
+      var actions = document.createElement('div');
+      actions.className = 'mt-16';
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn--danger btn--sm';
+      btn.textContent = '重置密码为 123456';
+
+      if (isSelf) {
+        btn.disabled = true;
+        btn.textContent = '这是你自己';
+      } else if (!canOperate) {
+        btn.disabled = true;
+        btn.title = '无权操作同级或更高级别账户';
+        btn.textContent = '权限不足';
+      } else {
+        btn.addEventListener('click', function () { askReset(u); });
+      }
+
+      actions.appendChild(btn);
+      card.appendChild(actions);
+      return card;
+    }
+
+    function roleText(lv) {
+      if (lv === 1) return '普通用户';
+      if (lv === 2) return '管理员';
+      if (lv === 3) return '超级管理员';
+      return '等级 ' + (lv == null ? '?' : lv);
+    }
+    function statusText(s) {
+      if (s === 0) return '已禁用';
+      if (s === 1) return '正常';
+      if (s === 2) return '已锁定';
+      return '未知';
+    }
+    function fmtTime(t) {
+      if (!t) return '—';
+      var d = new Date(t);
+      if (isNaN(d.getTime())) return String(t);
+      var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+             ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    /* ---------- 重置确认弹层 ---------- */
+    function askReset(u) {
+      pendingTarget = u;
+      confirmDesc.textContent = '目标：' + u.username + '（ID ' + u.id + '）';
+      confirmMask.classList.remove('hidden');
+    }
+
+    function closeMask() {
+      pendingTarget = null;
+      confirmMask.classList.add('hidden');
+      App.ui.setLoading(confirmReset, false);
+    }
+
+    cancelReset.addEventListener('click', closeMask);
+    confirmMask.addEventListener('click', function (e) {
+      if (e.target === confirmMask) closeMask();
+    });
+
+    confirmReset.addEventListener('click', function () {
+      if (!pendingTarget) return;
+
+      App.ui.setLoading(confirmReset, true);
+      App.request('/api/account/admin/reset', {
+        method: 'POST',
+        body: { id: pendingTarget.id }
+      }).then(function (r) {
+        App.ui.setLoading(confirmReset, false);
+
+        if (r.code === App.CODE.OK) {
+          closeMask();
+          App.ui.showAlert(alertEl, 'success', r.message || '重置成功');
+          // 刷新当前查询结果，反映最新状态
+          valueEl.dispatchEvent(new Event('input'));
+          queryForm.dispatchEvent(new Event('submit'));
+          return;
+        }
+
+        var msg = r.message || '重置失败';
+        if (r.code === 1007) msg = '权限不足，无法操作该账户';
+        closeMask();
+        App.ui.showAlert(alertEl, 'error', msg);
+      });
+    });
+
+    /* ---------- 退出登录 ---------- */
+    logoutBtn.addEventListener('click', function () {
+      if (!confirm('确定要退出登录吗？')) return;
+      App.ui.setLoading(logoutBtn, true);
+      App.request('/api/account/logout', { method: 'POST', silent401: true }).then(function () {
+        App.auth.clear();
+        location.replace(App.PAGE.login);
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

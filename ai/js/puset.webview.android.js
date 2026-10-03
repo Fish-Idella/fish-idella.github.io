@@ -57,8 +57,12 @@
         },
 
         // 获取网页内容
-        getWebVisualTextContent(selector) {
-            return Array.from(document.querySelectorAll(selector), el => el.innerText).join('\n');
+        getWebVisualTextContent(type, selector) {
+            const op = type === 'html'
+                ? el => el.outerHTML
+                : el => el.innerText;
+            return Array.from(document.querySelectorAll(selector), op).join('\n')
+                .replace(/data:[^;,\s]+(?:;[^;,\s]+)*;base64,[A-Za-z0-9+/=_-]+/g, 'data url removed');
         }
     });
 })(window.SimpleWebViewJavascriptInterface);

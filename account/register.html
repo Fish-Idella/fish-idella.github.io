@@ -1,180 +1,227 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>注册账号</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    padding: 20px;
-  }
-  .card {
-    width: 100%; max-width: 420px;
-    background: #fff; border-radius: 16px;
-    box-shadow: 0 20px 50px rgba(0,0,0,.25);
-    padding: 36px 32px 28px;
-  }
-  h1 { margin: 0 0 6px; font-size: 22px; color: #222; text-align: center; }
-  .sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 26px; }
-  .field { margin-bottom: 16px; }
-  label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
-  label .req { color: #e74c3c; }
-  input {
-    width: 100%; padding: 11px 13px;
-    border: 1px solid #ddd; border-radius: 9px;
-    font-size: 14px; outline: none;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.15); }
-  .row { display: flex; gap: 10px; }
-  .row > .field { flex: 1; }
-  .hint { font-size: 12px; color: #999; margin-top: 5px; }
-  button {
-    width: 100%; padding: 12px; margin-top: 10px;
-    border: none; border-radius: 9px; cursor: pointer;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: #fff; font-size: 15px; font-weight: 600;
-    transition: opacity .15s, transform .05s;
-  }
-  button:hover:not(:disabled) { opacity: .92; }
-  button:active:not(:disabled) { transform: scale(.99); }
-  button:disabled { opacity: .6; cursor: not-allowed; }
-  .msg {
-    margin-top: 14px; padding: 10px 12px; border-radius: 8px;
-    font-size: 13px; display: none; word-break: break-all;
-  }
-  .msg.ok  { display: block; background: #eafaf1; color: #1e874b; border: 1px solid #b7e6c8; }
-  .msg.err { display: block; background: #fdecea; color: #c0392b; border: 1px solid #f5c6c0; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>注册 · Go Web Server</title>
+  <link rel="stylesheet" href="theme.css">
 </head>
 <body>
-  <form class="card" id="form" autocomplete="off">
-    <h1>创建账号</h1>
-    <div class="sub">带 <span style="color:#e74c3c">*</span> 为必填项</div>
-
-    <div class="field">
-      <label>用户名 <span class="req">*</span></label>
-      <input name="username" id="username" placeholder="3~50 位字母 / 数字 / 下划线" required>
-    </div>
-
-    <div class="field">
-      <label>密码 <span class="req">*</span></label>
-      <input type="password" name="password" id="password" placeholder="6~72 位" required>
-    </div>
-
-    <div class="field">
-      <label>确认密码 <span class="req">*</span></label>
-      <input type="password" id="password2" placeholder="再次输入密码" required>
-    </div>
-
-    <div class="row">
-      <div class="field">
-        <label>邮箱</label>
-        <input type="email" name="email" id="email" placeholder="用于找回密码">
-      </div>
-      <div class="field">
-        <label>手机号</label>
-        <input name="phone" id="phone" placeholder="用于找回密码">
+  <div class="page-center">
+    <div class="brand">
+      <div class="brand__mark">G</div>
+      <div>
+        <div class="brand__name">Go Web Server</div>
+        <div class="brand__sub">Account Center</div>
       </div>
     </div>
-    <div class="hint">邮箱和手机号至少填写一个，用于找回密码</div>
 
-    <div class="field" style="margin-top:16px">
-      <label>昵称</label>
-      <input name="nickname" id="nickname" placeholder="不填则默认与用户名相同">
+    <div class="card">
+      <div class="card__head">
+        <h1 class="card__title">创建账号</h1>
+        <p class="card__desc">邮箱和手机号至少填写一个</p>
+      </div>
+
+      <div class="alert alert--error" id="alert" role="alert" aria-live="polite"></div>
+
+      <form class="form" id="registerForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="username">用户名<span class="req">*</span></label>
+          <input class="input" id="username" name="username" type="text"
+                 autocomplete="username" placeholder="3~50 位字母、数字或下划线"
+                 required autofocus>
+          <div class="field__hint">仅支持 a-z A-Z 0-9 和 _</div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="password">密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="password" name="password" type="password"
+                   autocomplete="new-password" placeholder="6~72 位" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="password">显示</button>
+          </div>
+          <div class="strength" id="strength" data-level="0">
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+          </div>
+          <div class="strength__text" id="strengthText">建议混合字母、数字与符号</div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="confirm">确认密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="confirm" name="confirm" type="password"
+                   autocomplete="new-password" placeholder="再次输入密码" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="confirm">显示</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="email">邮箱</label>
+          <input class="input" id="email" name="email" type="email"
+                 autocomplete="email" placeholder="you@example.com">
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="phone">手机号</label>
+          <input class="input" id="phone" name="phone" type="tel"
+                 autocomplete="tel" placeholder="选填，纯数字 6~20 位">
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="nickname">昵称</label>
+          <input class="input" id="nickname" name="nickname" type="text"
+                 autocomplete="nickname" placeholder="留空则默认与用户名相同">
+        </div>
+
+        <label class="checkbox">
+          <input type="checkbox" id="agree">
+          <span>我已阅读并同意服务条款与隐私政策</span>
+        </label>
+
+        <button class="btn btn--block" type="submit" id="submitBtn">
+          <span class="btn__spinner"></span>
+          <span>注 册</span>
+        </button>
+      </form>
+
+      <div class="card__foot">
+        已经有账号？<a href="login.html">返回登录</a>
+      </div>
     </div>
+  </div>
 
-    <button type="submit" id="btn">注 册</button>
-    <div class="msg" id="msg"></div>
-  </form>
+  <script src="common.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-<script>
-(function () {
-  // ==== 接口地址，按需修改 ====
-  const API = '/api/account/register';
+    var App = window.App;
+    var $ = function (id) { return document.getElementById(id); };
 
-  const form    = document.getElementById('form');
-  const btn     = document.getElementById('btn');
-  const msgBox  = document.getElementById('msg');
+    var alertEl  = $('alert');
+    var form     = $('registerForm');
+    var btn      = $('submitBtn');
+    var username = $('username');
+    var password = $('password');
+    var confirm  = $('confirm');
+    var email    = $('email');
+    var phone    = $('phone');
+    var nickname = $('nickname');
+    var agree    = $('agree');
+    var strengthEl = $('strength');
+    var strengthTx = $('strengthText');
 
-  function show(type, text) {
-    msgBox.className = 'msg ' + type;
-    msgBox.textContent = text;
-  }
-  function hide() {
-    msgBox.className = 'msg';
-    msgBox.textContent = '';
-  }
+    App.redirectIfLoggedIn();
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    hide();
-
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const password2 = document.getElementById('password2').value;
-    const email    = document.getElementById('email').value.trim();
-    const phone    = document.getElementById('phone').value.trim();
-    const nickname = document.getElementById('nickname').value.trim();
-
-    // ===== 前端校验（与后端规则保持一致） =====
-    if (!/^[A-Za-z0-9_]{3,50}$/.test(username)) {
-      return show('err', '用户名需为 3~50 位字母 / 数字 / 下划线');
-    }
-    if (password.length < 6 || password.length > 72) {
-      return show('err', '密码长度需为 6~72 位');
-    }
-    if (password !== password2) {
-      return show('err', '两次输入的密码不一致');
-    }
-    if (!email && !phone) {
-      return show('err', '邮箱和手机号至少填写一个');
-    }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return show('err', '邮箱格式不正确');
-    }
-
-    // ===== 请求 =====
-    btn.disabled = true;
-    btn.textContent = '提交中…';
-    try {
-      const resp = await fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-          email: email,
-          phone: phone,
-          nickname: nickname
-        })
+    /* 密码显示切换 */
+    document.querySelectorAll('[data-toggle-pwd]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = $(b.getAttribute('data-toggle-pwd'));
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        b.textContent = show ? '隐藏' : '显示';
       });
+    });
 
-      let data = null;
-      try { data = await resp.json(); } catch (_) { /* 非 JSON 响应 */ }
+    /* 输入清错 */
+    [username, password, confirm, email, phone, nickname].forEach(function (el) {
+      el.addEventListener('input', function () {
+        App.ui.hideAlert(alertEl);
+        el.removeAttribute('aria-invalid');
+      });
+    });
 
-      if (data && data.code === 0) {
-        show('ok', '注册成功！用户 ID：' + (data.data && data.data.id != null ? data.data.id : '-') +
-                   '，用户名：' + username + '。现在可以去登录了。');
-        form.reset();
-      } else if (data && data.message) {
-        show('err', data.message);
-      } else {
-        show('err', '注册失败（HTTP ' + resp.status + '）');
-      }
-    } catch (err) {
-      show('err', '网络错误：' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '注 册';
+    /* 密码强度 */
+    var STRENGTH_TEXT = [
+      '建议混合字母、数字与符号',
+      '强度：弱',
+      '强度：一般',
+      '强度：较强',
+      '强度：很强'
+    ];
+    password.addEventListener('input', function () {
+      var lv = App.validate.strength(password.value);
+      strengthEl.setAttribute('data-level', String(lv));
+      strengthTx.textContent = STRENGTH_TEXT[lv];
+    });
+
+    function fail(el, msg) {
+      App.ui.showAlert(alertEl, 'error', msg);
+      el.setAttribute('aria-invalid', 'true');
+      el.focus();
     }
-  });
-})();
-</script>
+
+    /* 提交 */
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.ui.hideAlert(alertEl);
+
+      var vUser  = username.value.trim();
+      var vPwd   = password.value;
+      var vCfm   = confirm.value;
+      var vMail  = email.value.trim();
+      var vPhone = phone.value.trim();
+      var vNick  = nickname.value.trim();
+
+      var err = App.validate.username(vUser);
+      if (err) { fail(username, err); return; }
+
+      err = App.validate.password(vPwd);
+      if (err) { fail(password, err); return; }
+
+      if (vPwd !== vCfm) { fail(confirm, '两次输入的密码不一致'); return; }
+
+      err = App.validate.email(vMail);
+      if (err) { fail(email, err); return; }
+
+      err = App.validate.phone(vPhone);
+      if (err) { fail(phone, err); return; }
+
+      if (!vMail && !vPhone) {
+        App.ui.showAlert(alertEl, 'error', '邮箱和手机号至少填写一个');
+        email.focus();
+        return;
+      }
+
+      if (!agree.checked) {
+        App.ui.showAlert(alertEl, 'error', '请先阅读并同意服务条款');
+        return;
+      }
+
+      App.ui.setLoading(btn, true);
+      App.request('/api/account/register', {
+        method: 'POST',
+        auth: false,
+        body: {
+          username: vUser,
+          password: vPwd,
+          email: vMail,
+          phone: vPhone,
+          nickname: vNick
+        }
+      }).then(function (r) {
+        if (r.code === App.CODE.OK) {
+          App.ui.setLoading(btn, false);
+          App.ui.showAlert(alertEl, 'success', '注册成功，正在跳转到登录页…');
+          setTimeout(function () {
+            location.replace('login.html?registered=1&account=' + encodeURIComponent(vUser));
+          }, 700);
+          return;
+        }
+
+        App.ui.setLoading(btn, false);
+        var msg = r.message || '注册失败，请稍后重试';
+        if (r.code === App.CODE.USER_EXISTS) msg = '用户名 / 邮箱 / 手机号已被占用';
+        else if (r.code === App.CODE.INVALID_PARAM) msg = msg || '请求参数有误';
+        App.ui.showAlert(alertEl, 'error', msg);
+      });
+    });
+  })();
+  </script>
 </body>
 </html>

@@ -1348,13 +1348,6 @@
     $('#btnStart').addEventListener('click', () => startBuiltin());
     $('#btnRetry').addEventListener('click', () => retryCurrent());
     $('#btnMenu').addEventListener('click', backToMenu);
-    $('#btnFull').addEventListener('click', function () {
-        if (document.fullscreenElement) {
-            document.exitFullscreen()
-        } else {
-            document.body.requestFullscreen();
-        }
-    })
 
     const fileInput = $('#fileInput');
     $('#btnLocal').addEventListener('click', () => {

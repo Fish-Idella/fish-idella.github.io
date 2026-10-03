@@ -24,15 +24,62 @@ th {
 	text-align: center;
 }
 
+
 :root {
-	--color-background: #f5f5f5;
+	
+	--color-background: #303030;
+	
+	--color-text: #efefef;
+	
 	--color-dark: #a8a8a8;
+	
 	--color-dark-d: #a8a8a80a;
+	
 	--color-title: #E0B989;
-	--color-highlight: #5d5553;
+	
+	--color-highlight: #6b5e5b;
+	
 	--color-sub: #E0AA89;
+	
 	--color-sub-d: #E0AA89;
 	--color-a: #2196F3;
+	
+	--color-a-d: #2196F314;
+	
+
+	
+	--color-surface: #2f2f2f;
+	
+	--color-surface-2: #3a3a3a;
+	
+	--color-border: #3d3d3d;
+	
+	--color-hover: #3a3a3a;
+	
+	--color-on-accent: #ffffff;
+	
+	--color-row-odd: #262626;
+	
+	--color-row-even: #2e2e2e;
+	
+	--color-bubble: #262626;
+	
+	--color-bubble-user: #4b4658;
+	
+	--color-stop-bg: #5a2f2f;
+	
+	--color-stop-text: #ff6b6b;
+	
+	--color-progress-bar: #2f5a5c;
+	
+	--color-scrollbar-thumb: #636363;
+	
+	--color-overlay: rgba(0, 0, 0, 0.6);
+	
+	--color-shadow: rgba(0, 0, 0, 0.4);
+	
+	--color-shadow-strong: rgba(0, 0, 0, 0.6);
+	
 }
 
 a,
@@ -51,6 +98,8 @@ body,
 	inline-size: 100%;
 	block-size: 100%;
 	overflow: hidden;
+	color: var(--color-text);
+	background-color: var(--color-background);
 }
 
 .unify {
@@ -100,6 +149,7 @@ body,
 	flex-grow: 1;
 	min-inline-size: 0px;
 	min-block-size: 0px;
+	
 }
 
 textarea#input-message {
@@ -109,6 +159,7 @@ textarea#input-message {
 	border-image: none;
 	background: none;
 	margin: 0.4rem 0px;
+	color: var(--color-text);
 }
 
 .info .fc {
@@ -117,11 +168,11 @@ textarea#input-message {
 }
 
 ul.fc.scroll li {
-	background: azure;
+	background: var(--color-row-odd);
 }
 
 ul.fc.scroll li:nth-child(2n) {
-	background: rgb(235, 235, 237);
+	background: var(--color-row-even);
 }
 
 .hide {
@@ -135,7 +186,7 @@ ul.fc.scroll li:nth-child(2n) {
 }
 
 ::-webkit-scrollbar-thumb {
-	background-color: rgb(99, 99, 99);
+	background-color: var(--color-scrollbar-thumb);
 	border-radius: 0.5rem;
 }
 
@@ -168,7 +219,7 @@ ul.fc.scroll li:nth-child(2n) {
 }
 
 button {
-	background-color: var(--color-background);
+	background-color: transparent;
 	border-width: medium;
 	border-style: none;
 	border-color: currentcolor;
@@ -177,6 +228,7 @@ button {
 	min-block-size: 32px;
 	border-radius: 16px;
 	line-height: 0;
+	color: var(--color-text);
 }
 
 button>svg {
@@ -191,7 +243,8 @@ button>svg {
 	max-inline-size: 80%;
 	max-block-size: 80%;
 	min-block-size: 5rem;
-	background-color: var(--color-background);
+	background-color: var(--color-surface);
+	color: var(--color-text);
 	padding: 1rem;
 	border-radius: 0.5rem;
 }
@@ -210,7 +263,7 @@ button>svg {
 
 button#send[name="send"] {
 	background-color: var(--color-a);
-	color: white;
+	color: var(--color-on-accent);
 }
 
 button#send[name="send"]>svg.stop {
@@ -218,8 +271,8 @@ button#send[name="send"]>svg.stop {
 }
 
 button#send[name="stop"] {
-	background-color: rgb(203, 150, 150);
-	color: rgb(255, 0, 0);
+	background-color: var(--color-stop-bg);
+	color: var(--color-stop-text);
 }
 
 button#send[name="stop"]>svg.send {
@@ -231,7 +284,7 @@ button#send[name="stop"]>svg.send {
 }
 
 #chat-view {
-	background-image: url("../image/20210110174630_6b3c2.jpg");
+	
 	background-size: cover;
 	max-inline-size: 100%;
 	left: 50%;
@@ -243,7 +296,7 @@ button#send[name="stop"]>svg.send {
 	line-height: 3rem;
 	font-weight: 600;
 	background-color: var(--color-background);
-	border-bottom: 1px solid rgb(221, 221, 221);
+	border-bottom: 1px solid var(--color-border);
 }
 
 header button,
@@ -260,8 +313,12 @@ header button,
 }
 
 .chat-message-output-box {
-	margin: 1rem 0px;
+	
 	font-family: MiSans, "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, sans-serif;
+}
+
+.flex-horizontal.chat-message-output-box[data-persona=tool] {
+	margin: 0;
 }
 
 .chat-message-output-box[data-persona="system"] {
@@ -279,12 +336,20 @@ header button,
 
 .chat-message-output-box[data-persona="user"] {
 	flex-direction: row-reverse;
+	margin: 1rem 0;
 }
 
+.chat-message-output-box[data-persona="user"] .chat-message>.chat-message-title,
 .chat-message-output-box[data-persona="user"] [name="remake"],
 .chat-message-output-box[data-persona="user"] [name="usage"] {
 	display: none;
 }
+
+
+.chat-message-output-box[data-persona="assistant"]:not(.tool_calls) {
+	margin: 0 0 1rem 0;
+}
+
 
 .output {
 	inline-size: auto;
@@ -294,42 +359,35 @@ header button,
 .chat-message {
 	border-radius: 0.4rem;
 	overflow: hidden;
-	background-color: var(--color-background);
-	box-shadow: 1px 1px 0px 0px var(--color-highlight);
+	
+	color: var(--color-text);
+	
 }
 
 .chat-message pre {
 	max-inline-size: 100%;
 	overflow: scroll;
 	margin: 0px;
+	background-color: var(--color-surface);
+	color: var(--color-text);
 }
 
 .chat-message .message {
-	padding: 0.2rem;
+	
 	font-weight: 400;
-	/* white-space: pre-wrap; */
-	min-block-size: 1rem;
+	
+	
 }
 
-.chat-message>.chat-message-title {
-	background-color: rgb(222, 222, 222);
-}
-
-.chat-message>.chat-message-title>.state {
-	background-color: var(--color-highlight);
-	line-height: 2rem;
-	padding: 0px 0.2rem;
-	color: bisque;
-}
-
-.chat-message-output-box[data-persona="user"] .chat-message>.chat-message-title>.state {
-	background-color: rgb(53, 40, 88);
+.chat-message-output-box[data-persona="user"] .chat-message {
+	background-color: var(--color-bubble-user);
 }
 
 .chat-message>.chat-message-title>.think {
-	/* white-space: pre-wrap; */
+	
 	padding: 0.2rem;
 	font-weight: 300;
+	color: var(--color-dark);
 }
 
 .image-list>img {
@@ -347,14 +405,15 @@ header button,
 }
 
 .branch {
-	background-color: var(--color-background);
+	
+	color: var(--color-text);
 	border-radius: 1rem;
 }
 
 .chat-message-input {
 	padding: 0.4rem;
 	background-color: var(--color-background);
-	border-top: 1px solid rgb(221, 221, 221);
+	border-top: 1px solid var(--color-border);
 }
 
 span.dd {
@@ -364,17 +423,18 @@ span.dd {
 .drawer-nav {
 	position: absolute;
 	background-color: var(--color-background);
+	color: var(--color-text);
 	min-inline-size: 100px;
 	max-inline-size: 70%;
 	block-size: 100%;
 	left: 0%;
 	transition: left 0.3s ease-in-out;
-	box-shadow: rgba(0, 0, 0, 0.1) 2px 0px 10px 0rem;
+	box-shadow: var(--color-shadow) 2px 0px 10px 0rem;
 	padding: 0.4rem;
 }
 
 .overlay {
-	background-color: rgba(128, 128, 128, 0.5);
+	background-color: var(--color-overlay);
 }
 
 ul {
@@ -393,7 +453,7 @@ ul#character-list>li {
 
 .login-form {
 	background-color: var(--color-background);
-	background-image: url("../image/20210110175241_cfe68.jpg");
+	
 	background-size: cover;
 	gap: 1rem;
 }
@@ -410,7 +470,8 @@ ul#character-list>li {
 	inline-size: 90%;
 	line-height: 1.2rem;
 	box-sizing: border-box;
-	background-color: var(--color-background);
+	background-color: var(--color-surface);
+	color: var(--color-text);
 }
 
 .login-row>.login-input {
@@ -421,14 +482,15 @@ ul#character-list>li {
 	padding: 0.6rem;
 	border-radius: 0.5rem;
 	box-sizing: border-box;
-	background-color: var(--color-background);
+	background-color: var(--color-surface);
+	color: var(--color-text);
 }
 
 .login-btn,
 .login-btn-primary {
 	padding: 0.6rem;
 	background-color: var(--color-a);
-	color: white;
+	color: var(--color-on-accent);
 	border-radius: 0.5rem;
 	cursor: pointer;
 	border-width: medium;
@@ -453,7 +515,7 @@ label.checkbox-button input[type="checkbox"] {
 label.checkbox-button input[type="checkbox"]:checked+span {
 	border: 1px solid var(--color-a);
 	color: var(--color-a);
-	background-color: rgba(33, 149, 243, 0.04);
+	background-color: var(--color-a-d);
 	box-sizing: border-box;
 }
 
@@ -485,11 +547,12 @@ label.checkbox-button>.outlay {
 	min-inline-size: 32px;
 	min-block-size: 32px;
 	border-radius: 16px;
-	border: 1px solid var(--color-dark);
+	border: 1px solid var(--color-border);
 	padding: 0px 0.4rem;
 	font-size: 0.9rem;
 	box-sizing: border-box;
 	text-align: center;
+	color: var(--color-text);
 }
 
 #api-list {
@@ -513,7 +576,7 @@ label.checkbox-button>.outlay {
 
 .hover:hover,
 .hover:hover button {
-	background-color: rgb(255, 255, 255);
+	background-color: var(--color-hover);
 	border-radius: 5px;
 }
 
@@ -526,13 +589,14 @@ label.checkbox-button>.outlay {
 	inline-size: fit-content;
 	block-size: fit-content;
 	padding: 1rem;
-	background-color: azure;
+	background-color: var(--color-surface);
+	color: var(--color-text);
 	left: 50%;
 	top: 60%;
 	font-weight: 600;
 	transform: translate(-50%);
 	border-radius: 0.4rem;
-	box-shadow: rgb(0, 0, 0) 1px 1px 10px 2px;
+	box-shadow: var(--color-shadow-strong) 1px 1px 10px 2px;
 	user-select: none;
 	touch-action: none;
 	pointer-events: none;
@@ -553,7 +617,7 @@ label.checkbox-button>.outlay {
 }
 
 .dialog-progress::-webkit-progress-bar {
-	background-color: cadetblue;
+	background-color: var(--color-progress-bar);
 	background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
 	background-size: 36px 36px;
 	animation: 1s linear 0s infinite normal none running moveStripes;
@@ -569,8 +633,149 @@ label.checkbox-button>.outlay {
 	width: 5rem;
 	height: 5rem;
 	aspect-ratio: 1;
-	border: 1px solid #ddd;
-	background-color: #ddd;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-surface-2);
 	background-size: cover;
 	border-radius: 15%;
+}
+
+
+
+/* ===================== ModalDialog 暗色主题 ===================== */
+:root {
+	/* 对话框专属，全部基于全局色板派生，可单独覆盖 */
+	--dialog-bg: var(--color-surface);
+	--dialog-text: var(--color-text);
+	--dialog-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.6);
+
+	--dialog-input-bg: var(--color-background);
+	--dialog-input-border: var(--color-border);
+	--dialog-input-text: var(--color-text);
+	--dialog-input-placeholder: var(--color-dark);
+
+	--dialog-btn-bg: var(--color-surface-2);
+	--dialog-btn-text: var(--color-text);
+	--dialog-btn-hover-bg: var(--color-hover);
+	--dialog-btn-primary-bg: var(--color-a);
+	--dialog-btn-primary-text: var(--color-on-accent);
+
+	--dialog-empty-text: var(--color-dark);
+	--dialog-toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- 容器 ---------- */
+dialog.modal-dialog {
+	border: none;
+	border-radius: 0.6rem;
+	box-shadow: var(--dialog-shadow);
+	background-color: var(--dialog-bg);
+	color: var(--dialog-text);
+	padding: 0;
+}
+
+dialog.modal-dialog::backdrop {
+	background-color: var(--color-overlay);
+}
+
+.modal-dialog .dialog-content-a {
+	max-block-size: 80vh;
+	max-inline-size: 80vw;
+	inline-size: fit-content;
+	border-radius: 1rem;
+	margin: 0;
+	padding: 1rem;
+	background-color: var(--dialog-bg);
+	color: var(--dialog-text);
+}
+
+/* ---------- 消息 ---------- */
+.modal-dialog .dialog-message {
+	overflow: auto;
+	white-space: pre;
+	color: var(--dialog-text);
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+/* ---------- 输入框 ---------- */
+.modal-dialog .dialog-input {
+	margin-block-start: 1rem;
+	padding: 6px 10px;
+	border: 1px solid var(--dialog-input-border);
+	border-radius: 4px;
+	inline-size: 100%;
+	box-sizing: border-box;
+	background-color: var(--dialog-input-bg);
+	color: var(--dialog-input-text);
+	outline: none;
+}
+
+.modal-dialog .dialog-input::placeholder {
+	color: var(--dialog-input-placeholder);
+}
+
+.modal-dialog .dialog-input:focus {
+	border-color: var(--color-a);
+}
+
+/* ---------- 自定义区域（列表 / 进度条） ---------- */
+.modal-dialog .dialog-custom {
+	line-height: 2rem;
+}
+
+.modal-dialog .dialog-custom label {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	cursor: pointer;
+}
+
+.modal-dialog .dialog-custom .dialog-empty {
+	color: var(--dialog-empty-text);
+}
+
+/* ---------- 按钮 ---------- */
+.modal-dialog .dialog-buttons {
+	flex-direction: row-reverse;
+	gap: 1rem;
+	margin-block-start: 1rem;
+}
+
+.modal-dialog .dialog-buttons button {
+	flex: 1;
+	padding: 8px 20px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	min-width: 80px;
+	background-color: var(--dialog-btn-bg);
+	color: var(--dialog-btn-text);
+	transition: background-color 0.2s, filter 0.2s;
+}
+
+.modal-dialog .dialog-buttons button:hover {
+	background-color: var(--dialog-btn-hover-bg);
+}
+
+.modal-dialog .dialog-buttons button.primary {
+	background-color: var(--dialog-btn-primary-bg);
+	color: var(--dialog-btn-primary-text);
+}
+
+.modal-dialog .dialog-buttons button.primary:hover {
+	filter: brightness(1.1);
+}
+
+/* ---------- Toast 模式 ---------- */
+dialog.modal-dialog.toast {
+	position: fixed;
+	inset-block-start: 20px;
+	inset-inline-start: 50%;
+	transform: translateX(-50%);
+	z-index: 9999;
+	padding: 12px 24px;
+	border-radius: 8px;
+	background-color: var(--dialog-bg);
+	color: var(--dialog-text);
+	box-shadow: var(--dialog-toast-shadow);
 }

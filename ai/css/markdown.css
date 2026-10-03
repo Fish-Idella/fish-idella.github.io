@@ -1,73 +1,95 @@
-/* ========== 基础容器与排版 ========== */
-.markdown {
-  /* font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif; */
-  /* font-size: 16px; */
-  /* line-height: 1.5; */
-  /* color: #24292f; */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+
+:root {
+	
+	--md-text: var(--color-text);                 
+	--md-text-strong: #ffffff;                    
+	--md-text-muted: var(--color-dark);           
+	--md-border: var(--color-border);             
+	--md-surface: var(--color-surface);           
+	--md-surface-2: var(--color-surface-2);       
+
+	--md-link: var(--color-a);                    
+	--md-link-hover: #6ab7ff;                     
+
+	--md-code-inline-bg: rgba(110, 118, 129, 0.25); 
+	--md-code-inline-text: #ff9492;               
+	--md-code-block-bg: #1e1e1e;                  
+	--md-code-block-border: var(--color-border);  
+
+	--md-mark-bg: #5c4a00;                        
+	--md-mark-text: #ffe08a;                      
+	--md-del: var(--color-dark);                  
 }
 
-.markdown > *:first-child {/* margin-top: 0 !important; */}
-.markdown > *:last-child {/* margin-bottom: 0 !important; */}
 
-/* ========== 标题 ========== */
+.markdown {
+	color: var(--md-text);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+
 .markdown h1,
 .markdown h2,
 .markdown h3,
 .markdown h4,
 .markdown h5,
 .markdown h6 {
-  margin-top: 1.5em;
-  margin-bottom: 0.6em;
-  font-weight: 600;
-  line-height: 1.3;
-  color: #1f2328;
+	margin-top: 1.5em;
+	margin-bottom: 0.6em;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--md-text-strong);
 }
 
-.markdown h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; }
-.markdown h2 { font-size: 1.5em; padding-bottom: 0.25em; border-bottom: 1px solid #d0d7de; }
+.markdown h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--md-border); }
+.markdown h2 { font-size: 1.5em; padding-bottom: 0.25em; border-bottom: 1px solid var(--md-border); }
 .markdown h3 { font-size: 1.25em; }
 .markdown h4 { font-size: 1em; }
 .markdown h5 { font-size: 0.875em; }
-.markdown h6 { font-size: 0.85em; color: #656d76; }
+.markdown h6 { font-size: 0.85em; color: var(--md-text-muted); }
 
-/* ========== 段落与文本 ========== */
+
 .markdown p {
-  margin: 0.5rem;
-  /* margin-bottom: 1em; */
+	margin: 0.5rem;
+	
 }
 
-.markdown strong { font-weight: 600; color: #1f2328; }
+.markdown strong { font-weight: 600; color: var(--md-text-strong); }
 .markdown em { font-style: italic; }
-.markdown del { color: #656d76; text-decoration: line-through; }
-.markdown mark { background-color: #fff8c5; padding: 0.1em 0.2em; border-radius: 2px; }
-
-/* ========== 链接 ========== */
-.markdown a {
-  color: #0969da;
-  text-decoration: none;
-  transition: color 0.2s;
+.markdown del { color: var(--md-del); text-decoration: line-through; }
+.markdown mark {
+	background-color: var(--md-mark-bg);
+	color: var(--md-mark-text);
+	padding: 0.1em 0.2em;
+	border-radius: 2px;
 }
-.markdown a:hover { text-decoration: underline; color: #0550ae; }
 
-/* ========== 引用块 ========== */
+
+.markdown a {
+	color: var(--md-link);
+	text-decoration: none;
+	transition: color 0.2s;
+}
+.markdown a:hover { text-decoration: underline; color: var(--md-link-hover); }
+
+
 .markdown blockquote {
-  margin: 0 0 1em 0;
-  padding: 0.5em 1em;
-  color: #656d76;
-  border-left: 4px solid #d0d7de;
-  background-color: #f6f8fa;
-  border-radius: 0 4px 4px 0;
+	margin: 0 0 1em 0;
+	padding: 0.5em 1em;
+	color: var(--md-text-muted);
+	border-left: 4px solid var(--md-border);
+	background-color: var(--md-surface);
+	border-radius: 0 4px 4px 0;
 }
 .markdown blockquote > *:last-child { margin-bottom: 0; }
 
-/* ========== 列表 ========== */
+
 .markdown ul,
 .markdown ol {
-  margin-top: 0;
-  margin-bottom: 1em;
-  padding-left: 2em;
+	margin-top: 0;
+	margin-bottom: 1em;
+	padding-left: 2em;
 }
 .markdown li { margin-bottom: 0.35em; }
 .markdown li > p { margin-bottom: 0.25em; }
@@ -76,92 +98,92 @@
 .markdown ul ul { list-style-type: circle; }
 .markdown ul ul ul { list-style-type: square; }
 
-/* 任务列表 */
+
 .markdown input[type="checkbox"] {
-  margin: 0 0.35em 0 -1.5em;
-  vertical-align: middle;
-  pointer-events: none;
+	margin: 0 0.35em 0 -1.5em;
+	vertical-align: middle;
+	pointer-events: none;
 }
 
-/* ========== 代码 ========== */
-/* 行内代码 */
+
+
 .markdown code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  font-size: 0.875em;
-  padding: 0.2em 0.4em;
-  margin: 0;
-  background-color: rgba(175, 184, 193, 0.2);
-  border-radius: 4px;
-  color: #cf222e;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+	font-size: 0.875em;
+	padding: 0.2em 0.4em;
+	margin: 0;
+	background-color: var(--md-code-inline-bg);
+	border-radius: 4px;
+	color: var(--md-code-inline-text);
 }
 
-/* 代码块 */
+
 .markdown pre {
-  /* margin-bottom: 1em; */
-  /* padding: 1em; */
-  overflow: auto;
-  font-size: 0.875em;
-  line-height: 1.6;
-  background-color: #f6f8fa;
-  border-radius: 6px;
-  border: 1px solid #d0d7de;
+	
+	
+	overflow: auto;
+	font-size: 0.875em;
+	line-height: 1.6;
+	background-color: var(--md-code-block-bg);
+	border-radius: 6px;
+	border: 1px solid var(--md-code-block-border);
 }
 .markdown pre code {
-  padding: 0;
-  margin: 0;
-  background-color: transparent;
-  border-radius: 0;
-  color: inherit;
-  font-size: inherit;
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	border-radius: 0;
+	color: inherit;
+	font-size: inherit;
 }
 
-/* ========== 表格 ========== */
+
 .markdown table {
-  width: 100%;
-  margin-bottom: 1em;
-  border-collapse: collapse;
-  border-spacing: 0;
-  font-size: 0.9em;
+	width: 100%;
+	margin-bottom: 1em;
+	border-collapse: collapse;
+	border-spacing: 0;
+	font-size: 0.9em;
 }
 .markdown table th,
 .markdown table td {
-  padding: 0.6em 1em;
-  border: 1px solid #d0d7de;
-  text-align: left;
+	padding: 0.6em 1em;
+	border: 1px solid var(--md-border);
+	text-align: left;
 }
 .markdown table th {
-  font-weight: 600;
-  background-color: #f6f8fa;
-  color: #1f2328;
+	font-weight: 600;
+	background-color: var(--md-surface);
+	color: var(--md-text-strong);
 }
-.markdown table tr:nth-child(even) { background-color: #f6f8fa; }
-.markdown table tr:hover { background-color: #eff2f5; }
+.markdown table tr:nth-child(even) { background-color: var(--md-surface); }
+.markdown table tr:hover { background-color: var(--md-surface-2); }
 
-/* ========== 分割线 ========== */
+
 .markdown hr {
-  height: 2px;
-  margin: 1.5em 0;
-  padding: 0;
-  background-color: #d0d7de;
-  border: 0;
-  border-radius: 1px;
+	height: 2px;
+	margin: 1.5em 0;
+	padding: 0;
+	background-color: var(--md-border);
+	border: 0;
+	border-radius: 1px;
 }
 
-/* ========== 图片 ========== */
+
 .markdown img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 1em auto;
-  border-radius: 6px;
-  border: 1px solid #d0d7de;
+	max-width: 100%;
+	height: auto;
+	display: block;
+	margin: 1em auto;
+	border-radius: 6px;
+	border: 1px solid var(--md-border);
 }
 
-/* ========== 脚注 ========== */
+
 .markdown .footnotes {
-  margin-top: 2em;
-  padding-top: 1em;
-  border-top: 1px solid #d0d7de;
-  font-size: 0.85em;
-  color: #656d76;
+	margin-top: 2em;
+	padding-top: 1em;
+	border-top: 1px solid var(--md-border);
+	font-size: 0.85em;
+	color: var(--md-text-muted);
 }

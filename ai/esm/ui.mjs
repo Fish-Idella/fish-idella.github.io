@@ -1,37 +1,25 @@
 /**
- * AI聊天应用初始化入口
- * 功能：初始化本地存储、加载配置、绑定交互事件、处理AI对话流
- * 修复版：修复自动滚动、递归发送、删除逻辑、超时控制等问题
+ * ui.js
+ * 应用入口：初始化存储、绑定交互、驱动 AI 对话流
  */
+
+import {
+    mimejson,
+    definitions,
+    createDefaultAiRequestConfig,
+    createDefaultHeaders,
+    XMLHttpRequestGetTextPromise
+} from './data.mjs';
+import { OpenAIFunctionCalling, runtime } from './toolcall.mjs';
+
 Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function getStorageValue(storage) {
     "use strict";
-    const mimejson = 'application/json';
-    const AndroidObject = promisify(PuSet.ensureObjectProperty(window, 'DaBaiFunctionCalling', Object));
-    /**
-     * 简易 HTTP GET 返回文本
-     * @param {string} url 
-     * @returns {Promise<string>}
-     */
-    function XMLHttpRequestGetTextPromise(url) {
-        return new Promise(function (resolve, reject) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        resolve(xhr.responseText);
-                    } else {
-                        reject(new Error("请求失败，网址：" + xhr.responseURL || url))
-                    }
-                }
-            };
-            xhr.send();
-        });
-    }
 
-    const global_prompt = await XMLHttpRequestGetTextPromise('data/global_prompt.md');
-    const r_np = /\n+/;
-    const r_sse_data = /^\s*data:\s*(.*)\s*$/;
+    // ---------- 全局依赖注入 ----------
+    const AndroidObject = promisify(PuSet.ensureObjectProperty(window, 'DaBaiFunctionCalling', Object));
+    runtime.AndroidObject = AndroidObject;
+
+    // ---------- DOM 引用 ----------
     const loginView = document.getElementById('login-view');
     const title = document.getElementById('info');
     const apiUrlInput = document.getElementById('api-url');
@@ -43,9 +31,10 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     const sendMsgBtn = document.getElementById('send');
     const messageList = document.getElementById('message-list');
     const messageInput = document.getElementById('input-message');
-    const messageBoxTemplate = messageList.firstElementChild;
     const drawer = document.getElementById('drawer');
     const characterList = drawer.querySelector('details#character-list');
+
+    // ---------- 应用状态 ----------
     const data = await storage.getItem('chat-data') || {
         "apiList": {},
         "agents": {},
@@ -56,29 +45,31 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     const saveData = function saveData() {
         storage.setItem('chat-data', data);
     };
+
     function changeImage(l = 0) {
         const image = new Image();
         const positions = [[-30, 100], [0, 100], [-24, 100], [-22, 100], [-20, 120], [-2, 100], [-5, 80]];
         image.onload = () => {
             const img = document.querySelector('#image>img');
             img.src = image.src;
-            img.style.setProperty('bottom', positions[i][0] + '%')
-            img.style.setProperty('width', positions[i][1] + '%')
+            img.style.setProperty('bottom', positions[i][0] + '%');
+            img.style.setProperty('width', positions[i][1] + '%');
         };
         const max = positions.length;
         const n = l % max;
         const i = n < 0 ? n + max : n;
         image.src = `image/${1 + i}.png`;
     }
+
     const information_map = PuSet.ensureObjectProperty(data, "information_map", Object);
     const agents = PuSet.ensureObjectProperty(data, "agents", Object);
     const dabai = agents[0] ?? (agents[0] = {
         id: '0',
         name: "默认智能体（大白）",
-        "settings": {
-            thinking: true
-        }
+        "settings": { thinking: true }
     });
+
+    // ---------- 消息流式累加器 ----------
     class MessageBox {
         constructor(message, index) {
             this.message = message;
@@ -132,32 +123,28 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             this.message.not_done = false;
         }
     }
-    const aiRequestConfig = {
-        "model": 'deepseek-v4-flash',
-        "stream": true,
-        "temperature": 0.8,
-        "thinking": {
-            "type": "enabled"
-        },
-        "tools": null,
-        "tool_choice": "auto",
-        "messages": []
-    };
-    const headers = {
-        'Accept': mimejson,
-        'Content-Type': mimejson,
-        "Authorization": ''
-    };
+
+    // ---------- 请求配置 ----------
+    const aiRequestConfig = createDefaultAiRequestConfig();
+    const headers = createDefaultHeaders();
+
     let autoScroll = true;
-    let currentApiConfig = null; // 当前选中的 API 配置对象
+    let currentApiConfig = null;
     let currentAgentConfig = null;
-    let apiUrl = ''; // 完整的 API endpoint
-    let currentAbortController = null; // 当前请求的中止控制器（用于停止生成）
+    runtime.currentAgentConfig = null;
+    let apiUrl = '';
+    let currentAbortController = null;
+
+    const global_prompt = await XMLHttpRequestGetTextPromise('data/global_prompt.md');
+    const r_sse_data = /^\s*data:\s*(.*)\s*$/;
+
     const system_prompt = {
         "role": "system",
         "content": global_prompt,
         branch: data.branch
-    }
+    };
+
+    // ---------- Web Worker 渲染器 ----------
     const worker = new Worker('./worker/worker.js', { type: 'module' });
     const workerMap = {};
     worker.onmessage = function (e) {
@@ -170,15 +157,17 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 for (let i = 1; i < value.length; i++) {
                     const obj = value[i];
                     if (obj.type === 'image_url') {
-                        ib.appendChild(document.createElement('img')).src = obj.image_url.url
+                        ib.appendChild(document.createElement('img')).src = obj.image_url.url;
                     }
                 }
             }
         }
         el.innerHTML = content;
-        Prism.highlightAllUnder(el)
-        Reflect.deleteProperty(workerMap, uuid)
-    }
+        Prism.highlightAllUnder(el);
+        Reflect.deleteProperty(workerMap, uuid);
+    };
+
+    // ---------- 消息列表 MVVM ----------
     const vm_message = PuSet.mvvm({
         target: messageList,
         selector: ":scope>div.chat-message-output-box",
@@ -194,21 +183,17 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 const max = group.length;
                 box.querySelector('button[name=select]').textContent = `${v}/${max}`;
             }
-            if (message.tool_calls) {
-                box.classList.add('tool_calls');
-            } else {
-                box.classList.remove('tool_calls');
-            }
+
+            box.classList.toggle('tool_calls', !!message.tool_calls);
             if (message.not_done) {
                 const elapsed = ((performance.now() - message.thinkStartTime) / 1000).toFixed(2);
                 message.state = `${s}（${elapsed}秒）`;
             }
-            box.querySelector('.state').textContent = message.role === 'tool'
-                ? '工具返回'
-                : message.state;
+            const is = message.role === 'tool';
+            box.querySelector('.state').textContent = is ? '工具返回' : message.state;
             [
-                { selector: '.think', value: message.reasoner },
-                { selector: '.message', value: message.content }
+                { selector: '.think', value: is ? message.content : message.reasoner },
+                { selector: '.message', value: is ? '' : message.content }
             ].forEach(({ selector, value }) => {
                 const uuid = crypto.randomUUID();
                 workerMap[uuid] = box.querySelector(selector);
@@ -222,12 +207,15 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             this.activeItem = box;
             box.dataset.index = index;
             box.dataset.persona = message.role;
-            box.querySelector('.chat-message-title').open = message.role !== 'user';
+            // box.querySelector('.chat-message-title').open = message.role !== 'user';
+            box.querySelector('.chat-message-title').open = false;
             box.querySelector('.state').textContent = message.state;
             this.render(box, message, index);
         }
     });
     const messages = vm_message.data;
+
+    // ---------- 消息工具函数 ----------
     function messagePurifying(messages) {
         aiRequestConfig.messages = messages.map(m => ({
             "role": m.role,
@@ -238,6 +226,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         }));
         return JSON.stringify(aiRequestConfig);
     }
+
     function addMessage(role, inputContent) {
         const index = messages.length;
         const last = index - 1;
@@ -257,9 +246,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         messages.push(message);
         return new MessageBox(message, index);
     }
-    /**
-     * 核心发送函数
-     */
+
+    // ---------- 核心 API 调用 ----------
     function callApi() {
         if (currentAbortController) {
             currentAbortController.abort();
@@ -271,7 +259,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         const assistantBox = addMessage('assistant', '');
         if (!apiUrl) {
             assistantBox.addContentChunk('[提示：]\n\n需要点击页面左上角打开抽屉栏，配置API之后才能正常使用\n\n所有数据存储在浏览器环境，切换浏览器会丢失所有信息');
-            return
+            return;
         }
         sendMsgBtn.name = 'stop';
         fetch(apiUrl, {
@@ -346,6 +334,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             saveData();
         });
     }
+
     function sendMessage() {
         if (currentAbortController) {
             currentAbortController.abort();
@@ -365,10 +354,11 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             autoScroll = true;
             callApi();
         } catch (e) {
-            console.error(e)
+            console.error(e);
             ModalDialog.show('sendMessage' + e.message, "确定");
         }
     }
+
     function initMessageList(branch) {
         let currentBranch = branch;
         while (currentBranch && currentBranch.length > 0) {
@@ -378,9 +368,12 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             currentBranch = message.branch;
         }
     }
+
     function concatURL(base, path) {
         return String(base).replace(/\/+$/, '') + '/' + String(path).replace(/^\/+/, '');
     }
+
+    // ---------- 设置项 ----------
     function settings(name, checked) {
         switch (name) {
             case "thinking":
@@ -390,12 +383,15 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 break;
         }
     }
+
     PuSet("#switch").on("input", "input", function () {
         settings(this.name, this.checked);
         if (currentAgentConfig) {
             currentAgentConfig.settings[this.name] = this.checked;
         }
     });
+
+    // ---------- API / Agent 初始化 ----------
     function initAPI(modelValue) {
         if (!modelValue) return;
         data.currentModel = modelValue;
@@ -409,21 +405,21 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         aiRequestConfig.model = model;
         headers.Authorization = `Bearer ${currentApiConfig.key}`;
     }
+
     function initAgent(name) {
         data.currentAgent = name;
         if (name && name !== '0') {
             currentAgentConfig = agents[name];
-            aiRequestConfig.tools = null;
             system_prompt.content = currentAgentConfig.content;
             system_prompt.branch = currentAgentConfig.branch;
             title.textContent = `与${currentAgentConfig.name}的对话`;
         } else {
             currentAgentConfig = dabai;
-            aiRequestConfig.tools = OpenAIFunctionCalling.tools;
             system_prompt.content = global_prompt;
             system_prompt.branch = data.branch;
             title.textContent = `与${dabai.name}的对话`;
         }
+        runtime.currentAgentConfig = currentAgentConfig;
         Object.entries(currentAgentConfig.settings || {}).forEach(([k, v]) => {
             settings(k, v);
             const sw = document.querySelector(`#switch [name="${k}"]`);
@@ -432,16 +428,21 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         messages.length = 1;
         initMessageList(system_prompt.branch);
     }
+
     initAPI(data.currentModel);
     initAgent(data.currentAgent);
+
+    // ---------- 辅助工具 ----------
     function removeArrayItem(array, item) {
         const index = array.indexOf(item);
         if (index !== -1) {
             array.splice(index, 1);
-            return true
+            return true;
         }
-        return false
+        return false;
     }
+
+    // ---------- API 列表 ----------
     const apiSelect = document.getElementById('api-url-list');
     const keySelect = document.getElementById('api-key-list');
     const vm_apiList = PuSet.mvvm({
@@ -459,6 +460,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             removeArrayItem(vm_apiList.data, value);
         }
     });
+
     function buildDataList() {
         const apis = new Set(['https://api.deepseek.com/', 'https://api.openai.com/v1/']);
         const keys = new Set(['none']);
@@ -467,15 +469,18 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             apis.add(a.api);
             keys.add(a.key);
         });
-        vm_apiList.update(values)
+        vm_apiList.update(values);
         apiSelect.innerHTML = '';
         keySelect.innerHTML = '';
         apis.forEach(v => apiSelect.appendChild(new Option(v, v)));
         keys.forEach(v => keySelect.appendChild(new Option(v, v)));
     }
+
+    // ---------- 词条列表 ----------
     function getSortedCharacters() {
         return Object.values(information_map).sort((a, b) => b.summary.localeCompare(a.summary));
     }
+
     const vm_information_map = PuSet.mvvm({
         target: characterList.querySelector('ul'),
         selector: 'li',
@@ -487,7 +492,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         if (nodeName(e.target, "button")) {
             return ModalDialog.show('确定要删除【' + character.summary + '】吗？', '确定', '取消').then((result) => {
                 if (result.which != 0) return;
-                OpenAIFunctionCalling.delete_information(data, information_map, { keys: [character.key] });
+                OpenAIFunctionCalling.delete_information(data, information_map, messages, { keys: [character.key] });
                 vm_information_map.update(getSortedCharacters());
                 saveData();
             });
@@ -499,11 +504,13 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         characterPrompt.value = character.information;
         PuSet.show(loginView, true);
     });
-    /** @type {HTMLSelectElement} */
+
+    // ---------- Agent 列表 ----------
     const _agents = document.getElementById('agents');
     _agents.addEventListener('change', function () {
         initAgent(this.value);
     });
+
     const vm_agent = PuSet.mvvm({
         target: document.getElementById('agent-list').querySelector('ul'),
         selector: 'li',
@@ -527,9 +534,9 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             return ModalDialog.show('确定要删除【' + value.name + '】吗？', '确定', '取消').then(result => {
                 if (result.which != 0) return;
                 Reflect.deleteProperty(agents, value.id);
-                vm_agent.update(Object.values(agents))
+                vm_agent.update(Object.values(agents));
                 saveData();
-            })
+            });
         }
         loginView.dataset.type = 'agent';
         loginView.dataset.id = value.id;
@@ -537,6 +544,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         characterPrompt.value = value.content;
         PuSet.show(loginView, true);
     });
+
+    // ---------- 增删编辑 ----------
     const aaa = {
         add(type) {
             loginView.reset();
@@ -564,9 +573,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                         const config = Object.assign({
                             "id": id,
                             'branch': [],
-                            "settings": {
-                                thinking: true
-                            }
+                            "settings": { thinking: true }
                         }, agents[id] || {}, {
                             "name": characterName.value,
                             "content": characterPrompt.value
@@ -582,7 +589,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 ModalDialog.show('保存失败：' + e.message, "确定");
             }
         }
-    }
+    };
+
     document.getElementById('enter-chat').addEventListener("click", function () {
         aaa.save(loginView.dataset.type);
     });
@@ -596,6 +604,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
     drawer.addEventListener('click', (ev) => {
         if (ev.target === drawer) PuSet.show(drawer, false);
     });
+
+    // ---------- 发送相关 ----------
     sendMsgBtn.addEventListener('click', sendMessage);
     messageInput.addEventListener('keypress', (ev) => {
         if (ev.key === "Enter" || ev.keyCode === 13) {
@@ -617,16 +627,20 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         AndroidObject.openWebView("");
     });
     document.getElementById("exit-edit").addEventListener("click", () => PuSet.show(loginView, false));
+
+    // ---------- 图片上传 ----------
     const vm_images = PuSet.mvvm({
         target: document.getElementById("image-list"),
         selector: '.image-item',
         data: [],
         layout(item, value) {
-            item.style.setProperty('background-image', `url(${value})`)
+            item.style.setProperty('background-image', `url(${value})`);
         }
     }).on('click', function (event, value, index) {
-        vm_images.data.splice(index, 1)
+        vm_images.data.splice(index, 1);
     });
+    runtime.vm_images = vm_images;
+
     document.getElementById('file-selector').addEventListener('click', function () {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -637,13 +651,15 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 const fr = new FileReader();
                 fr.onloadend = () => {
                     const url = fr.result;
-                    url && vm_images.data.push(url)
+                    url && vm_images.data.push(url);
                 };
                 fr.readAsDataURL(file);
             });
-        }, { once: true })
-        fileInput.click()
-    })
+        }, { once: true });
+        fileInput.click();
+    });
+
+    // ---------- 消息编辑 ----------
     let editData = {};
     const editDialog = document.getElementById('message-edit');
     const editTextarea = editDialog.querySelector('textarea');
@@ -653,7 +669,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         const { parentBox, dataIndex, message } = editData;
         switch (this.name) {
             case 'save':
-                message.content = val;
+                message.content[0].text = val;
                 vm_message.render(parentBox, message, dataIndex);
                 break;
             case 'submit':
@@ -666,6 +682,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         saveData();
         PuSet.show(editDialog, false);
     });
+
+    // ---------- 消息按钮动作 ----------
     const messageButtonActions = {
         edit(btn, parentBox, idx) {
             const msg = messages[idx];
@@ -676,7 +694,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                 message: msg
             };
             editDialog.querySelector('.dialog-content').dataset.name = msg.role;
-            editTextarea.value = msg.content;
+            editTextarea.value = msg.content[0].text;
             PuSet.show(editDialog, true);
         },
         _switchBranch(group, dataIndex, delta) {
@@ -730,13 +748,13 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     }
                     branch.splice(start, 1);
                 }
-                initMessageList(branch); // 重新渲染剩余消息
-                saveData(); // 持久化
+                initMessageList(branch);
+                saveData();
             });
         },
         remake(btn, parentBox, idx) {
             if (currentAbortController) return;
-            messages.length = idx; // 删除当前及之后消息（包括当前 assistant）
+            messages.length = idx;
             autoScroll = true;
             callApi();
         },
@@ -746,6 +764,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             ModalDialog.show(JSON.stringify(usage, null, 2), "确定");
         }
     };
+
     PuSet(messageList).on("click", "button", function (ev) {
         const action = messageButtonActions[this.name];
         if (!action) return;
@@ -756,6 +775,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         const bottom = messageList.scrollHeight - messageList.clientHeight - 50;
         autoScroll = messageList.scrollTop >= bottom;
     });
+
+    // ---------- API 弹窗 ----------
     const apiModal = document.getElementById('api-m');
     PuSet(apiModal).on("click", "button.login-btn", function () {
         if (this.name === "save") {
@@ -792,6 +813,8 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
         }
         PuSet.show(apiModal, false);
     });
+
+    // ---------- 设置：导出 / 导入 ----------
     PuSet('.settings').on('click', 'button', function () {
         switch (this.name) {
             case 'api': {
@@ -819,7 +842,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     const fr = new FileReader();
                     fr.addEventListener('load', () => PuSet.download(fr.result, "chat-data.json"));
                     fr.readAsDataURL(new Blob([JSON.stringify(obj)], { type: mimejson }));
-                })
+                });
                 break;
             }
             case 'import': {
@@ -832,35 +855,37 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
                     const fr = new FileReader();
                     fr.addEventListener('load', function () {
                         try {
-                            const json = JSON.parse(fr.result)
+                            const json = JSON.parse(fr.result);
                             ModalDialog.show("文件已读取", "合并", "覆盖", "取消").then(function (res) {
                                 switch (res.which) {
                                     case 0: {
                                         Object.keys(data).forEach(key => Object.assign(data[key], json[key]));
                                         saveData();
                                         window.location.reload(true);
-                                        break
+                                        break;
                                     }
                                     case 1: {
                                         Object.assign(data, json);
                                         saveData();
                                         window.location.reload(true);
-                                        break
+                                        break;
                                     }
                                     default: return;
                                 }
                             });
                         } catch {
-                            ModalDialog.show("无法解析文件", "确定")
+                            ModalDialog.show("无法解析文件", "确定");
                         }
-                    })
-                    fr.readAsText(files[0])
+                    });
+                    fr.readAsText(files[0]);
                 });
-                input.click()
+                input.click();
                 break;
             }
         }
     });
+
+    // ---------- 启动时拉取所有 API 的模型列表 ----------
     Object.keys(data.apiList).forEach(id => {
         const cfg = data.apiList[id];
         fetch(concatURL(cfg.api, "models"), {
@@ -880,5 +905,6 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function get
             });
         }).catch(() => console.warn("无法访问: " + cfg.api));
     });
-    PeakTimeDisplay.mount('#peaktime')
+
+    PeakTimeDisplay.mount('#peaktime');
 });

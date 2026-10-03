@@ -1212,7 +1212,62 @@ const PuSet = (function () {
     // 暴露ViewManager创建方法
     PuSetFactory.mvvm = PuSetFactory.ViewManager = options => new ViewModel(options);
 
+    /**
+     * 内置操作表：op → (el, value, arg) => void
+     * 未命中的 op 会退回为 setAttribute(op, value)
+     */
+    const OPS = Object.freeze({
+        text(el, value) {
+            el.textContent = value == null ? '' : String(value);
+        },
 
+        html(el, value) {
+            el.innerHTML = value == null ? '' : String(value);
+        },
+
+        value(el, value) {
+            // 兼容 checkbox / radio
+            if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!value;
+            else el.value = value == null ? '' : String(value);
+        },
+
+        attr(el, value, arg) {
+            if (value == null || value === false) el.removeAttribute(arg);
+            else el.setAttribute(arg, value === true ? '' : String(value));
+        },
+
+        prop(el, value, arg) {
+            el[arg] = value;
+        },
+
+        data(el, value, arg) {
+            el.dataset[arg] = value;
+        },
+
+        css(el, value, arg) {
+            if (arg.includes('-')) {
+                // kebab-case
+                if (value == null || value === false) el.style.removeProperty(arg);
+                else el.style.setProperty(arg, String(value));
+            } else {
+                // camelCase
+                if (value == null || value === false) el.style[arg] = '';
+                else el.style[arg] = String(value);
+            }
+        },
+
+        class(el, value, arg) {
+            el.classList.toggle(arg, !!value);
+        },
+
+        show(el, value) {
+            PuSetFactory.show(el, !!value);      // ← 直接复用
+        },
+
+        hide(el, value) {
+            PuSetFactory.show(el, !value);       // ← 直接复用
+        }
+    });
 
     // ===================== 配对绑定 PairedBuilder =====================
     /**
@@ -1228,85 +1283,12 @@ const PuSet = (function () {
         /** key → Array<{ op, selector, arg }> */
         #entries = new Map();
 
-        /**
-         * 内置操作表：op → (el, value, arg) => void
-         * 未命中的 op 会退回为 setAttribute(op, value)
-         */
-        static OPS = Object.freeze({
-            text(el, value) {
-                el.textContent = value == null ? '' : String(value);
-            },
-
-            html(el, value) {
-                el.innerHTML = value == null ? '' : String(value);
-            },
-
-            value(el, value) {
-                // 兼容 checkbox / radio
-                if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!value;
-                else el.value = value == null ? '' : String(value);
-            },
-
-            attr(el, value, arg) {
-                if (value == null || value === false) el.removeAttribute(arg);
-                else el.setAttribute(arg, value === true ? '' : String(value));
-            },
-
-            prop(el, value, arg) {
-                el[arg] = value;
-            },
-
-            data(el, value, arg) {
-                el.dataset[arg] = value;
-            },
-
-            css(el, value, arg) {
-                if (arg.includes('-')) {
-                    // kebab-case
-                    if (value == null || value === false) el.style.removeProperty(arg);
-                    else el.style.setProperty(arg, String(value));
-                } else {
-                    // camelCase
-                    if (value == null || value === false) el.style[arg] = '';
-                    else el.style[arg] = String(value);
-                }
-            },
-
-            class(el, value, arg) {
-                el.classList.toggle(arg, !!value);
-            },
-
-            show(el, value) {
-                PuSetFactory.show(el, !!value);      // ← 直接复用
-            },
-
-            hide(el, value) {
-                PuSetFactory.show(el, !value);       // ← 直接复用
-            }
-        });
-
         /** 依 OPS 自动生成快捷方法：builder.op(key, selector?, arg?) */
         static {
-            for (const action of Object.keys(PairedBuilder.OPS)) {
+            for (const action of Object.keys(OPS)) {
                 PairedBuilder.prototype[action] = function (key, selector, arg) {
                     return this.append(action, key, selector, arg);
                 };
-            }
-        }
-
-        /** 将单条操作应用到单个元素（内置 op 走 OPS，否则当属性名） */
-        static applyOp(el, op, value, arg) {
-            // 用 hasOwn 判定，避免命中原型链上的 constructor / toString 等
-            const handler = Object.hasOwn(PairedBuilder.OPS, op)
-                ? PairedBuilder.OPS[op]
-                : null;
-
-            if (handler) {
-                handler(el, value, arg);
-            } else if (value == null || value === false) {
-                el.removeAttribute(op);
-            } else {
-                el.setAttribute(op, value === true ? '' : String(value));
             }
         }
 
@@ -1345,12 +1327,16 @@ const PuSet = (function () {
 
             for (let i = 0; i < actions.length; i++) {
                 const { op, selector, arg } = actions[i];
+                /** 将单条操作应用到单个元素（内置 op 走 OPS，否则当属性名） */
+                const operation = OPS[Object.hasOwn(OPS, op) ? op : 'attr'];
                 // 约定自身选择器
                 if (selector === "&" || selector === ":scope") {
-                    PairedBuilder.applyOp(node, op, value, arg);
+                    operation(node, value, arg);
                 } else {
-                    node.querySelectorAll(selector)
-                        .forEach(el => PairedBuilder.applyOp(el, op, value, arg));
+                    const children = node.querySelectorAll(selector);
+                    for (const el of children) {
+                        operation(el, value, arg);
+                    }
                 }
             }
         }

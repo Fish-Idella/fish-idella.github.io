@@ -1,487 +1,415 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>个人中心</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            padding: 20px;
-        }
-
-        .card {
-            width: 100%;
-            max-width: 460px;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
-            padding: 36px 32px 28px;
-            animation: fade .35s ease;
-        }
-
-        @keyframes fade {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: none;
-            }
-        }
-
-        /* 加载态 */
-        .loading {
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            padding: 30px 0;
-        }
-
-        .spinner {
-            width: 34px;
-            height: 34px;
-            margin: 0 auto 16px;
-            border: 3px solid #e6e6f2;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* 资料卡 */
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .avatar {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            font-size: 26px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex: 0 0 auto;
-        }
-
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .header .who {
-            min-width: 0;
-        }
-
-        .header .name {
-            font-size: 19px;
-            color: #222;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .header .uname {
-            font-size: 13px;
-            color: #999;
-            margin-top: 3px;
-        }
-
-        .badges {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: #eef0fe;
-            color: #667eea;
-        }
-
-        .badge.ok {
-            background: #eafaf1;
-            color: #1e874b;
-        }
-
-        .badge.warn {
-            background: #fdecea;
-            color: #c0392b;
-        }
-
-        .badge.role {
-            background: #fff4e5;
-            color: #b06a00;
-        }
-
-        .list {
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .item {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 12px 2px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-        }
-
-        .item .k {
-            color: #888;
-            flex: 0 0 auto;
-        }
-
-        .item .v {
-            color: #333;
-            text-align: right;
-            word-break: break-all;
-            min-width: 0;
-        }
-
-        .item .v.empty {
-            color: #bbb;
-        }
-
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 9px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-            transition: opacity .15s, transform .05s;
-        }
-
-        button:hover:not(:disabled) {
-            opacity: .92;
-        }
-
-        button:active:not(:disabled) {
-            transform: scale(.99);
-        }
-
-        button:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-        }
-
-        .btn-ghost {
-            background: #f4f4f8;
-            color: #555;
-        }
-
-        .msg {
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            display: none;
-            word-break: break-all;
-        }
-
-        .msg.err {
-            display: block;
-            background: #fdecea;
-            color: #c0392b;
-            border: 1px solid #f5c6c0;
-        }
-
-        .msg.ok {
-            display: block;
-            background: #eafaf1;
-            color: #1e874b;
-            border: 1px solid #b7e6c8;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>控制台 · Go Web Server</title>
+  <link rel="stylesheet" href="theme.css">
 </head>
-
 <body>
 
-    <!-- 加载中 -->
-    <div class="card" id="loadingCard">
-        <div class="loading">
-            <div class="spinner"></div>
-            正在验证登录状态…
+  <!-- 顶部导航 -->
+  <header class="nav">
+    <div class="nav__inner">
+      <div class="brand">
+        <div class="brand__mark">G</div>
+        <div>
+          <div class="brand__name">Go Web Server</div>
+          <div class="brand__sub">Console</div>
         </div>
+      </div>
+
+      <div class="nav__spacer"></div>
+
+      <div class="nav__user" id="navUser">
+        <a class="btn btn--ghost btn--sm hidden" href="admin.html" id="adminLink">账户管理</a>
+        <div class="avatar" id="navAvatar">?</div>
+        <span id="navName" class="text-sm">加载中…</span>
+        <button class="btn btn--ghost btn--sm" type="button" id="logoutBtn">退出登录</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap main">
+
+    <!-- 欢迎区 -->
+    <section class="hero">
+      <h1 class="hero__title" id="heroTitle">你好</h1>
+      <p class="hero__desc" id="heroDesc">正在校验登录状态…</p>
+    </section>
+
+    <!-- 状态提示 -->
+    <div class="alert alert--error" id="alert" role="alert" aria-live="polite"></div>
+
+    <!-- 账号信息 -->
+    <h2 class="section-title">账号信息</h2>
+    <div class="grid">
+      <div class="tile">
+        <div class="tile__label">用户 ID</div>
+        <div class="tile__value skeleton" id="vId">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">用户名</div>
+        <div class="tile__value skeleton" id="vUsername">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">昵称</div>
+        <div class="tile__value skeleton" id="vNickname">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">权限等级</div>
+        <div class="tile__value skeleton" id="vRole">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">登录次数</div>
+        <div class="tile__value skeleton" id="vLoginCount">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">最后登录</div>
+        <div class="tile__value skeleton" id="vLastLogin">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">邮箱</div>
+        <div class="tile__value skeleton" id="vEmail">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile__label">手机号</div>
+        <div class="tile__value skeleton" id="vPhone">—</div>
+      </div>
     </div>
 
-    <!-- 资料卡 -->
-    <div class="card" id="profileCard" style="display:none">
-        <div class="header">
-            <div class="avatar" id="avatar"></div>
-            <div class="who">
-                <div class="name" id="displayName">-</div>
-                <div class="uname" id="displayUsername">@-</div>
-            </div>
-        </div>
-
-        <div class="badges" id="badges"></div>
-
-        <div class="list">
-            <div class="item"><span class="k">用户 ID</span><span class="v" id="fId">-</span></div>
-            <div class="item"><span class="k">邮箱</span><span class="v" id="fEmail">-</span></div>
-            <div class="item"><span class="k">手机号</span><span class="v" id="fPhone">-</span></div>
-            <div class="item"><span class="k">昵称</span><span class="v" id="fNickname">-</span></div>
-            <div class="item"><span class="k">登录次数</span><span class="v" id="fLoginCount">-</span></div>
-            <div class="item"><span class="k">最后登录</span><span class="v" id="fLastLogin">-</span></div>
-            <div class="item"><span class="k">注册时间</span><span class="v" id="fCreatedAt">-</span></div>
-        </div>
-
-        <div class="actions">
-            <button class="btn-ghost" id="refreshBtn">刷新资料</button>
-            <button class="btn-primary" id="logoutBtn">退出登录</button>
-        </div>
-        <div class="msg" id="msg"></div>
+    <!-- 详细信息 -->
+    <h2 class="section-title">详细资料</h2>
+    <div class="card card--wide">
+      <dl class="kv">
+        <dt>注册时间</dt><dd id="vCreated">—</dd>
+        <dt>账号状态</dt><dd id="vStatus">—</dd>
+        <dt>头像地址</dt><dd id="vAvatar" class="text-mute">—</dd>
+      </dl>
     </div>
 
-    <script>
-        (function () {
-            // ==== 配置，按需修改 ====
-            const API_ME = '/api/account/me';
-            const API_LOGOUT = '/api/account/logout';
-            const LOGIN_PAGE = './login.html';       // 登录页路径
-            const TOKEN_KEY = 'account_token';
-            const USER_KEY = 'account_user';
+    <!-- 修改密码 -->
+    <h2 class="section-title">安全设置</h2>
+    <div class="card card--wide">
+      <div class="card__head">
+        <h3 class="card__title" style="font-size:17px">修改密码</h3>
+        <p class="card__desc">修改成功后，该账号在<b>所有设备</b>上的登录状态都会失效，需要重新登录。</p>
+      </div>
 
-            const ROLE_TEXT = { 1: '普通用户', 2: '管理员', 3: '超级管理员' };
-            const STATUS_TEXT = { 0: '已禁用', 1: '正常', 2: '已锁定' };
+      <div class="alert alert--error" id="pwdAlert" role="alert" aria-live="polite"></div>
 
-            const loadingCard = document.getElementById('loadingCard');
-            const profileCard = document.getElementById('profileCard');
-            const msgBox = document.getElementById('msg');
+      <form class="form" id="pwdForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="oldPwd">当前密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="oldPwd" type="password"
+                   autocomplete="current-password" placeholder="请输入当前密码" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="oldPwd">显示</button>
+          </div>
+        </div>
 
-            function showErr(t) { msgBox.className = 'msg err'; msgBox.textContent = t; }
-            function showOk(t) { msgBox.className = 'msg ok'; msgBox.textContent = t; }
+        <div class="field">
+          <label class="field__label" for="newPwd">新密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="newPwd" type="password"
+                   autocomplete="new-password" placeholder="6~72 位，不能与当前密码相同" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="newPwd">显示</button>
+          </div>
+          <div class="strength" id="strength" data-level="0">
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+            <div class="strength__bar"></div>
+          </div>
+          <div class="strength__text" id="strengthText">建议混合字母、数字与符号</div>
+        </div>
 
-            function getToken() {
-                return localStorage.getItem(TOKEN_KEY) || '';
-            }
+        <div class="field">
+          <label class="field__label" for="confirmPwd">确认新密码<span class="req">*</span></label>
+          <div class="input-group">
+            <input class="input" id="confirmPwd" type="password"
+                   autocomplete="new-password" placeholder="再次输入新密码" required>
+            <button class="input-group__btn" type="button" data-toggle-pwd="confirmPwd">显示</button>
+          </div>
+        </div>
 
-            function clearAuth() {
-                localStorage.removeItem(TOKEN_KEY);
-                localStorage.removeItem(USER_KEY);
-            }
+        <button class="btn" type="submit" id="pwdBtn">
+          <span class="btn__spinner"></span>
+          <span>确认修改</span>
+        </button>
+      </form>
+    </div>
 
-            function toLogin(reason) {
-                clearAuth();
-                if (reason) sessionStorage.setItem('login_notice', reason);
-                location.replace(LOGIN_PAGE);
-            }
+    <!-- 可用接口 -->
+    <h2 class="section-title">可用接口</h2>
+    <div class="grid">
+      <a class="tile" href="/api/account/me" target="_blank" rel="noopener">
+        <div class="tile__label">GET</div>
+        <div class="tile__value">/api/account/me</div>
+      </a>
+      <a class="tile" href="/api/family/query?key=id&value=1" target="_blank" rel="noopener">
+        <div class="tile__label">GET</div>
+        <div class="tile__value">/api/family/query</div>
+      </a>
+      <a class="tile" href="/api/files?path=" target="_blank" rel="noopener">
+        <div class="tile__label">GET</div>
+        <div class="tile__value">/api/files</div>
+      </a>
+      <a class="tile" href="/api/proxy?url=https://www.baidu.com" target="_blank" rel="noopener">
+        <div class="tile__label">GET</div>
+        <div class="tile__value">/api/proxy</div>
+      </a>
+    </div>
 
-            // 格式化时间（后端返回 RFC3339 或 "2006-01-02 15:04:05" 都能兜住）
-            function fmtTime(s) {
-                if (!s) return '';
-                const d = new Date(s);
-                if (isNaN(d.getTime())) return s;
-                const p = n => String(n).padStart(2, '0');
-                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
-                    ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
-            }
+    <!-- 公开上传 -->
+    <h2 class="section-title">图片上传（公开接口）</h2>
+    <div class="card card--wide">
+      <form class="form" id="uploadForm">
+        <div class="field">
+          <label class="field__label" for="file">选择图片</label>
+          <input class="input" id="file" name="file" type="file"
+                 accept="image/jpeg,image/png,image/gif,image/bmp,image/webp">
+          <div class="field__hint">支持 jpg / png / gif / bmp / webp，单文件最大 10 MB</div>
+        </div>
+        <button class="btn" type="submit" id="uploadBtn">
+          <span class="btn__spinner"></span>
+          <span>上传</span>
+        </button>
+      </form>
+      <div class="alert mt-16" id="uploadAlert" role="status" aria-live="polite"></div>
+    </div>
 
-            function setText(id, val) {
-                const el = document.getElementById(id);
-                if (val === null || val === undefined || val === '') {
-                    el.textContent = '—';
-                    el.classList.add('empty');
-                } else {
-                    el.textContent = val;
-                    el.classList.remove('empty');
-                }
-            }
+  </main>
 
-            // ===== 渲染 =====
-            function render(user) {
-                const name = user.nickname || user.username || '用户';
-                document.getElementById('displayName').textContent = name;
-                document.getElementById('displayUsername').textContent = '@' + (user.username || '-');
+  <script src="common.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-                // 头像：有 URL 用图片，否则用首字母
-                const avatarEl = document.getElementById('avatar');
-                avatarEl.innerHTML = '';
-                if (user.avatar) {
-                    const img = document.createElement('img');
-                    img.src = user.avatar;
-                    img.alt = name;
-                    img.onerror = function () {
-                        avatarEl.textContent = (name[0] || 'U').toUpperCase();
-                    };
-                    avatarEl.appendChild(img);
-                } else {
-                    avatarEl.textContent = (name[0] || 'U').toUpperCase();
-                }
+    var App = window.App;
+    var $ = function (id) { return document.getElementById(id); };
 
-                // 徽章
-                const badges = document.getElementById('badges');
-                badges.innerHTML = '';
-                const addBadge = (text, cls) => {
-                    const b = document.createElement('span');
-                    b.className = 'badge' + (cls ? ' ' + cls : '');
-                    b.textContent = text;
-                    badges.appendChild(b);
-                };
-                addBadge(ROLE_TEXT[user.role_level] || ('等级 ' + user.role_level), 'role');
+    var alertEl   = $('alert');
+    var logoutBtn = $('logoutBtn');
 
-                const st = Number(user.status);
-                if (st === 1) addBadge('账号正常', 'ok');
-                else addBadge(STATUS_TEXT[st] || '状态异常', 'warn');
+    /* ---------- 登录守卫 ---------- */
+    App.requireLogin().then(function (ok) {
+      if (!ok) return;          // 已跳转登录页
+      loadProfile();
+    });
 
-                // 明细
-                setText('fId', user.id);
-                setText('fEmail', user.email);
-                setText('fPhone', user.phone);
-                setText('fNickname', user.nickname);
-                setText('fLoginCount', user.login_count);
-                setText('fLastLogin', fmtTime(user.last_login_at));
-                setText('fCreatedAt', fmtTime(user.created_at));
+    /* ---------- 加载用户信息 ---------- */
+    function loadProfile() {
+      App.request('/api/account/me', { method: 'GET' }).then(function (r) {
+        if (!(r.code === App.CODE.OK && r.data)) {
+          App.ui.showAlert(alertEl, 'error', r.message || '获取用户信息失败');
+          return;
+        }
+        render(r.data);
+      });
+    }
 
-                loadingCard.style.display = 'none';
-                profileCard.style.display = 'block';
-                document.title = name + ' · 个人中心';
-            }
+    function render(u) {
+      var name = u.nickname || u.username || '用户';
 
-            // ===== 请求资料 =====
-            async function loadMe(opts) {
-                opts = opts || {};
-                const token = getToken();
-                if (!token) {
-                    toLogin('请先登录');
-                    return;
-                }
+      $('navAvatar').textContent = App.ui.initials(name);
+      $('navName').textContent = name;
 
-                loadingCard.style.display = 'block';
-                profileCard.style.display = 'none';
+      $('heroTitle').textContent = '你好，' + name;
+      $('heroDesc').textContent = '欢迎回来，以下是你当前的账号数据。';
 
-                let resp;
-                try {
-                    resp = await fetch(API_ME, {
-                        method: 'GET',
-                        headers: { 'Authorization': 'Bearer ' + token }
-                    });
-                } catch (err) {
-                    loadingCard.style.display = 'none';
-                    profileCard.style.display = 'block';
-                    showErr('网络错误：' + err.message);
-                    return;
-                }
+      setTile('vId', u.id);
+      setTile('vUsername', u.username);
+      setTile('vNickname', u.nickname || '—');
+      setTile('vRole', roleText(u.role_level));
+      setTile('vLoginCount', u.login_count != null ? u.login_count + ' 次' : '—');
+      setTile('vLastLogin', fmtTime(u.last_login_at));
+      setTile('vEmail', u.email || '未绑定');
+      setTile('vPhone', u.phone || '未绑定');
 
-                let data = null;
-                try { data = await resp.json(); } catch (_) { }
+      $('vCreated').textContent = fmtTime(u.created_at);
+      $('vStatus').textContent = statusText(u.status);
+      $('vAvatar').textContent = u.avatar || '未设置';
 
-                // 未认证 / token 失效 → 跳登录页
-                if (resp.status === 401 || (data && data.code === 1004)) {
-                    toLogin('登录已失效，请重新登录');
-                    return;
-                }
+      /* 管理员才显示「账户管理」入口 */
+      var adminLink = $('adminLink');
+      if (adminLink) {
+        adminLink.classList.toggle('hidden', !(u.role_level >= 2));
+      }
+    }
 
-                // 账号被禁用 / 锁定 → 停在页面提示，不跳转
-                if (data && (data.code === 1005 || data.code === 1006)) {
-                    loadingCard.style.display = 'none';
-                    profileCard.style.display = 'block';
-                    showErr(data.message || '账号状态异常');
-                    return;
-                }
+    function setTile(id, val) {
+      var el = $(id);
+      if (!el) return;
+      el.classList.remove('skeleton');
+      el.textContent = (val === undefined || val === null || val === '') ? '—' : val;
+    }
 
-                if (!data || data.code !== 0 || !data.data) {
-                    loadingCard.style.display = 'none';
-                    profileCard.style.display = 'block';
-                    showErr((data && data.message) || ('获取资料失败（HTTP ' + resp.status + '）'));
-                    return;
-                }
+    function roleText(lv) {
+      if (lv === 1) return '普通用户';
+      if (lv === 2) return '管理员';
+      if (lv === 3) return '超级管理员';
+      return '等级 ' + (lv == null ? '?' : lv);
+    }
 
-                // 顺带刷新本地缓存
-                localStorage.setItem(USER_KEY, JSON.stringify(data.data));
-                render(data.data);
+    function statusText(s) {
+      if (s === 0) return '已禁用';
+      if (s === 1) return '正常';
+      if (s === 2) return '已锁定';
+      return '未知';
+    }
 
-                if (opts.silent !== true) {
-                    // 首次进入不打扰，只有点「刷新资料」才提示
-                    if (opts.fromRefresh) showOk('资料已刷新');
-                }
-            }
+    function fmtTime(t) {
+      if (!t) return '—';
+      var d = new Date(t);
+      if (isNaN(d.getTime())) return String(t);
+      var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+             ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
 
-            // ===== 退出 =====
-            async function doLogout() {
-                const btn = document.getElementById('logoutBtn');
-                btn.disabled = true;
-                btn.textContent = '退出中…';
+    /* ---------- 退出登录 ---------- */
+    logoutBtn.addEventListener('click', function () {
+      if (!confirm('确定要退出登录吗？')) return;
+      App.ui.setLoading(logoutBtn, true);
+      App.request('/api/account/logout', { method: 'POST', silent401: true }).then(function () {
+        App.auth.clear();
+        location.replace(App.PAGE.login);
+      });
+    });
 
-                const token = getToken();
-                try {
-                    if (token) {
-                        await fetch(API_LOGOUT, {
-                            method: 'POST',
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                    }
-                } catch (_) { /* 忽略网络错误，本地照清 */ }
+    /* ---------- 密码显隐 ---------- */
+    document.querySelectorAll('[data-toggle-pwd]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = $(b.getAttribute('data-toggle-pwd'));
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        b.textContent = show ? '隐藏' : '显示';
+      });
+    });
 
-                clearAuth();
-                location.replace(LOGIN_PAGE);
-            }
+    /* ---------- 修改密码 ---------- */
+    var pwdForm   = $('pwdForm');
+    var pwdBtn    = $('pwdBtn');
+    var pwdAlert  = $('pwdAlert');
+    var oldPwdEl  = $('oldPwd');
+    var newPwdEl  = $('newPwd');
+    var confirmEl = $('confirmPwd');
+    var strengthEl = $('strength');
+    var strengthTx = $('strengthText');
 
-            // ===== 事件 =====
-            document.getElementById('refreshBtn').addEventListener('click', function () {
-                loadMe({ fromRefresh: true });
-            });
-            document.getElementById('logoutBtn').addEventListener('click', doLogout);
+    var STRENGTH_TEXT = ['建议混合字母、数字与符号', '强度：弱', '强度：一般', '强度：较强', '强度：很强'];
 
-            // 登录页跳过来时带的一次性提示
-            const notice = sessionStorage.getItem('login_notice');
-            if (notice) {
-                sessionStorage.removeItem('login_notice');
-                // 稍后展示，等资料渲染完成
-                setTimeout(function () {
-                    if (profileCard.style.display !== 'none') showErr(notice);
-                }, 300);
-            }
+    newPwdEl.addEventListener('input', function () {
+      var lv = App.validate.strength(newPwdEl.value);
+      strengthEl.setAttribute('data-level', String(lv));
+      strengthTx.textContent = STRENGTH_TEXT[lv];
+    });
 
-            // 页面加载即尝试 token 登录
-            loadMe({ silent: true });
-        })();
-    </script>
+    [oldPwdEl, newPwdEl, confirmEl].forEach(function (el) {
+      el.addEventListener('input', function () {
+        App.ui.hideAlert(pwdAlert);
+        el.removeAttribute('aria-invalid');
+      });
+    });
+
+    function pwdFail(el, msg) {
+      App.ui.showAlert(pwdAlert, 'error', msg);
+      el.setAttribute('aria-invalid', 'true');
+      el.focus();
+    }
+
+    pwdForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.ui.hideAlert(pwdAlert);
+
+      var oldPwd = oldPwdEl.value;
+      var newPwd = newPwdEl.value;
+      var cfmPwd = confirmEl.value;
+
+      if (!oldPwd) { pwdFail(oldPwdEl, '请输入当前密码'); return; }
+
+      var err = App.validate.password(newPwd);
+      if (err) { pwdFail(newPwdEl, err); return; }
+
+      if (oldPwd === newPwd) { pwdFail(newPwdEl, '新密码不能与当前密码相同'); return; }
+
+      if (newPwd !== cfmPwd) { pwdFail(confirmEl, '两次输入的新密码不一致'); return; }
+
+      if (!confirm('修改成功后所有设备都需要重新登录，确定继续吗？')) return;
+
+      App.ui.setLoading(pwdBtn, true);
+      App.request('/api/account/change-password', {
+        method: 'POST',
+        silent401: true,
+        body: { old_password: oldPwd, new_password: newPwd }
+      }).then(function (r) {
+        App.ui.setLoading(pwdBtn, false);
+
+        if (r.code === App.CODE.OK) {
+          /* 后端已删除全部 token 并清 Cookie，前端清本地状态后跳登录 */
+          App.auth.clear();
+          App.ui.showAlert(pwdAlert, 'success', r.message || '密码已修改，请重新登录');
+          setTimeout(function () { location.replace(App.PAGE.login); }, 900);
+          return;
+        }
+
+        var msg = r.message || '修改失败，请稍后重试';
+        if (r.code === App.CODE.CREDENTIAL_BAD) msg = '当前密码不正确';
+        else if (r.code === App.CODE.UNAUTHORIZED) msg = '登录已失效，请重新登录';
+        else if (r.code === App.CODE.INVALID_PARAM) msg = msg || '请求参数有误';
+
+        App.ui.showAlert(pwdAlert, 'error', msg);
+      });
+    });
+
+    /* ---------- 图片上传（公开接口，无需登录） ---------- */
+    var uploadForm  = $('uploadForm');
+    var uploadBtn   = $('uploadBtn');
+    var uploadAlert = $('uploadAlert');
+    var fileEl      = $('file');
+
+    function fmtSize(n) {
+      if (n == null) return '—';
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / 1024 / 1024).toFixed(2) + ' MB';
+    }
+
+    uploadForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      App.ui.hideAlert(uploadAlert);
+
+      var f = fileEl.files && fileEl.files[0];
+      if (!f) {
+        App.ui.showAlert(uploadAlert, 'error', '请先选择要上传的图片');
+        return;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        App.ui.showAlert(uploadAlert, 'error', '文件超过 10 MB 限制');
+        return;
+      }
+
+      var fd = new FormData();
+      fd.append('file', f);
+
+      App.ui.setLoading(uploadBtn, true);
+      App.request('/api/upload', { method: 'POST', body: fd, auth: false }).then(function (r) {
+        App.ui.setLoading(uploadBtn, false);
+
+        if (r.data && r.data.success) {
+          App.ui.showAlert(uploadAlert, 'success',
+            '上传成功：' + r.data.filename + '（' + fmtSize(r.data.size) + '）' +
+            (r.data.existed ? ' · 已存在相同文件' : ''));
+        } else {
+          App.ui.showAlert(uploadAlert, 'error',
+            (r.data && r.data.message) || r.message || '上传失败');
+        }
+      });
+    });
+  })();
+  </script>
 </body>
-
 </html>
