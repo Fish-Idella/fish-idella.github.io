@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="./css/prism.css">
 </head>
 
-<body class="view">
+<body class="view" theme="auto">
     <div id="chat-view" class="view flex-vertical">
         <header class="top flex-horizontal">
             <button id="gotomain">
@@ -39,7 +39,7 @@
             </button>
         </header>
         <div class="fill chat-message-output">
-            <div id="image" class="view hide"><img src="./image/1.png"></div>
+            <div id="image" class="view hide"><canvas id="vrm-canvas"></canvas></div>
             <div id="message-list" class="view scroll-y">
                 <div class="flex-horizontal chat-message-output-box hide" data-persona="assistant" data-index="0">
                     <div class="logo"></div>

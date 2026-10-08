@@ -26,7 +26,7 @@ export const PENDING = {
 export const runtime = {
     AndroidObject: null,
     currentAgentConfig: null,
-    vm_images:null
+    vm_images: null
 };
 
 export const OpenAIFunctionCalling = {
@@ -41,11 +41,6 @@ export const OpenAIFunctionCalling = {
             if (!Object.prototype.hasOwnProperty.call(OpenAIFunctionCalling, name)) {
                 console.warn(`未知函数调用: ${name}`);
                 continue;
-            }
-
-            if (name !== "confirm") {
-                // 过期的任务
-                PENDING.func = PENDING.key = PENDING.tool = null;
             }
 
             let args;
@@ -336,6 +331,8 @@ export const OpenAIFunctionCalling = {
         PENDING.func = function () {
             info.information = work.join("\n");
             info.updated_at = formatDate();
+            // 过期任务，避免重复执行
+            PENDING.func = PENDING.key = PENDING.tool = null;
             return { dryRun: false, hunks: hunks.length, totalBefore, totalAfter };
         };
 
@@ -348,7 +345,7 @@ export const OpenAIFunctionCalling = {
 
     confirm(data, information_map, messages, args) {
         if (PENDING.tool == null) {
-            return { error: "没用未完成的任务或任务已过期" };
+            return { error: "没有未完成的任务/任务已过期" };
         }
         if (args.tool !== PENDING.tool) {
             return { error: "不是上次调用的工具" };

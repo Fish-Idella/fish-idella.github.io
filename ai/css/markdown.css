@@ -21,6 +21,46 @@
 	--md-del: var(--color-dark);                  
 }
 
+/* ===================== 亮色主题适配 ===================== */
+body[theme="light"],
+body[theme="auto"] {
+	/* 依赖 --color-* 的间接变量必须在 body 上重新声明，
+	   否则会沿用 html(:root) 上已解析的旧值 */
+	--md-text: var(--color-text);
+	--md-text-muted: var(--color-dark);
+	--md-border: var(--color-border);
+	--md-surface: var(--color-surface);
+	--md-surface-2: var(--color-surface-2);
+	--md-link: var(--color-a);
+	--md-code-block-border: var(--color-border);
+	--md-del: var(--color-dark);
+
+	--md-text-strong: #16181d;
+	--md-link-hover: #0b72d0;
+	--md-code-inline-bg: rgba(110, 118, 129, 0.18);
+	--md-code-inline-text: #c2185b;
+	--md-code-block-bg: #1e1e1e;
+	--md-mark-bg: #fff3a3;
+	--md-mark-text: #6b5300;
+}
+
+/* 代码块统一保持深底浅字（两种主题下都清晰） */
+body[theme="light"] .markdown pre,
+body[theme="auto"] .markdown pre {
+	color: #f8f8f2;
+}
+
+@media (prefers-color-scheme: dark) {
+	body[theme="auto"] {
+		--md-text-strong: #ffffff;
+		--md-link-hover: #6ab7ff;
+		--md-code-inline-bg: rgba(110, 118, 129, 0.25);
+		--md-code-inline-text: #ff9492;
+		--md-mark-bg: #5c4a00;
+		--md-mark-text: #ffe08a;
+	}
+}
+
 
 .markdown {
 	color: var(--md-text);

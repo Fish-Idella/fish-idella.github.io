@@ -24,62 +24,98 @@ th {
 	text-align: center;
 }
 
-
 :root {
-	
 	--color-background: #303030;
-	
 	--color-text: #efefef;
-	
 	--color-dark: #a8a8a8;
-	
 	--color-dark-d: #a8a8a80a;
-	
 	--color-title: #E0B989;
-	
 	--color-highlight: #6b5e5b;
-	
 	--color-sub: #E0AA89;
-	
 	--color-sub-d: #E0AA89;
 	--color-a: #2196F3;
-	
 	--color-a-d: #2196F314;
-	
-
-	
-	--color-surface: #2f2f2f;
-	
-	--color-surface-2: #3a3a3a;
-	
+	--color-surface: #3f3f3f;
+	--color-surface-2: #5f5f5f;
 	--color-border: #3d3d3d;
-	
 	--color-hover: #3a3a3a;
-	
 	--color-on-accent: #ffffff;
-	
 	--color-row-odd: #262626;
-	
 	--color-row-even: #2e2e2e;
-	
-	--color-bubble: #262626;
-	
-	--color-bubble-user: #4b4658;
-	
+	--color-bubble: rgba(28, 28, 32, 0.72);
+	--color-bubble-user: rgba(70, 64, 92, 0.78);
 	--color-stop-bg: #5a2f2f;
-	
 	--color-stop-text: #ff6b6b;
-	
 	--color-progress-bar: #2f5a5c;
-	
 	--color-scrollbar-thumb: #636363;
-	
 	--color-overlay: rgba(0, 0, 0, 0.6);
-	
 	--color-shadow: rgba(0, 0, 0, 0.4);
-	
 	--color-shadow-strong: rgba(0, 0, 0, 0.6);
-	
+}
+
+/* ===================== äº®è‰²ä¸»é¢˜ ===================== */
+/* ç”± body çš„ theme å±žæ€§æ€»æŽ§ï¼š
+   theme="light" å¼ºåˆ¶äº®è‰²ï¼›theme="auto" è·Ÿéšç³»ç»Ÿï¼›theme="dark" èµ° :root é»˜è®¤æš—è‰²ã€‚
+   body[theme="auto"] é»˜è®¤å–äº®è‰²ï¼Œç³»ç»Ÿä¸ºæš—è‰²æ—¶ç”±ä¸‹æ–¹åª’ä½“æŸ¥è¯¢è¦†ç›–å›žæš—è‰²ã€‚ */
+body[theme="light"],
+body[theme="auto"] {
+	--color-background: #f4f4f6;
+	--color-text: #1c1c1e;
+	--color-dark: #6b6b70;
+	--color-dark-d: #6b6b700a;
+	--color-title: #9a6b1f;
+	--color-highlight: #ece2d8;
+	--color-sub: #b0703a;
+	--color-sub-d: #b0703a;
+	--color-a: #2196F3;
+	--color-a-d: #2196F314;
+	--color-surface: #ffffff;
+	--color-surface-2: #e6e6e9;
+	--color-border: #d6d6da;
+	--color-hover: #ececef;
+	--color-on-accent: #ffffff;
+	--color-row-odd: #f7f7f9;
+	--color-row-even: #efeff2;
+	--color-bubble: rgba(255, 255, 255, 0.72);
+	--color-bubble-user: rgb(161 207 243 / 80%);
+	--color-stop-bg: #ffd9d9;
+	--color-stop-text: #d32f2f;
+	--color-progress-bar: #cfe8e8;
+	--color-scrollbar-thumb: #bfbfc4;
+	--color-overlay: rgba(0, 0, 0, 0.35);
+	--color-shadow: rgba(0, 0, 0, 0.15);
+	--color-shadow-strong: rgba(0, 0, 0, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+	body[theme="auto"] {
+		--color-background: #303030;
+		--color-text: #efefef;
+		--color-dark: #a8a8a8;
+		--color-dark-d: #a8a8a80a;
+		--color-title: #E0B989;
+		--color-highlight: #6b5e5b;
+		--color-sub: #E0AA89;
+		--color-sub-d: #E0AA89;
+		--color-a: #2196F3;
+		--color-a-d: #2196F314;
+		--color-surface: #3f3f3f;
+		--color-surface-2: #5f5f5f;
+		--color-border: #3d3d3d;
+		--color-hover: #3a3a3a;
+		--color-on-accent: #ffffff;
+		--color-row-odd: #262626;
+		--color-row-even: #2e2e2e;
+		--color-bubble: rgba(28, 28, 32, 0.72);
+		--color-bubble-user: rgba(70, 64, 92, 0.78);
+		--color-stop-bg: #5a2f2f;
+		--color-stop-text: #ff6b6b;
+		--color-progress-bar: #2f5a5c;
+		--color-scrollbar-thumb: #636363;
+		--color-overlay: rgba(0, 0, 0, 0.6);
+		--color-shadow: rgba(0, 0, 0, 0.4);
+		--color-shadow-strong: rgba(0, 0, 0, 0.6);
+	}
 }
 
 a,
@@ -149,7 +185,10 @@ body,
 	flex-grow: 1;
 	min-inline-size: 0px;
 	min-block-size: 0px;
-	
+}
+
+span#info {
+	user-select: none;
 }
 
 textarea#input-message {
@@ -284,7 +323,6 @@ button#send[name="stop"]>svg.send {
 }
 
 #chat-view {
-	
 	background-size: cover;
 	max-inline-size: 100%;
 	left: 50%;
@@ -304,16 +342,22 @@ header button,
 	aspect-ratio: 1 / 1;
 }
 
-#image>img {
-	position: absolute;
-	bottom: -30%;
+#image>canvas {
+	display: block;
 	inline-size: 100%;
-	left: 50%;
-	transform: translateX(-50%);
+	block-size: 100%;
+}
+
+/* VRM ä½œä¸ºåŠ¨æ€èƒŒæ™¯ï¼šèŠå¤©å±‚é€æ˜Žï¼Œè®©è§’è‰²é€å‡º */
+#chat-view {
+	background-color: transparent;
+}
+
+#message-list {
+	background-color: transparent;
 }
 
 .chat-message-output-box {
-	
 	font-family: MiSans, "Microsoft Yahei", "PingFang SC", Tahoma, Arial, Helvetica, sans-serif;
 }
 
@@ -345,11 +389,9 @@ header button,
 	display: none;
 }
 
-
 .chat-message-output-box[data-persona="assistant"]:not(.tool_calls) {
 	margin: 0 0 1rem 0;
 }
-
 
 .output {
 	inline-size: auto;
@@ -357,11 +399,12 @@ header button,
 }
 
 .chat-message {
-	border-radius: 0.4rem;
+	/* border-radius: 0.4rem; */
 	overflow: hidden;
-	
 	color: var(--color-text);
-	
+	/* background-color: var(--color-bubble); */
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
 }
 
 .chat-message pre {
@@ -373,18 +416,15 @@ header button,
 }
 
 .chat-message .message {
-	
 	font-weight: 400;
-	
-	
 }
 
 .chat-message-output-box[data-persona="user"] .chat-message {
 	background-color: var(--color-bubble-user);
+	border-radius: 0.4rem;
 }
 
 .chat-message>.chat-message-title>.think {
-	
 	padding: 0.2rem;
 	font-weight: 300;
 	color: var(--color-dark);
@@ -405,7 +445,6 @@ header button,
 }
 
 .branch {
-	
 	color: var(--color-text);
 	border-radius: 1rem;
 }
@@ -453,7 +492,6 @@ ul#character-list>li {
 
 .login-form {
 	background-color: var(--color-background);
-	
 	background-size: cover;
 	gap: 1rem;
 }
@@ -639,31 +677,42 @@ label.checkbox-button>.outlay {
 	border-radius: 15%;
 }
 
-
-
-/* ===================== ModalDialog 暗色主题 ===================== */
+/* ===================== ModalDialog Ã¦Å¡â€”Ã¨â€°Â²Ã¤Â¸Â»Ã©Â¢Ëœ ===================== */
 :root {
-	/* 对话框专属，全部基于全局色板派生，可单独覆盖 */
+	/* Ã¥Â¯Â¹Ã¨Â¯ÂÃ¦Â¡â€ Ã¤Â¸â€œÃ¥Â±Å¾Ã¯Â¼Å’Ã¥â€¦Â¨Ã©Æ’Â¨Ã¥Å¸ÂºÃ¤ÂºÅ½Ã¥â€¦Â¨Ã¥Â±â‚¬Ã¨â€°Â²Ã¦ÂÂ¿Ã¦Â´Â¾Ã§â€Å¸Ã¯Â¼Å’Ã¥ÂÂ¯Ã¥Ââ€¢Ã§â€¹Â¬Ã¨Â¦â€ Ã§â€ºâ€“ */
 	--dialog-bg: var(--color-surface);
 	--dialog-text: var(--color-text);
 	--dialog-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.6);
-
 	--dialog-input-bg: var(--color-background);
 	--dialog-input-border: var(--color-border);
 	--dialog-input-text: var(--color-text);
 	--dialog-input-placeholder: var(--color-dark);
-
 	--dialog-btn-bg: var(--color-surface-2);
 	--dialog-btn-text: var(--color-text);
 	--dialog-btn-hover-bg: var(--color-hover);
 	--dialog-btn-primary-bg: var(--color-a);
 	--dialog-btn-primary-text: var(--color-on-accent);
-
 	--dialog-empty-text: var(--color-dark);
 	--dialog-toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
-/* ---------- 容器 ---------- */
+/* é—´æŽ¥å˜é‡éœ€åœ¨ body ä¸Šé‡æ–°å£°æ˜Žï¼Œéš theme å±žæ€§é‡æ–°è§£æž */
+body[theme] {
+	--dialog-bg: var(--color-surface);
+	--dialog-text: var(--color-text);
+	--dialog-input-bg: var(--color-background);
+	--dialog-input-border: var(--color-border);
+	--dialog-input-text: var(--color-text);
+	--dialog-input-placeholder: var(--color-dark);
+	--dialog-btn-bg: var(--color-surface-2);
+	--dialog-btn-text: var(--color-text);
+	--dialog-btn-hover-bg: var(--color-hover);
+	--dialog-btn-primary-bg: var(--color-a);
+	--dialog-btn-primary-text: var(--color-on-accent);
+	--dialog-empty-text: var(--color-dark);
+}
+
+/* ---------- Ã¥Â®Â¹Ã¥â„¢Â¨ ---------- */
 dialog.modal-dialog {
 	border: none;
 	border-radius: 0.6rem;
@@ -688,7 +737,7 @@ dialog.modal-dialog::backdrop {
 	color: var(--dialog-text);
 }
 
-/* ---------- 消息 ---------- */
+/* ---------- Ã¦Â¶Ë†Ã¦ÂÂ¯ ---------- */
 .modal-dialog .dialog-message {
 	overflow: auto;
 	white-space: pre;
@@ -696,7 +745,7 @@ dialog.modal-dialog::backdrop {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
-/* ---------- 输入框 ---------- */
+/* ---------- Ã¨Â¾â€œÃ¥â€¦Â¥Ã¦Â¡â€  ---------- */
 .modal-dialog .dialog-input {
 	margin-block-start: 1rem;
 	padding: 6px 10px;
@@ -717,7 +766,7 @@ dialog.modal-dialog::backdrop {
 	border-color: var(--color-a);
 }
 
-/* ---------- 自定义区域（列表 / 进度条） ---------- */
+/* ---------- Ã¨â€¡ÂªÃ¥Â®Å¡Ã¤Â¹â€°Ã¥Å’ÂºÃ¥Å¸Å¸Ã¯Â¼Ë†Ã¥Ë†â€”Ã¨Â¡Â¨ / Ã¨Â¿â€ºÃ¥ÂºÂ¦Ã¦ÂÂ¡Ã¯Â¼â€° ---------- */
 .modal-dialog .dialog-custom {
 	line-height: 2rem;
 }
@@ -733,7 +782,7 @@ dialog.modal-dialog::backdrop {
 	color: var(--dialog-empty-text);
 }
 
-/* ---------- 按钮 ---------- */
+/* ---------- Ã¦Å’â€°Ã©â€™Â® ---------- */
 .modal-dialog .dialog-buttons {
 	flex-direction: row-reverse;
 	gap: 1rem;
@@ -766,7 +815,7 @@ dialog.modal-dialog::backdrop {
 	filter: brightness(1.1);
 }
 
-/* ---------- Toast 模式 ---------- */
+/* ---------- Toast Ã¦Â¨Â¡Ã¥Â¼Â ---------- */
 dialog.modal-dialog.toast {
 	position: fixed;
 	inset-block-start: 20px;
