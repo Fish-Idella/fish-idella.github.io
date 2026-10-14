@@ -1050,7 +1050,8 @@ const PuSet = (function () {
                 }
             });
             if (this.#isArrayData) {
-                this.#handleLengthChange(this.data.length);
+                const l = this.data.length;
+                this.#handleLengthChange(l, l);
             }
         }
 
@@ -1068,7 +1069,7 @@ const PuSet = (function () {
                 if (this.#isArrayData) {
                     // 数组：处理length或索引
                     if (property === 'length') {
-                        return void this.#handleLengthChange(value);
+                        return void this.#handleLengthChange(value, target.length);
                     } else {
                         node = this.#getChild(node, property, value, receiver);
                     }
@@ -1085,14 +1086,14 @@ const PuSet = (function () {
          * 处理数组长度变更
          * @param {number} newLength - 新长度
          */
-        #handleLengthChange(newLength) {
+        #handleLengthChange(newLength, oldLength) {
             // 隐藏超出新长度的元素
-            for (let i = newLength, oldLength = this.childCount; i < oldLength; i++) {
+            for (let i = newLength, count = this.childCount; i < count; i++) {
                 PuSetFactory.show(this.#children.get(String(i)), false);
             }
             // 触发resize回调
             if (this.#hasResize) {
-                this.onresize(this.target, newLength, 'length');
+                this.onresize(this.target, newLength, oldLength);
             }
         }
 

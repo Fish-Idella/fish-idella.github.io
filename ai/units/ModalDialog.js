@@ -55,6 +55,7 @@ class ModalDialog {
         }
 
         const {
+            ai = false,
             type = 'message',
             message = '',
             duration = 2500,
@@ -176,11 +177,11 @@ class ModalDialog {
                 }
             });
 
-            if (typeLower === 'toast' && btnList.length === 0) {
+            if (ai || (typeLower === 'toast' && btnList.length === 0)) {
                 setTimeout(() => {
                     if (resolved) return;
                     resolved = true;
-                    resolve({ which: -1, value: undefined, selected: null });
+                    resolve({ which: -1, value: "超时关闭", selected: null });
                     container.remove();
                 }, duration);
             }

@@ -59,7 +59,7 @@ th {
    body[theme="auto"] é»˜è®¤å–äº®è‰²ï¼Œç³»ç»Ÿä¸ºæš—è‰²æ—¶ç”±ä¸‹æ–¹åª’ä½“æŸ¥è¯¢è¦†ç›–å›žæš—è‰²ã€‚ */
 body[theme="light"],
 body[theme="auto"] {
-	--color-background: #f4f4f6;
+	--color-background: #fafafa;
 	--color-text: #1c1c1e;
 	--color-dark: #6b6b70;
 	--color-dark-d: #6b6b700a;
@@ -185,10 +185,6 @@ body,
 	flex-grow: 1;
 	min-inline-size: 0px;
 	min-block-size: 0px;
-}
-
-span#info {
-	user-select: none;
 }
 
 textarea#input-message {
@@ -318,7 +314,7 @@ button#send[name="stop"]>svg.send {
 	display: none;
 }
 
-#login-view .title {
+#editor .title {
 	max-inline-size: 20rem;
 }
 
@@ -330,7 +326,6 @@ button#send[name="stop"]>svg.send {
 }
 
 .top {
-	block-size: 3rem;
 	line-height: 3rem;
 	font-weight: 600;
 	background-color: var(--color-background);
@@ -340,6 +335,10 @@ button#send[name="stop"]>svg.send {
 header button,
 .top button {
 	aspect-ratio: 1 / 1;
+}
+
+#info {
+	overflow: hidden;
 }
 
 #image>canvas {
@@ -481,11 +480,11 @@ ul {
 	padding: 0px;
 }
 
-ul#character-list {
+ul#memory-list {
 	overflow: hidden auto;
 }
 
-ul#character-list>li {
+ul#memory-list>li {
 	place-items: center;
 	margin: 0.6rem 0px;
 }
@@ -550,7 +549,7 @@ label.checkbox-button input[type="checkbox"] {
 }
 
 .settings>button,
-label.checkbox-button input[type="checkbox"]:checked+span {
+label.checkbox-button input[type="checkbox"]:checked:not(:disabled)+span {
 	border: 1px solid var(--color-a);
 	color: var(--color-a);
 	background-color: var(--color-a-d);
@@ -663,7 +662,6 @@ label.checkbox-button>.outlay {
 
 #image-list {
 	gap: 1rem;
-	margin: 0.4rem 0;
 	grid-template-columns: repeat(auto-fill, 5rem);
 }
 
@@ -768,7 +766,8 @@ dialog.modal-dialog::backdrop {
 
 /* ---------- Ã¨â€¡ÂªÃ¥Â®Å¡Ã¤Â¹â€°Ã¥Å’ÂºÃ¥Å¸Å¸Ã¯Â¼Ë†Ã¥Ë†â€”Ã¨Â¡Â¨ / Ã¨Â¿â€ºÃ¥ÂºÂ¦Ã¦ÂÂ¡Ã¯Â¼â€° ---------- */
 .modal-dialog .dialog-custom {
-	line-height: 2rem;
+	margin-top: 1rem;
+	gap: 1rem;
 }
 
 .modal-dialog .dialog-custom label {
