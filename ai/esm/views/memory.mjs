@@ -4,6 +4,7 @@
  */
 
 import { runtime } from '../runtime.mjs';
+import { DEFAULT_TEMPERATURE } from '../core.mjs';
 
 export function setupMemoryViews(ctx) {
     const { dom, data, memory_map, agents, chuji, saveData, registry } = ctx;
@@ -122,7 +123,7 @@ export function setupMemoryViews(ctx) {
                         const config = Object.assign({
                             "id": id,
                             'branch': [],
-                            "settings": { thinking: true }
+                            "settings": { thinking: true, temperature: DEFAULT_TEMPERATURE }
                         }, agents[id] || {}, {
                             "name": characterName.value,
                             "tags": characterKeys.value.trim().split(/\s*,\s*|\s*\uff0c\s*/),

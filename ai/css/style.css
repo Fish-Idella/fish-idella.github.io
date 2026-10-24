@@ -252,7 +252,43 @@ ul.fc.scroll li:nth-child(2n) {
 	cursor: not-allowed !important;
 	opacity: 0.8;
 }
+/*
+.checkbox {
+	position: relative;
+	margin: 0;
+}
 
+.checkbox:after,
+.checkbox:before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    content: '';
+    text-align: center;
+    font-family: helvetica;
+    border-radius: 3px;
+    color: #fff;
+}
+
+.checkbox:before {
+    background-color: var(--color-surface-2);
+    -webkit-transition: all .3s ease-in-out;
+    transition: all .3s ease-in-out;
+}
+
+.checkbox:checked:before {
+    box-shadow: inset 0 0 0 11px var(--color-a);
+}
+
+.checkbox:checked:after {
+    content: "\2713";
+    font-size: 0.8rem;
+    line-height: 1rem;
+}
+*/
 button {
 	background-color: transparent;
 	border-width: medium;
@@ -566,6 +602,161 @@ label.checkbox-button>.outlay {
 	gap: 3px;
 	user-select: none;
 	box-sizing: border-box;
+}
+
+/* ===================== 设置弹窗 ===================== */
+/* 底部栏只保留「深度思考」，其余开关收纳进这个弹窗 */
+.settings-dialog {
+	inline-size: 24rem;
+	gap: 0.8rem;
+	/* .dialog-content 的 max-block-size:80% 在 grid 居中容器里会被当成固定高度，
+	   内容撑不下时「关闭」按钮会溢出卡片外。设置项是有限的固定几行，
+	   直接取消高度上限，让卡片按内容自适应。 */
+	max-block-size: none;
+}
+
+.settings-title {
+	font-weight: 600;
+	line-height: 1.2rem;
+}
+
+.settings-list {
+	gap: 0.4rem;
+}
+
+/* 温度数值：对齐右侧、等宽字体避免数字跳动 */
+.settings-row-value {
+	flex: none;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-a);
+	font-weight: 600;
+	min-inline-size: 2.2rem;
+	text-align: end;
+}
+
+/* 温度滑轨：独立成行，撑满卡片宽度 */
+.settings-slider {
+	padding: 0px 0.6rem 0.2rem;
+	box-sizing: border-box;
+}
+
+.settings-slider>input[type="range"] {
+	appearance: none;
+	-webkit-appearance: none;
+	inline-size: 100%;
+	block-size: 1.4rem;
+	background: transparent;
+	margin: 0px;
+}
+
+.settings-slider>input[type="range"]::-webkit-slider-runnable-track {
+	block-size: 0.35rem;
+	border-radius: 0.175rem;
+	background-color: var(--color-dark-d);
+	border: 1px solid var(--color-dark);
+}
+
+.settings-slider>input[type="range"]::-webkit-slider-thumb {
+	appearance: none;
+	-webkit-appearance: none;
+	inline-size: 1.1rem;
+	block-size: 1.1rem;
+	margin-block-start: -0.42rem;
+	border-radius: 50%;
+	background-color: var(--color-a);
+	border: 1px solid var(--color-a);
+	box-sizing: border-box;
+}
+
+.settings-slider>input[type="range"]:disabled {
+	opacity: 0.5;
+}
+/* 整行可点：视觉上是一行「图标 + 名称 … 滑动开关」 */
+label.settings-row {
+	display: flex !important;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	padding: 0.6rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background-color: var(--color-background);
+	cursor: pointer;
+	user-select: none;
+	box-sizing: border-box;
+}
+
+label.settings-row>input[type="checkbox"] {
+	display: none;
+}
+
+.settings-row-main {
+	min-inline-size: 0px;
+	flex: 1 1 0%;
+	color: var(--color-text);
+	font-size: 14px;
+}
+
+.settings-row-name {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 开关滑轨：默认关闭（灰），:checked 时点亮成主题色 */
+.settings-row>.switch-track {
+	position: relative;
+	flex: none;
+	inline-size: 2.4rem;
+	block-size: 1.3rem;
+	border-radius: 0.65rem;
+	background-color: var(--color-dark-d);
+	border: 1px solid var(--color-dark);
+	transition: background-color 0.2s, border-color 0.2s;
+	box-sizing: border-box;
+}
+
+.settings-row>.switch-track::after {
+	content: "";
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-start: 0.15rem;
+	inline-size: 0.9rem;
+	block-size: 0.9rem;
+	border-radius: 50%;
+	background-color: var(--color-dark);
+	transform: translateY(-50%);
+	transition: inset-inline-start 0.2s, background-color 0.2s;
+}
+
+.settings-row>input[type="checkbox"]:checked~.switch-track {
+	background-color: var(--color-a-d);
+	border-color: var(--color-a);
+}
+
+.settings-row>input[type="checkbox"]:checked~.switch-track::after {
+	inset-inline-start: calc(100% - 1.05rem);
+	background-color: var(--color-a);
+}
+
+/* 工具总开关关闭时，浏览器开关不可用（与原有 disabled 联动一致）。
+   不用 :has()：旧版 Android WebView 支持不稳，改由 syncSettingsUI() 加 .is-disabled。 */
+label.settings-row.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.settings-actions {
+	margin-block-start: 0.2rem;
+}
+
+.settings-actions>button {
+	flex: 1 1 0%;
+	padding: 0.6rem;
+	border-radius: 0.5rem;
+	background-color: var(--color-surface-2);
+	color: var(--color-text);
+	line-height: 1.2rem;
 }
 
 .tips {

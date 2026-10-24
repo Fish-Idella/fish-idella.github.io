@@ -21,8 +21,9 @@ export function setupRenderer(ctx) {
 
         if (not_done) return;
 
-        const ib = el.nextElementSibling;
-        if (ib) {
+        // TODO  这里有个问题，因为 PuSet.mvvm()是复用元素，导致重做消息列表时，旧的图片会在新对话中异常出现
+        if (el.classList.contains('message')) {
+            const ib = el.nextElementSibling;
             ib.textContent = '';
             if (isArray) {
                 for (let i = 1; i < value.length; i++) {

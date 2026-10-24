@@ -51,7 +51,10 @@ class ModalDialog {
      */
     static show(options, ...buttons) {
         if (arguments.length > 1) {
-            return this.show({ type: 'message', message: options, buttons });
+            return this.show({ message: options, buttons });
+        }
+        if (typeof options === "string") {
+            return this.show({ message: options });
         }
 
         const {
@@ -96,12 +99,15 @@ class ModalDialog {
             case 'list':
             case 'check':
             case 'checkbox':
+            case 'radio': {
                 customContainer.style.display = 'block';
+                const rn = 'radio_' + Date.now() + '_' + Math.random().toString(36).slice(2);
                 if (Array.isArray(list) && list.length) {
                     list.forEach((item) => {
                         const wrap = document.createElement('label');
                         const cb = document.createElement('input');
-                        cb.type = 'checkbox';
+                        cb.className = cb.type = typeLower === 'radio' ? 'radio' : 'checkbox';
+                        cb.name = typeLower === 'radio' ? rn : '';
                         cb.value = item.value !== undefined ? item.value : item.text || '';
                         cb.checked = !!item.checked;
                         const text = document.createElement("span");
@@ -117,7 +123,7 @@ class ModalDialog {
                     customContainer.appendChild(empty);
                 }
                 break;
-
+            }
             case 'toast':
                 break;
 
@@ -136,6 +142,7 @@ class ModalDialog {
 
         buttonContainer.innerHTML = '';
         let btnList = customButtons;
+        // 默认按钮
         if (!btnList || !btnList.length) {
             if (['toast', 'progress'].includes(typeLower)) {
                 btnList = [];

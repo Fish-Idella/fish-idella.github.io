@@ -4,6 +4,7 @@
  */
 
 import { runtime } from '../runtime.mjs';
+import { DEFAULT_TEMPERATURE } from '../core.mjs';
 
 /** 新用户默认数据结构 */
 const DEFAULT_DATA = {
@@ -75,7 +76,7 @@ export function setupStore(ctx, raw) {
         id: '0',
         name: "默认智能体",
         tags: ["默认智能体", "初姬"],
-        "settings": { thinking: true }
+        "settings": { thinking: true, temperature: DEFAULT_TEMPERATURE }
     });
 
     // fix

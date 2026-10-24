@@ -41,12 +41,17 @@ export function concatURL(base, path) {
     return String(base).replace(/\/+$/, '') + '/' + String(path).replace(/^\/+/, '');
 }
 
+/** 模型温度的取值范围与默认值（与设置弹窗里的滑轨保持一致） */
+export const TEMPERATURE_MIN = 0;
+export const TEMPERATURE_MAX = 2;
+export const DEFAULT_TEMPERATURE = 0.8;
+
 /** 生成默认的 AI 请求配置（每次调用返回新对象） */
 export function createDefaultAiRequestConfig() {
     return {
         "model": 'deepseek-v4-flash',
         "stream": true,
-        "temperature": 0.8,
+        "temperature": DEFAULT_TEMPERATURE,
         "thinking": { "type": "enabled" },
         "tools": null,
         "tool_choice": "none",

@@ -26,30 +26,64 @@ function guard() {
     return null;
 }
 
-export async function open_browser(ctx, args) {
-    const denied = guard(); if (denied) return denied;
-    await runtime.AndroidObject.openWebView(String(args.url ?? ''));
-    // 等待页面首屏渲染完成再返回，否则紧接着读取内容会拿到空串。
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    return { "message": "已打开浏览器窗口" };
-}
+export const browser = {
+    schema: {
+        "type": "function",
+        "function": {
+            "name": "browser",
+            "description": "【浏览器】打开网页",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": { "type": "string", "description": "控制浏览器窗口的开关", "enum": ["open", "close"] },
+                    "ratio": { "type": "number", "description": "浏览器窗口占屏幕的高度百分比， 0 ~ 1直接的小数" },
+                    "url": { "type": "string", "description": "网页链接，可以省略，保持上次的页面" }
+                },
+                "required": ["action"]
+            }
+        }
+    },
+    async handler(ctx, args) {
+        const denied = guard(); if (denied) return denied;
+        if (args.action === "open") {
+            await runtime.AndroidObject.openWebView(String(args.url ?? ''), args.ratio ?? 0.4);
+            // 等待页面首屏渲染完成再返回，否则紧接着读取内容会拿到空串。
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return { "message": "已打开浏览器窗口" };
+        } else {
+            await runtime.AndroidObject.closeWebView(true);
+            return { "message": "已关闭浏览器窗口" };
+        }
+    }
+};
 
-export async function get_browser_content(ctx, args) {
-    const denied = guard(); if (denied) return denied;
-    const result = await runtime.AndroidObject.getWebViewContent(args.type ?? 'text', args.selector ?? 'body');
-    return { result };
-}
-
-export async function get_browser_url(ctx, args) {
-    const denied = guard(); if (denied) return denied;
-    const url = await runtime.AndroidObject.getWebViewURL();
-    return { url };
-}
-
-export async function close_browser(ctx, args) {
-    // 关闭窗口无需「已启用」开关：用户关掉开关后仍需能关掉已开的窗口，
-    // 否则窗口会一直挂着。仅要求桥接可用。
-    if (!bridgeReady()) return { "message": "当前环境不支持浏览器能力" };
-    await runtime.AndroidObject.closeWebView(true);
-    return { "message": "已关闭浏览器窗口" };
-}
+export const read_browser = {
+    schema: {
+        "type": "function",
+        "function": {
+            "name": "read_browser",
+            "description": "【浏览器】读取已打开的网页的网址/可视文档，没有用户明确允许禁止读取网页",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "type": { "type": "string", "description": "读取类型，URL、屏幕截图（可以通过push_image工具迂回看图）、可视文本或者 HTML 标签，默认读取可视文本", "enum": ["url", "screenshot", "text", "html"] },
+                    "selector": { "type": "string", "description": "CSS选择器，默认 body" }
+                },
+                "required": []
+            }
+        }
+    },
+    async handler(ctx, args) {
+        const denied = guard(); if (denied) return denied;
+        if (args.type === 'url') {
+            const url = await runtime.AndroidObject.getWebViewURL();
+            return { url };
+        } else if (args.type === 'screenshot') {
+            const url = await fetch("/screenshot").then(r => r.blob()).then(blob => URL.createObjectURL(blob));
+            return { url };
+        } else {
+            const result = await runtime.AndroidObject.getWebViewContent(args.type ?? 'text', args.selector ?? 'body');
+            return { result };
+        }
+    }
+};

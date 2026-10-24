@@ -4,8 +4,9 @@
  */
 
 import { runtime } from '../runtime.mjs';
-import { definitions } from '../domain.mjs';
-import { concatURL } from '../core.mjs';
+import {
+    concatURL, TEMPERATURE_MIN, TEMPERATURE_MAX, DEFAULT_TEMPERATURE
+} from '../core.mjs';
 
 export function setupController(ctx) {
     const {
@@ -77,23 +78,45 @@ export function setupController(ctx) {
                 switch (choice.finish_reason) {
                     case "tool_calls": {
                         assistantBox.setToolCalls();
-                        setTimeout(() => {
+                        // 放到队列末尾
+                        setTimeout(() => { 
                             OpenAIFunctionCalling.handleToolCalls(assistantBox, data, memory_map, messages)
                                 .then((list) => {
                                     const cc = ctx.currentAgentConfig;
-                                    for (const c of list) {
-                                        if (!c) break;
-                                        const { id, message, beginning } = c;
-                                        initAgent(id);
-                                        if (beginning) {
-                                            messages.length = 1;
+                                    let reinject = false;
+                                    for (const task of list) {
+                                        if (!task) continue;
+                                        const [name, opt] = task;
+                                        if (!opt) continue;
+                                        if (name == 'push_image') {
+                                            // 有一个回传则全部回传
+                                            reinject = reinject || opt.reinject;
+                                            continue;
                                         }
-                                        const mb = addMessage('user', `[[cooperate] ${cc.name}(${cc.id}): [${message}]]`);
-                                        vm_message.render(vm_message.activeItem, mb.message, mb.index, '已完成');
-                                        ctx.autoScroll = true;
+                                        if (name == 'cooperate') {
+                                            const { id, message, beginning } = opt;
+                                            initAgent(id);
+                                            if (beginning) {
+                                                messages.length = 1;
+                                            }
+                                            const mb = addMessage('user', `[[cooperate] ${cc.name}(${cc.id}): [${message}]]`);
+                                            vm_message.render(vm_message.activeItem, mb.message, mb.index, '已完成');
+                                            ctx.autoScroll = true;
+                                        }
                                     }
-                                    saveData();
-                                    callApi();
+                                    if (reinject) {
+                                        // sendMessage 带 abort 守卫（给用户手动发送用），
+                                        // 流未收尾时调用会 abort 本流并 return，图片发不出去。
+                                        // 标记待发，流已收尾则立即发，否则交给 finally 补发。
+                                        abortController.pendingPushImage = true;
+                                        if (ctx.currentAbortController !== abortController) {
+                                            dom.messageInput.value = 'push image reinject';
+                                            sendMessage();
+                                        }
+                                    } else {
+                                        saveData();
+                                        callApi();
+                                    }
                                 })
                                 .catch(e => {
                                     // handleToolCalls 是 async，这里不 catch 就是 unhandled rejection：
@@ -128,6 +151,10 @@ export function setupController(ctx) {
             assistantBox.done();
             dom.sendMsgBtn.name = 'send';
             saveData();
+            if (abortController.pendingPushImage && !ctx.currentAbortController) {
+                dom.messageInput.value = 'push image';
+                sendMessage();
+            }
         });
     }
     ctx.callApi = callApi;
@@ -145,7 +172,9 @@ export function setupController(ctx) {
             const mb = addMessage('user', inputContent);
             if (ctx.vm_images.data.length) {
                 const content = mb.message.content;
-                ctx.vm_images.data.forEach(url => content.push({ type: 'image_url', image_url: { url } }));
+                ctx.vm_images.data.forEach(url => {
+                    content.push({ type: 'image_url', image_url: { url } })
+                });
                 ctx.vm_images.data.length = 0;
             }
             vm_message.render(vm_message.activeItem, mb.message, mb.index, '已完成');
@@ -163,31 +192,75 @@ export function setupController(ctx) {
     ctx.sendMessage = sendMessage;
 
     // ---------- 设置项 ----------
-    function settings(name, checked) {
+    /**
+     * 把一个设置项应用到请求配置。
+     * @param {string} name 设置名（与 agent.settings 的键一致）
+     * @param {boolean|number} value 开关传布尔，温度传数值
+     */
+    function settings(name, value) {
         switch (name) {
             case "thinking":
-                aiRequestConfig.thinking.type = checked ? 'enabled' : 'disabled';
-                aiRequestConfig.enable_thinking = checked;
-                aiRequestConfig.think = checked;
+                aiRequestConfig.thinking.type = value ? 'enabled' : 'disabled';
+                aiRequestConfig.enable_thinking = value;
+                aiRequestConfig.think = value;
                 break;
             case "use-tools": {
                 // 判空：settings() 会被 initAgent 按每个 agent 的 settings 触发，
                 // 抽屉栏 DOM 尚未渲染或该开关不存在时 querySelector 返回 null，直接 .disabled 会抛错。
+                // 开关现在位于设置弹窗里，选择器按 name 全局查，不依赖容器 #switch。
                 const useBrowserSwitch = document.querySelector('input[name="use-browser"]');
-                if (checked) {
-                    aiRequestConfig.tools = definitions;
+                if (value) {
                     aiRequestConfig.tool_choice = "auto";
                     if (useBrowserSwitch) useBrowserSwitch.disabled = false;
                 } else {
-                    aiRequestConfig.tools = null;
                     aiRequestConfig.tool_choice = "none";
                     if (useBrowserSwitch) useBrowserSwitch.disabled = true;
+                }
+                break;
+            }
+            case "temperature": {
+                // 数值型：夹到合法区间，非法值（NaN / 字符串）回退默认，避免把请求发成 temperature:null
+                const n = Number(value);
+                if (Number.isFinite(n)) {
+                    aiRequestConfig.temperature = Math.min(TEMPERATURE_MAX,
+                        Math.max(TEMPERATURE_MIN, n));
+                } else {
+                    aiRequestConfig.temperature = DEFAULT_TEMPERATURE;
                 }
                 break;
             }
         }
     }
     ctx.settings = settings;
+
+    /**
+     * 把一个设置项回写到对应的 DOM 控件上。
+     * 开关用 checked，温度用 range.value + 旁边的数值显示。
+     * @param {string} name 设置名
+     * @param {boolean|number} value 设置值
+     */
+    function applySettingToDom(name, value) {
+        const input = document.querySelector(`[name="${name}"]`);
+        if (!input) return;
+        if (input.type === 'checkbox') {
+            input.checked = !!value;
+        } else if (input.type === 'range') {
+            const n = Number(value);
+            input.value = Number.isFinite(n)
+                ? Math.min(TEMPERATURE_MAX, Math.max(TEMPERATURE_MIN, n))
+                : DEFAULT_TEMPERATURE;
+            updateTemperatureLabel();
+        }
+    }
+    ctx.applySettingToDom = applySettingToDom;
+
+    /** 把温度控件的当前值写到旁边的数字显示上 */
+    function updateTemperatureLabel() {
+        const range = document.querySelector('input[name="temperature"]');
+        const label = document.querySelector('[name="temperature-value"]');
+        if (range && label) label.textContent = Number(range.value).toFixed(1);
+    }
+    ctx.updateTemperatureLabel = updateTemperatureLabel;
 
     // ---------- API / Agent 初始化 ----------
     function initAPI(modelValue) {
@@ -219,11 +292,18 @@ export function setupController(ctx) {
             system_prompt.branch = data.branch;
         }
         runtime.currentAgentConfig = ctx.currentAgentConfig;
-        Object.entries(ctx.currentAgentConfig.settings || {}).forEach(([k, v]) => {
+        // 温度不是开关：没配置 temperature 的 agent 必须显式回到默认值，
+        // 否则会把上一个 agent 的温度带过来（原逻辑只 switch/checked，漏掉这类数值项）。
+        const agentSettings = ctx.currentAgentConfig.settings || {};
+        settings("temperature", agentSettings.temperature ?? DEFAULT_TEMPERATURE);
+        Object.entries(agentSettings).forEach(([k, v]) => {
             settings(k, v);
-            const sw = document.querySelector(`#switch [name="${k}"]`);
-            if (sw) sw.checked = v;
+            applySettingToDom(k, v);
         });
+        // 上面只写了配置里有的键，没写的要按默认值刷新到 UI
+        applySettingToDom("temperature", agentSettings.temperature ?? DEFAULT_TEMPERATURE);
+        // 弹窗里的开关行有无「禁用」态（工具关→浏览器禁）由该函数统一收口
+        if (typeof ctx.syncSettingsUI === 'function') ctx.syncSettingsUI();
         messages.length = 1;
         initMessageList(system_prompt.branch);
     }

@@ -61,6 +61,7 @@ Promise.resolve(StorageHelper.open({ name: 'ai-chat' })).then(async function boo
 
     // ---------- 请求配置 ----------
     ctx.aiRequestConfig = createDefaultAiRequestConfig();
+    ctx.aiRequestConfig.tools = OpenAIFunctionCalling.tools;
     ctx.headers = authHeaders();
     ctx.currentApiConfig = null;
     ctx.currentAgentConfig = null;
